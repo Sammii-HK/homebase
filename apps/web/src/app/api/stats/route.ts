@@ -31,7 +31,7 @@ async function getGitHub() {
 async function getLunary() {
   const key = process.env.LUNARY_ADMIN_API_KEY;
   const url = process.env.LUNARY_URL ?? "https://lunary.app";
-  if (!key) return { mau: 229, mrr: 22.5, subscribers: 3, activeToday: 14 };
+  if (!key) return { mau: 0, mrr: 0, subscribers: 0, activeToday: 0 };
   try {
     const res = await fetch(`${url}/api/internal/homebase-stats`, {
       headers: { Authorization: `Bearer ${key}` },
@@ -39,24 +39,43 @@ async function getLunary() {
     });
     if (!res.ok) throw new Error(`${res.status}`);
     return await res.json();
-  } catch {
-    return { mau: 229, mrr: 22.5, subscribers: 3, activeToday: 14 };
+  } catch (e) {
+    console.error("[homebase] lunary fetch failed:", e);
+    return { mau: 0, mrr: 0, subscribers: 0, activeToday: 0 };
   }
 }
 
 async function getSpellcast() {
-  // TODO: add /api/internal/homebase-stats to Spellcast API
-  return { postsToday: 7, scheduled: 31, accounts: 14 };
-}
-
-async function getMeta() {
-  // TODO: wire to Spellcast Instagram analytics
-  return { followers: 1240, reachThisWeek: 4500, postsThisWeek: 5 };
+  const secret = process.env.SPELLCAST_CRON_SECRET;
+  const url = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
+  if (!secret) return { postsToday: 0, scheduled: 0, accounts: 0, igFollowers: 0, reachThisWeek: 0, postsThisWeek: 0 };
+  try {
+    const res = await fetch(`${url}/api/internal/homebase-stats`, {
+      headers: { Authorization: `Bearer ${secret}` },
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) throw new Error(`${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.error("[homebase] spellcast fetch failed:", e);
+    return { postsToday: 0, scheduled: 0, accounts: 0, igFollowers: 0, reachThisWeek: 0, postsThisWeek: 0 };
+  }
 }
 
 export async function GET() {
-  const [github, lunary, spellcast, meta] = await Promise.all([
-    getGitHub(), getLunary(), getSpellcast(), getMeta(),
+  const [github, lunary, spellcast] = await Promise.all([
+    getGitHub(), getLunary(), getSpellcast(),
   ]);
-  return NextResponse.json({ github, lunary, spellcast, meta, updatedAt: new Date().toISOString() });
+
+  return NextResponse.json({
+    github,
+    lunary,
+    spellcast,
+    meta: {
+      followers: spellcast.igFollowers ?? 0,
+      reachThisWeek: spellcast.reachThisWeek ?? 0,
+      postsThisWeek: spellcast.postsThisWeek ?? 0,
+    },
+    updatedAt: new Date().toISOString(),
+  });
 }
