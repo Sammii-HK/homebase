@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AgentSprite from "./AgentSprite";
-import { useLiveStats } from "@/hooks/useLiveStats";
+import AgentSprite, { ActivityState } from "./AgentSprite";
+import { useLiveStats, LiveEvent } from "@/hooks/useLiveStats";
+import { useActivityStream } from "@/hooks/useActivityStream";
 
 // ── Pixel art renderer ────────────────────────────────────────────────────
 
@@ -322,7 +323,7 @@ const SERVER = {
 };
 
 // Small candle — 4w × 8h
-function CandleSprite({ color = "#fde68a" }: { color?: string }) {
+function CandleSprite({ color = "#fde68a", hot = false }: { color?: string; hot?: boolean }) {
   return (
     <Px scale={3} colors={{ F: color, f: "#fbbf24", W: "#f5f5dc", w: "#e8e8c8", K: "#111" }} data={[
       ".FF.",
@@ -390,7 +391,7 @@ const CHART_ART = {
     "KKKKKKKKKKKKKKKKKKKKKK",
     "KBBBBBBBBBBBBBBBBBBBBk",
     "KBBBBBBBBBBBBBBBBBBBBk",
-    "KBBBBBBBBBBBBBCBBBBBBk",
+    "KBBBBBBBBBBBBCBBBBBBk",
     "KBBBBBBBBBBBBCCCBBBBBk",
     "KBBBBBBBBBBBCCCCCBBBBk",
     "KBBBBBBBBBBCCCCCCCBBBk",
@@ -525,7 +526,7 @@ const COFFEE = {
 
 // ── Room decoration components ─────────────────────────────────────────────
 
-function LunaryRoom() {
+function LunaryRoom({ isHot, activeToday, events }: { isHot: boolean; activeToday: number; events: LiveEvent[] }) {
   return <>
     {/* Wallpaper: starry pattern */}
     <div className="absolute" style={{ inset: 0, top: 0, height: "38%", backgroundImage: `radial-gradient(circle, rgba(196,181,253,0.35) 1px, transparent 1px)`, backgroundSize: "20px 20px", zIndex: 0 }} />
@@ -549,12 +550,12 @@ function LunaryRoom() {
     <div className="absolute" style={{ right: 12, bottom: 48, zIndex: 4 }}>
       <Px {...DESK} scale={2} />
     </div>
-    <div className="absolute" style={{ right: 30, bottom: 48 + 16, zIndex: 5 }}>
+    <div className={`absolute ${isHot ? "telescope-hot" : ""}`} style={{ right: 30, bottom: 48 + 16, zIndex: 5 }}>
       <Px {...TELESCOPE} scale={2} />
     </div>
 
     {/* Crystal ball on pedestal */}
-    <div className="absolute" style={{ right: 72, bottom: 48 + 20, zIndex: 5 }}>
+    <div className={`absolute ${isHot ? "crystal-hot" : ""}`} style={{ right: 72, bottom: 48 + 20, zIndex: 5 }}>
       <Px {...CRYSTAL_BALL} scale={2} />
     </div>
 
@@ -563,20 +564,59 @@ function LunaryRoom() {
       <PlantSprite accent="#7c3aed" />
     </div>
 
-    {/* Candles */}
-    <div className="absolute pulse" style={{ left: 50, bottom: 48, zIndex: 4 }}>
+    {/* Candles — scale up when users online */}
+    <div
+      className={`absolute ${isHot ? "pulse-fast" : "pulse"}`}
+      style={{ left: 50, bottom: 48, zIndex: 4, transform: activeToday > 0 ? "scale(1.2)" : "scale(1)", transition: "transform 0.5s" }}
+    >
       <CandleSprite color="#fde68a" />
     </div>
-    <div className="absolute pulse" style={{ right: 110, bottom: 48, zIndex: 4, animationDelay: "0.7s" }}>
+    <div
+      className={`absolute ${isHot ? "pulse-fast" : "pulse"}`}
+      style={{ right: 110, bottom: 48, zIndex: 4, animationDelay: "0.7s", transform: activeToday > 0 ? "scale(1.2)" : "scale(1)", transition: "transform 0.5s" }}
+    >
       <CandleSprite color="#c4b5fd" />
     </div>
+
+    {/* Online indicator */}
+    {activeToday > 0 && (
+      <div className="absolute" style={{ left: "50%", top: 32, transform: "translateX(-50%)", zIndex: 10 }}>
+        <div className="pulse-fast" style={{
+          fontFamily: "'Press Start 2P'", fontSize: 6,
+          color: "#4ade80", textShadow: "0 0 6px #4ade80",
+          background: "rgba(0,0,0,0.7)", padding: "2px 6px",
+          border: "1px solid rgba(74,222,128,0.4)",
+          whiteSpace: "nowrap",
+        }}>
+          {activeToday} ONLINE
+        </div>
+      </div>
+    )}
+
+    {/* Live event bubbles */}
+    {events.map((ev) => (
+      <div key={ev.id} className="event-bubble absolute" style={{ left: "50%", bottom: "55%", transform: "translateX(-50%)", zIndex: 15 }}>
+        <div style={{
+          fontFamily: "'Press Start 2P'", fontSize: 7,
+          background: ev.type === "new-sub" ? "rgba(250,204,21,0.9)" : ev.type === "new-user" ? "rgba(167,139,250,0.9)" : "rgba(34,211,238,0.9)",
+          color: "#000", padding: "3px 8px",
+          border: "2px solid rgba(255,255,255,0.5)",
+          whiteSpace: "nowrap",
+        }}>
+          {ev.type === "new-user" && "NEW USER!"}
+          {ev.type === "new-sub" && "NEW SUB!"}
+          {ev.type === "online" && `${ev.label} ONLINE`}
+          {ev.type === "offline" && "OFFLINE"}
+        </div>
+      </div>
+    ))}
 
     {/* Purple rug */}
     <div className="absolute" style={{ left: 40, bottom: 48, right: 10, height: 32, background: "rgba(91,33,182,0.45)", border: "2px solid rgba(124,58,237,0.4)", zIndex: 3 }} />
   </>;
 }
 
-function SpellcastRoom() {
+function SpellcastRoom({ isHot }: { isHot: boolean }) {
   return <>
     {/* Wallpaper: grid/circuit pattern */}
     <div className="absolute" style={{ inset: 0, top: 0, height: "38%",
@@ -594,7 +634,7 @@ function SpellcastRoom() {
     </div>
 
     {/* Server rack */}
-    <div className="absolute" style={{ left: 10, bottom: 48, zIndex: 4 }}>
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 10, bottom: 48, zIndex: 4 }}>
       <Px {...SERVER} scale={2} />
     </div>
 
@@ -604,10 +644,10 @@ function SpellcastRoom() {
     </div>
 
     {/* 2 monitors on desk */}
-    <div className="absolute" style={{ left: 40, bottom: 48 + 16, zIndex: 5 }}>
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 40, bottom: 48 + 16, zIndex: 5 }}>
       <Px {...MONITOR} scale={2} />
     </div>
-    <div className="absolute" style={{ left: 110, bottom: 48 + 16, zIndex: 5 }}>
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 110, bottom: 48 + 16, zIndex: 5 }}>
       <Px {...MONITOR} scale={2} />
     </div>
 
@@ -615,7 +655,7 @@ function SpellcastRoom() {
     <div className="absolute" style={{ right: 14, bottom: 78, display: "flex", flexDirection: "column", gap: 5, zIndex: 5 }}>
       {[["#4ade80", "ON"], ["#facc15", "Q"], ["#f472b6", "IG"]].map(([c, l]) => (
         <div key={l} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <div className="pulse" style={{ width: 7, height: 7, background: c, border: "1px solid rgba(0,0,0,0.5)", boxShadow: `0 0 6px ${c}` }} />
+          <div className={isHot ? "led-hot" : "pulse"} style={{ width: 7, height: 7, background: c, border: "1px solid rgba(0,0,0,0.5)", boxShadow: `0 0 6px ${c}` }} />
           <span style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: "rgba(255,255,255,0.45)" }}>{l}</span>
         </div>
       ))}
@@ -631,7 +671,7 @@ function SpellcastRoom() {
   </>;
 }
 
-function DevRoom() {
+function DevRoom({ isHot }: { isHot: boolean }) {
   return <>
     {/* Wallpaper: matrix rain columns */}
     <div className="absolute" style={{ inset: 0, top: 0, height: "38%",
@@ -639,7 +679,7 @@ function DevRoom() {
       zIndex: 0 }} />
 
     {/* Terminal wall art */}
-    <div className="absolute" style={{ right: 10, top: 6, zIndex: 4 }}>
+    <div className={`absolute ${isHot ? "terminal-hot" : ""}`} style={{ right: 10, top: 6, zIndex: 4 }}>
       <Px {...TERMINAL_ART} scale={2} />
     </div>
 
@@ -659,7 +699,7 @@ function DevRoom() {
     </div>
 
     {/* Laptop on desk */}
-    <div className="absolute" style={{ left: 20, bottom: 48 + 16, zIndex: 5 }}>
+    <div className={`absolute ${isHot ? "laptop-hot" : ""}`} style={{ left: 20, bottom: 48 + 16, zIndex: 5 }}>
       <Px {...LAPTOP} scale={2} />
     </div>
 
@@ -677,7 +717,7 @@ function DevRoom() {
     </div>
 
     {/* Green candle */}
-    <div className="absolute pulse" style={{ right: 50, bottom: 48, zIndex: 4 }}>
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ right: 50, bottom: 48, zIndex: 4 }}>
       <CandleSprite color="#4ade80" />
     </div>
 
@@ -686,7 +726,7 @@ function DevRoom() {
   </>;
 }
 
-function MetaRoom() {
+function MetaRoom({ isHot }: { isHot: boolean }) {
   return <>
     {/* Wallpaper: soft chevron / diamonds */}
     <div className="absolute" style={{ inset: 0, top: 0, height: "38%",
@@ -709,7 +749,7 @@ function MetaRoom() {
     </div>
 
     {/* Ring light */}
-    <div className="absolute pulse" style={{ left: 44, bottom: 52, zIndex: 4 }}>
+    <div className={`absolute ${isHot ? "ring-hot" : "pulse"}`} style={{ left: 44, bottom: 52, zIndex: 4 }}>
       <Px {...RING_LIGHT} scale={2} />
     </div>
 
@@ -724,7 +764,7 @@ function MetaRoom() {
     </div>
 
     {/* Candle */}
-    <div className="absolute pulse" style={{ right: 60, bottom: 48, zIndex: 4, animationDelay: "0.4s" }}>
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ right: 60, bottom: 48, zIndex: 4, animationDelay: "0.4s" }}>
       <CandleSprite color="#f472b6" />
     </div>
 
@@ -748,18 +788,50 @@ interface RoomConfig {
   sprite: "luna" | "caster" | "dev" | "meta";
   glowColor: string;
   name: string;
-  decoration: React.ReactNode;
+  roomKey?: string;
   stats: { label: string; value: string }[];
 }
 
-function Room({ config }: { config: RoomConfig }) {
-  const { shellProps, title, subtitle, accent, sprite, glowColor, name, decoration, stats } = config;
+function getRoomActivityState(
+  roomKey: string | undefined,
+  hotRooms: string[],
+  activeRooms: string[],
+  toolState: string
+): ActivityState {
+  if (!roomKey) return "idle";
+  const isHot = hotRooms.includes(roomKey);
+  const isActive = activeRooms.includes(roomKey);
+  if (isHot) {
+    if (toolState === "typing" || toolState === "running" || toolState === "searching" || toolState === "thinking") {
+      return toolState as ActivityState;
+    }
+    return "hot";
+  }
+  if (isActive) return "active";
+  return "idle";
+}
+
+interface RoomProps {
+  config: RoomConfig;
+  activityState: ActivityState;
+  isHot: boolean;
+  decoration: React.ReactNode;
+}
+
+function Room({ config, activityState, isHot, decoration }: RoomProps) {
+  const { shellProps, title, subtitle, accent, sprite, glowColor, name, stats } = config;
   return (
     <RoomShell {...shellProps}>
       {decoration}
       <div className="absolute top-2 left-3" style={{ zIndex: 10 }}>
         <div className="room-title" style={{ color: accent }}>{title}</div>
         <div style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{subtitle}</div>
+        {/* Hot indicator */}
+        {isHot && (
+          <div className="pulse-fast" style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: accent, textShadow: `0 0 6px ${accent}`, marginTop: 2 }}>
+            ● ACTIVE
+          </div>
+        )}
       </div>
       <div className="absolute bottom-2 left-3" style={{ zIndex: 10, display: "flex", flexDirection: "column", gap: 2 }}>
         {stats.map((s) => (
@@ -768,7 +840,7 @@ function Room({ config }: { config: RoomConfig }) {
           </div>
         ))}
       </div>
-      <AgentSprite sprite={sprite} name={name} glowColor={glowColor} />
+      <AgentSprite sprite={sprite} name={name} glowColor={glowColor} activityState={activityState} />
     </RoomShell>
   );
 }
@@ -776,10 +848,15 @@ function Room({ config }: { config: RoomConfig }) {
 // ── Floor plan ─────────────────────────────────────────────────────────────
 
 export default function FloorPlan() {
-  const stats = useLiveStats();
+  const { stats, events } = useLiveStats();
+  const activity = useActivityStream();
   const fmt = (v: number | undefined) => (v !== undefined ? String(v) : "...");
 
-  const rooms: RoomConfig[] = [
+  const lunaryHot = activity.hotRooms.includes("lunary");
+  const spellcastHot = activity.hotRooms.includes("spellcast");
+  const devHot = activity.hotRooms.includes("dev");
+
+  const roomConfigs: RoomConfig[] = [
     {
       shellProps: {
         wallColor: "#1e0a3c",
@@ -788,7 +865,7 @@ export default function FloorPlan() {
       },
       title: "LUNARY", subtitle: "OBSERVATORY", accent: "#c084fc",
       sprite: "luna", glowColor: "#7c3aed", name: "LUNA",
-      decoration: <LunaryRoom />,
+      roomKey: "lunary",
       stats: [
         { label: "MAU", value: fmt(stats?.lunary.mau) },
         { label: "MRR", value: stats ? `£${stats.lunary.mrr.toFixed(2)}` : "..." },
@@ -803,7 +880,7 @@ export default function FloorPlan() {
       },
       title: "SPELLCAST", subtitle: "COMMAND", accent: "#22d3ee",
       sprite: "caster", glowColor: "#0e7490", name: "CASTER",
-      decoration: <SpellcastRoom />,
+      roomKey: "spellcast",
       stats: [
         { label: "TODAY", value: stats ? `${stats.spellcast.postsToday} posts` : "..." },
         { label: "QUEUED", value: fmt(stats?.spellcast.scheduled) },
@@ -818,7 +895,7 @@ export default function FloorPlan() {
       },
       title: "DEV", subtitle: "DEN", accent: "#4ade80",
       sprite: "dev", glowColor: "#166534", name: "DEV",
-      decoration: <DevRoom />,
+      roomKey: "dev",
       stats: [
         { label: "COMMITS", value: stats ? `${stats.github.commitsToday} today` : "..." },
         { label: "REPOS", value: fmt(stats?.github.repos) },
@@ -833,7 +910,6 @@ export default function FloorPlan() {
       },
       title: "META", subtitle: "ANALYTICS", accent: "#f472b6",
       sprite: "meta", glowColor: "#9d174d", name: "META",
-      decoration: <MetaRoom />,
       stats: [
         { label: "IG FLWRS", value: stats ? stats.meta.followers.toLocaleString() : "..." },
         { label: "REACH/WK", value: stats ? `${(stats.meta.reachThisWeek / 1000).toFixed(1)}k` : "..." },
@@ -842,9 +918,38 @@ export default function FloorPlan() {
     },
   ];
 
+  const decorations = [
+    <LunaryRoom
+      key="lunary"
+      isHot={lunaryHot}
+      activeToday={stats?.lunary.activeToday ?? 0}
+      events={events}
+    />,
+    <SpellcastRoom key="spellcast" isHot={spellcastHot} />,
+    <DevRoom key="dev" isHot={devHot} />,
+    <MetaRoom key="meta" isHot={false} />,
+  ];
+
   return (
     <div className="w-screen h-screen" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr" }}>
-      {rooms.map((r) => <Room key={r.title} config={r} />)}
+      {roomConfigs.map((config, i) => {
+        const activityState = getRoomActivityState(
+          config.roomKey,
+          activity.hotRooms,
+          activity.activeRooms,
+          activity.toolState
+        );
+        const isHot = config.roomKey ? activity.hotRooms.includes(config.roomKey) : false;
+        return (
+          <Room
+            key={config.title}
+            config={config}
+            activityState={activityState}
+            isHot={isHot}
+            decoration={decorations[i]}
+          />
+        );
+      })}
       {/* Crosshair */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ width: 16, height: 2, background: "rgba(255,255,255,0.12)" }} />
