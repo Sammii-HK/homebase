@@ -524,6 +524,192 @@ const COFFEE = {
   ],
 };
 
+// Cauldron — 12w × 10h (bubbling purple cauldron)
+const CAULDRON = {
+  colors: { K: "#111", P: "#4c1d95", p: "#7c3aed", B: "#8b5cf6", b: "#a78bfa", F: "#fbbf24", f: "#fde68a", S: "#6d28d9" },
+  data: [
+    ".f..F.f.....",
+    "..f.....F...",
+    "..KKKKKKKK..",
+    ".KppppppppK.",
+    "KpBBBBBBBBpK",
+    "KpBbBbBbBBpK",
+    "KpBBBBBBBBpK",
+    ".KppppppppK.",
+    "..KSSSSSKK..",
+    "..KKKKKKKK..",
+  ],
+};
+
+// Moon phase strip — 28w × 8h (wall art, 5 phases)
+const MOON_PHASE = {
+  colors: { K: "#111", F: "#5b21b6", B: "#0f0820", W: "#fde68a", w: "#fbbf24", D: "#1e1035" },
+  data: [
+    "KKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+    "KFFFFFFFFFFFFFFFFFFFFFFFFFFk",
+    "KFDDDDFwDDFWwwWFwwwWFwwwwWFk",
+    "KFDDDDFwDDFWwwWFwwwWFwwwwWFk",
+    "KFDDDDFwDDFWwwWFwwwWFwwwwWFk",
+    "KFDDDDFwDDFWwwWFwwwWFwwwwWFk",
+    "KFFFFFFFFFFFFFFFFFFFFFFFFFFk",
+    "KKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+  ],
+};
+
+// Potion rack — 10w × 12h (3 bottles on a shelf)
+const POTION_RACK = {
+  colors: { K: "#111", L: "#8b6035", W: "#c49a60", P: "#7c3aed", p: "#a78bfa", G: "#059669", g: "#34d399", B: "#0e7490", b: "#22d3ee", C: "#fde68a" },
+  data: [
+    ".KKKKKKKK.",
+    ".KWWWWWWKk",
+    ".K.C.C.Ck.",
+    ".K.P.G.Bk.",
+    ".K.P.G.Bk.",
+    ".K.p.g.bk.",
+    ".K.p.g.bk.",
+    ".K.P.G.Bk.",
+    ".KKKKKKKK.",
+    ".LLLLLLLL.",
+    "..........",
+    "..........",
+  ],
+};
+
+// Whiteboard — 20w × 16h (kanban columns)
+const WHITEBOARD = {
+  colors: { K: "#111", W: "#f8fafc", w: "#e2e8f0", F: "#1e293b", R: "#fca5a5", Y: "#fde68a", G: "#86efac", B: "#93c5fd", p: "#f0abfc" },
+  data: [
+    "KKKKKKKKKKKKKKKKKKKK",
+    "KWWWWWWKWWWWWWKWWWWk",
+    "KwRRRwKwYYYwKwGGGwk.",
+    "KwRRRwKwYYYwKwGGGwk.",
+    "KwRRRwKwYYYwKwGGGwk.",
+    "KwwwwwKwwwwwKwwwwwk.",
+    "KwBBBwKwBBBwKw...wk.",
+    "KwBBBwKwBBBwKw...wk.",
+    "KwBBBwKwBBBwKw...wk.",
+    "KwwwwwKwwwwwKwwwwwk.",
+    "KwpppwKw...wKw...wk.",
+    "KwpppwKw...wKw...wk.",
+    "KwpppwKw...wKw...wk.",
+    "KwwwwwKwwwwwKwwwwwk.",
+    "KWWWWWWKWWWWWWKWWWWk",
+    "KKKKKKKKKKKKKKKKKKKK",
+  ],
+};
+
+// Coffee machine — 10w × 14h
+const COFFEE_MACHINE = {
+  colors: { K: "#111", M: "#27272a", m: "#3f3f46", W: "#71717a", S: "#a1a1aa", B: "#d4a76a", b: "#fbbf24", R: "#ef4444", G: "#4ade80", C: "#f8fafc" },
+  data: [
+    ".KKKKKKKK.",
+    ".KMMMMMMKk",
+    ".KMSSSSMKk",
+    ".KMSCCSMKk",
+    ".KMSCCSMKk",
+    ".KMMMMMKk.",
+    ".KRKKGKK..",
+    ".KMmmmMKk.",
+    ".KMmBbmKk.",
+    ".KMmBbmKk.",
+    ".KMmBbmKk.",
+    ".KMMMMMMKk",
+    ".KKKKKKKk.",
+    "..........",
+  ],
+};
+
+// Rubber duck — 4w × 4h
+const RUBBER_DUCK = {
+  colors: { K: "#111", Y: "#fbbf24", y: "#fde68a", B: "#1d4ed8", E: "#1a0a00" },
+  data: [
+    ".yY.",
+    "YyYY",
+    "YYYY",
+    ".KK.",
+  ],
+};
+
+// Book pile — 10w × 10h
+const BOOK_PILE = {
+  colors: { K: "#111", R: "#c0392b", r: "#e74c3c", B: "#1d6fa4", b: "#2980b9", G: "#1a7a3c", g: "#27ae60", Y: "#c07c00", y: "#e69c00", L: "#c49a60" },
+  data: [
+    ".KKKKKKKK.",
+    ".KRrRrRRKk",
+    ".KLLLLLLKk",
+    "KKKKKKKKKK",
+    "KBbBbBbBBk",
+    "KLLLLLLLLk",
+    "KKKKKKKKKK",
+    "KGgGgGgGGk",
+    "KLLLLLLLLk",
+    "KKKKKKKKKK",
+  ],
+};
+
+// Sticky notes cluster — 16w × 14h (wall)
+const STICKY_NOTES = {
+  colors: { K: "#111", Y: "#fef9c3", y: "#fde68a", P: "#fce7f3", p: "#fbcfe8", G: "#dcfce7", g: "#bbf7d0", B: "#dbeafe", b: "#bfdbfe", T: "#78716c" },
+  data: [
+    "KKKKKKKKKKKKKKKK",
+    "KYYYYKPPPPKYYYYk",
+    "KYTTTKPpppKYTTTk",
+    "KYTTTKPpppKYTTTk",
+    "KYYYYKPPPPKYYYYk",
+    "KKKKKKKKKKKKKKKK",
+    "KGGGGKBBBBKPPPPk",
+    "KGgggKBbbbKPpppk",
+    "KGgggKBbbbKPpppk",
+    "KGGGGKBBBBKPPPPk",
+    "KKKKKKKKKKKKKKKK",
+    "..KYYYYKGGGGK...",
+    "..KYTTTKGgggK...",
+    "..KYYYYKGGGGK...",
+  ],
+};
+
+// Colour-blocked photo backdrop — 16w × 20h
+const BACKDROP = {
+  colors: { K: "#111", A: "#fce7f3", a: "#fbcfe8", C: "#fdf4ff", c: "#f5d0fe", B: "#ffe4e6", b: "#fecdd3", D: "#fff7ed", d: "#fed7aa", P: "#831843" },
+  data: [
+    ".PPPPPPPPPPPPPP..",
+    ".PAAAAAaaaCCCCcP.",
+    ".PAAAAAaaaCCCCcP.",
+    ".PAAAAAaaaCCCCcP.",
+    ".PAAAAAaaaCCCCcP.",
+    ".PAAAAAaaaCCCCcP.",
+    ".PBBBBBbbbCCCCcP.",
+    ".PBBBBBbbbCCCCcP.",
+    ".PBBBBBbbbCCCCcP.",
+    ".PBBBBBbbbCCCCcP.",
+    ".PBBBBBbbbDDDDdP.",
+    ".PBBBBBbbbDDDDdP.",
+    ".PBBBBBbbbDDDDdP.",
+    ".PBBBBBbbbDDDDdP.",
+    ".PBBBBBbbbDDDDdP.",
+    ".PaaaaaadddDDDdP.",
+    ".PaaaaaadddDDDdP.",
+    ".PaaaaaadddDDDdP.",
+    ".PaaaaaadddDDDdP.",
+    ".PPPPPPPPPPPPPP..",
+  ],
+};
+
+// Simple stool — 8w × 8h
+const STOOL = {
+  colors: { K: "#111", W: "#c49a60", w: "#8b6035", D: "#5c3a1e", S: "#a07040" },
+  data: [
+    "KKKKKKKK",
+    "KWwWwWWk",
+    "KWwWwWWk",
+    "KKKKKKKK",
+    "..KK.KK.",
+    "..KK.KK.",
+    "..KK.KK.",
+    "..KKKK..",
+  ],
+};
+
 // ── Room decoration components ─────────────────────────────────────────────
 
 function LunaryRoom({ isHot, activeToday, events }: { isHot: boolean; activeToday: number; events: LiveEvent[] }) {
@@ -531,51 +717,72 @@ function LunaryRoom({ isHot, activeToday, events }: { isHot: boolean; activeToda
     {/* Wallpaper: starry pattern */}
     <div className="absolute" style={{ inset: 0, top: 0, height: "38%", backgroundImage: `radial-gradient(circle, rgba(196,181,253,0.35) 1px, transparent 1px)`, backgroundSize: "20px 20px", zIndex: 0 }} />
 
-    {/* Star chart on wall center */}
-    <div className="absolute" style={{ left: "50%", top: 10, transform: "translateX(-50%)", zIndex: 4 }}>
-      <Px {...STAR_CHART} scale={2} />
+    {/* ── WALL ART ── */}
+    {/* Left wall: moon phase strip — full-width strip */}
+    <div className="absolute" style={{ left: 4, top: 8, zIndex: 4 }}>
+      <Px {...MOON_PHASE} scale={5} />
+    </div>
+    {/* Center wall: star chart */}
+    <div className="absolute" style={{ left: "50%", top: 6, transform: "translateX(-50%)", zIndex: 4 }}>
+      <Px {...STAR_CHART} scale={4} />
+    </div>
+    {/* Right wall: moon painting */}
+    <div className="absolute" style={{ right: 6, top: 5, zIndex: 4 }}>
+      <Px {...MOON_PAINTING} scale={4} />
     </div>
 
-    {/* Moon painting on right wall */}
-    <div className="absolute" style={{ right: 12, top: 6, zIndex: 4 }}>
-      <Px {...MOON_PAINTING} scale={2} />
+    {/* ── FLOOR — bottom row ── */}
+    {/* Large rug first so items sit on it */}
+    <div className="absolute" style={{ left: 30, bottom: 48, right: 8, height: 40, background: "rgba(91,33,182,0.5)", border: "2px solid rgba(124,58,237,0.5)", zIndex: 3 }} />
+    {/* Bookshelf far left — anchors left wall to floor */}
+    <div className="absolute" style={{ left: 6, bottom: 48, zIndex: 5 }}>
+      <Px {...BOOKSHELF} scale={4} />
     </div>
-
-    {/* Bookshelf left */}
-    <div className="absolute" style={{ left: 8, bottom: 48, zIndex: 4 }}>
-      <Px {...BOOKSHELF} scale={2} />
-    </div>
-
-    {/* Telescope + desk right */}
-    <div className="absolute" style={{ right: 12, bottom: 48, zIndex: 4 }}>
-      <Px {...DESK} scale={2} />
-    </div>
-    <div className={`absolute ${isHot ? "telescope-hot" : ""}`} style={{ right: 30, bottom: 48 + 16, zIndex: 5 }}>
-      <Px {...TELESCOPE} scale={2} />
-    </div>
-
-    {/* Crystal ball on pedestal */}
-    <div className={`absolute ${isHot ? "crystal-hot" : ""}`} style={{ right: 72, bottom: 48 + 20, zIndex: 5 }}>
-      <Px {...CRYSTAL_BALL} scale={2} />
-    </div>
-
-    {/* Plants */}
-    <div className="absolute" style={{ left: 10, bottom: 48, zIndex: 4 }}>
+    {/* Plant next to shelf */}
+    <div className="absolute" style={{ left: 88, bottom: 48, zIndex: 5 }}>
       <PlantSprite accent="#7c3aed" />
     </div>
+    {/* Cauldron center-left — thinking waypoint */}
+    <div className={`absolute ${isHot ? "crystal-hot" : ""}`} style={{ left: "34%", bottom: 48, zIndex: 5 }}>
+      <Px {...CAULDRON} scale={5} />
+    </div>
+    {/* Desk right */}
+    <div className="absolute" style={{ right: 10, bottom: 48, zIndex: 4 }}>
+      <Px {...DESK} scale={3} />
+    </div>
+    {/* Telescope on desk */}
+    <div className={`absolute ${isHot ? "telescope-hot" : ""}`} style={{ right: 38, bottom: 48 + 24, zIndex: 6 }}>
+      <Px {...TELESCOPE} scale={3} />
+    </div>
+    {/* Crystal ball center-right */}
+    <div className={`absolute ${isHot ? "crystal-hot" : ""}`} style={{ right: 120, bottom: 48 + 24, zIndex: 6 }}>
+      <Px {...CRYSTAL_BALL} scale={3} />
+    </div>
 
-    {/* Candles — scale up when users online */}
-    <div
-      className={`absolute ${isHot ? "pulse-fast" : "pulse"}`}
-      style={{ left: 50, bottom: 48, zIndex: 4, transform: activeToday > 0 ? "scale(1.2)" : "scale(1)", transition: "transform 0.5s" }}
-    >
+    {/* ── FLOOR — mid-level items ── */}
+    {/* Potion rack with built-in legs — sits on floor, appears mid-room */}
+    <div className="absolute" style={{ left: "54%", bottom: 48, zIndex: 4 }}>
+      <Px {...POTION_RACK} scale={3} />
+    </div>
+    {/* Second rug center */}
+    <div className="absolute" style={{ left: "24%", bottom: 52, width: 110, height: 28, background: "rgba(109,40,217,0.35)", border: "1px solid rgba(167,139,250,0.3)", zIndex: 3 }} />
+
+    {/* ── CSS ATMOSPHERE ── */}
+    {/* Arcane floor circle around cauldron */}
+    <div className="absolute" style={{ left: "26%", bottom: 44, width: 130, height: 52, border: "1px solid rgba(167,139,250,0.35)", borderRadius: "50%", zIndex: 2, pointerEvents: "none" }} />
+    <div className="absolute" style={{ left: "29%", bottom: 48, width: 96, height: 38, border: "1px dashed rgba(196,181,253,0.2)", borderRadius: "50%", zIndex: 2, pointerEvents: "none" }} />
+    {/* Cauldron glow on floor */}
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: "30%", bottom: 44, width: 120, height: 48, background: "radial-gradient(ellipse, rgba(124,58,237,0.25) 0%, transparent 70%)", zIndex: 2, pointerEvents: "none" }} />
+
+    {/* ── CANDLES ── */}
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: 100, bottom: 48, zIndex: 6, transform: activeToday > 0 ? "scale(1.2)" : "scale(1)", transition: "transform 0.5s" }}>
       <CandleSprite color="#fde68a" />
     </div>
-    <div
-      className={`absolute ${isHot ? "pulse-fast" : "pulse"}`}
-      style={{ right: 110, bottom: 48, zIndex: 4, animationDelay: "0.7s", transform: activeToday > 0 ? "scale(1.2)" : "scale(1)", transition: "transform 0.5s" }}
-    >
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: "46%", bottom: 48, zIndex: 6, animationDelay: "0.4s" }}>
       <CandleSprite color="#c4b5fd" />
+    </div>
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ right: 130, bottom: 48, zIndex: 6, animationDelay: "0.7s" }}>
+      <CandleSprite color="#f0abfc" />
     </div>
 
     {/* Online indicator */}
@@ -610,9 +817,6 @@ function LunaryRoom({ isHot, activeToday, events }: { isHot: boolean; activeToda
         </div>
       </div>
     ))}
-
-    {/* Purple rug */}
-    <div className="absolute" style={{ left: 40, bottom: 48, right: 10, height: 32, background: "rgba(91,33,182,0.45)", border: "2px solid rgba(124,58,237,0.4)", zIndex: 3 }} />
   </>;
 }
 
@@ -623,51 +827,67 @@ function SpellcastRoom({ isHot }: { isHot: boolean }) {
       backgroundImage: `linear-gradient(rgba(34,211,238,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.08) 1px, transparent 1px)`,
       backgroundSize: "16px 16px", zIndex: 0 }} />
 
-    {/* Pinboard on wall */}
-    <div className="absolute" style={{ right: 10, top: 6, zIndex: 4 }}>
-      <Px {...PINBOARD} scale={2} />
+    {/* ── WALL ART ── */}
+    {/* Left wall: kanban whiteboard */}
+    <div className="absolute" style={{ left: 4, top: 4, zIndex: 4 }}>
+      <Px {...WHITEBOARD} scale={5} />
+    </div>
+    {/* Center wall: window */}
+    <div className="absolute" style={{ left: "44%", top: 4, zIndex: 4 }}>
+      <Px {...WINDOW} scale={4} />
+    </div>
+    {/* Right wall: pinboard */}
+    <div className="absolute" style={{ right: 6, top: 5, zIndex: 4 }}>
+      <Px {...PINBOARD} scale={4} />
     </div>
 
-    {/* Window */}
-    <div className="absolute" style={{ left: "20%", top: 4, zIndex: 4 }}>
-      <Px {...WINDOW} scale={2} />
+    {/* ── FLOOR — bottom row ── */}
+    {/* Teal rug under desk area */}
+    <div className="absolute" style={{ left: "36%", bottom: 48, right: 8, height: 40, background: "rgba(14,79,95,0.55)", border: "2px solid rgba(34,211,238,0.3)", zIndex: 3 }} />
+
+    {/* Server rack 1 — far left */}
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 8, bottom: 48, zIndex: 5 }}>
+      <Px {...SERVER} scale={3} />
+    </div>
+    {/* Server rack 2 — staggered, slightly behind */}
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 42, bottom: 80, zIndex: 4 }}>
+      <Px {...SERVER} scale={3} />
+    </div>
+    {/* Server glow */}
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: 6, bottom: 44, width: 80, height: 40, background: "radial-gradient(ellipse, rgba(74,222,128,0.2) 0%, transparent 70%)", zIndex: 2, pointerEvents: "none" }} />
+
+    {/* Coffee machine center-left */}
+    <div className="absolute" style={{ left: "24%", bottom: 48, zIndex: 5 }}>
+      <Px {...COFFEE_MACHINE} scale={3} />
     </div>
 
-    {/* Server rack */}
-    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 10, bottom: 48, zIndex: 4 }}>
-      <Px {...SERVER} scale={2} />
+    {/* Long desk right half */}
+    <div className="absolute" style={{ left: "40%", right: 8, bottom: 48, zIndex: 4 }}>
+      <Px {...DESK} scale={3} />
     </div>
-
-    {/* Long desk */}
-    <div className="absolute" style={{ left: 30, right: 8, bottom: 48, zIndex: 4 }}>
-      <Px {...DESK} scale={2} />
+    {/* Monitor 1 */}
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: "44%", bottom: 48 + 24, zIndex: 6 }}>
+      <Px {...MONITOR} scale={3} />
     </div>
-
-    {/* 2 monitors on desk */}
-    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 40, bottom: 48 + 16, zIndex: 5 }}>
-      <Px {...MONITOR} scale={2} />
-    </div>
-    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 110, bottom: 48 + 16, zIndex: 5 }}>
-      <Px {...MONITOR} scale={2} />
+    {/* Monitor 2 */}
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ right: 36, bottom: 48 + 24, zIndex: 6 }}>
+      <Px {...MONITOR} scale={3} />
     </div>
 
     {/* Status LEDs */}
-    <div className="absolute" style={{ right: 14, bottom: 78, display: "flex", flexDirection: "column", gap: 5, zIndex: 5 }}>
+    <div className="absolute" style={{ right: 12, bottom: 96, display: "flex", flexDirection: "column", gap: 6, zIndex: 7 }}>
       {[["#4ade80", "ON"], ["#facc15", "Q"], ["#f472b6", "IG"]].map(([c, l]) => (
         <div key={l} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <div className={isHot ? "led-hot" : "pulse"} style={{ width: 7, height: 7, background: c, border: "1px solid rgba(0,0,0,0.5)", boxShadow: `0 0 6px ${c}` }} />
-          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: "rgba(255,255,255,0.45)" }}>{l}</span>
+          <div className={isHot ? "led-hot" : "pulse"} style={{ width: 8, height: 8, background: c, border: "1px solid rgba(0,0,0,0.5)", boxShadow: `0 0 8px ${c}` }} />
+          <span style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: "rgba(255,255,255,0.5)" }}>{l}</span>
         </div>
       ))}
     </div>
 
-    {/* Plant */}
-    <div className="absolute" style={{ right: 12, bottom: 48, zIndex: 4 }}>
+    {/* Plant far right */}
+    <div className="absolute" style={{ right: 10, bottom: 48, zIndex: 6 }}>
       <PlantSprite accent="#0891b2" />
     </div>
-
-    {/* Teal rug */}
-    <div className="absolute" style={{ left: 30, bottom: 48, right: 40, height: 32, background: "rgba(14,79,95,0.5)", border: "2px solid rgba(34,211,238,0.25)", zIndex: 3 }} />
   </>;
 }
 
@@ -678,51 +898,66 @@ function DevRoom({ isHot }: { isHot: boolean }) {
       backgroundImage: `repeating-linear-gradient(90deg, rgba(74,222,128,0.05) 0px, rgba(74,222,128,0.05) 2px, transparent 2px, transparent 18px)`,
       zIndex: 0 }} />
 
-    {/* Terminal wall art */}
-    <div className={`absolute ${isHot ? "terminal-hot" : ""}`} style={{ right: 10, top: 6, zIndex: 4 }}>
-      <Px {...TERMINAL_ART} scale={2} />
+    {/* ── WALL ART ── */}
+    {/* Left wall: sticky notes cluster */}
+    <div className="absolute" style={{ left: 4, top: 6, zIndex: 5 }}>
+      <Px {...STICKY_NOTES} scale={4} />
+    </div>
+    {/* Center wall: window */}
+    <div className="absolute" style={{ left: "42%", top: 4, zIndex: 4 }}>
+      <Px {...WINDOW} scale={4} />
+    </div>
+    {/* Right wall: terminal art */}
+    <div className={`absolute ${isHot ? "terminal-hot" : ""}`} style={{ right: 6, top: 5, zIndex: 4 }}>
+      <Px {...TERMINAL_ART} scale={4} />
     </div>
 
-    {/* Window */}
-    <div className="absolute" style={{ left: "16%", top: 4, zIndex: 4 }}>
-      <Px {...WINDOW} scale={2} />
-    </div>
+    {/* ── FLOOR — bottom row ── */}
+    {/* Green rug under center-right */}
+    <div className="absolute" style={{ left: 80, bottom: 48, right: 42, height: 40, background: "rgba(21,83,61,0.5)", border: "2px solid rgba(74,222,128,0.25)", zIndex: 3 }} />
 
-    {/* Bookshelf right wall */}
-    <div className="absolute" style={{ right: 8, bottom: 48, zIndex: 4 }}>
-      <Px {...BOOKSHELF} scale={2} />
+    {/* Desk left — typing waypoint */}
+    <div className="absolute" style={{ left: 6, bottom: 48, zIndex: 4 }}>
+      <Px {...DESK} scale={3} />
     </div>
-
-    {/* Desk */}
-    <div className="absolute" style={{ left: 8, bottom: 48, zIndex: 4 }}>
-      <Px {...DESK} scale={2} />
-    </div>
-
     {/* Laptop on desk */}
-    <div className={`absolute ${isHot ? "laptop-hot" : ""}`} style={{ left: 20, bottom: 48 + 16, zIndex: 5 }}>
-      <Px {...LAPTOP} scale={2} />
+    <div className={`absolute ${isHot ? "laptop-hot" : ""}`} style={{ left: 18, bottom: 48 + 24, zIndex: 6 }}>
+      <Px {...LAPTOP} scale={3} />
     </div>
-
-    {/* Coffee mug */}
-    <div className="absolute" style={{ left: 78, bottom: 48 + 16, zIndex: 5 }}>
+    {/* Rubber duck on desk */}
+    <div className="absolute" style={{ left: 68, bottom: 48 + 24, zIndex: 6 }}>
+      <Px {...RUBBER_DUCK} scale={4} />
+    </div>
+    {/* Coffee mug on desk */}
+    <div className="absolute" style={{ left: 82, bottom: 48 + 20, zIndex: 6 }}>
       <Px {...COFFEE} scale={3} />
     </div>
+    {/* Desk glow */}
+    <div className={`absolute ${isHot ? "pulse-fast" : ""}`} style={{ left: 4, bottom: 44, width: 120, height: 36, background: "radial-gradient(ellipse, rgba(74,222,128,0.15) 0%, transparent 70%)", zIndex: 2, pointerEvents: "none" }} />
 
-    {/* Plants */}
-    <div className="absolute" style={{ left: 8, bottom: 48, zIndex: 4 }}>
+    {/* Book pile center floor — thinking waypoint area */}
+    <div className="absolute" style={{ left: "38%", bottom: 48, zIndex: 5 }}>
+      <Px {...BOOK_PILE} scale={3} />
+    </div>
+
+    {/* Bookshelf right wall — searching waypoint */}
+    <div className="absolute" style={{ right: 6, bottom: 48, zIndex: 5 }}>
+      <Px {...BOOKSHELF} scale={4} />
+    </div>
+
+    {/* Plant left of books */}
+    <div className="absolute" style={{ left: "30%", bottom: 48, zIndex: 5 }}>
       <PlantSprite accent="#16a34a" />
     </div>
-    <div className="absolute" style={{ left: 36, bottom: 48, zIndex: 4 }}>
+    {/* Plant right of books */}
+    <div className="absolute" style={{ left: "56%", bottom: 48, zIndex: 5 }}>
       <PlantSprite accent="#15803d" />
     </div>
 
     {/* Green candle */}
-    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ right: 50, bottom: 48, zIndex: 4 }}>
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ right: 82, bottom: 48, zIndex: 6 }}>
       <CandleSprite color="#4ade80" />
     </div>
-
-    {/* Green rug */}
-    <div className="absolute" style={{ left: 60, bottom: 48, right: 44, height: 32, background: "rgba(21,83,61,0.45)", border: "2px solid rgba(74,222,128,0.2)", zIndex: 3 }} />
   </>;
 }
 
@@ -733,48 +968,64 @@ function MetaRoom({ isHot }: { isHot: boolean }) {
       backgroundImage: `radial-gradient(ellipse at 50% 0%, rgba(244,114,182,0.15) 0%, transparent 60%), repeating-linear-gradient(45deg, rgba(244,114,182,0.04) 0px, rgba(244,114,182,0.04) 2px, transparent 2px, transparent 14px)`,
       zIndex: 0 }} />
 
-    {/* Photo wall (left) */}
-    <div className="absolute" style={{ left: 10, top: 4, zIndex: 4 }}>
-      <Px {...PHOTOS} scale={2} />
+    {/* ── WALL ART ── */}
+    {/* Left wall: photo strip */}
+    <div className="absolute" style={{ left: 8, top: 4, zIndex: 4 }}>
+      <Px {...PHOTOS} scale={4} />
+    </div>
+    {/* Center wall: colour-blocked backdrop — tall panel spanning wall into floor */}
+    <div className="absolute" style={{ left: "35%", top: 0, zIndex: 3 }}>
+      <Px {...BACKDROP} scale={6} />
+    </div>
+    {/* Right wall: analytics chart */}
+    <div className="absolute" style={{ right: 6, top: 5, zIndex: 4 }}>
+      <Px {...CHART_ART} scale={4} />
     </div>
 
-    {/* Analytics chart on wall */}
-    <div className="absolute" style={{ right: 8, top: 6, zIndex: 4 }}>
-      <Px {...CHART_ART} scale={2} />
+    {/* ── FLOOR ── */}
+    {/* Pink rug */}
+    <div className="absolute" style={{ left: 8, bottom: 48, right: 8, height: 40, background: "rgba(131,24,67,0.45)", border: "2px solid rgba(244,114,182,0.35)", zIndex: 3 }} />
+
+    {/* Camera — far left */}
+    <div className="absolute" style={{ left: 10, bottom: 48, zIndex: 5 }}>
+      <Px {...CAMERA} scale={3} />
     </div>
 
-    {/* Camera on tripod */}
-    <div className="absolute" style={{ left: 14, bottom: 52, zIndex: 4 }}>
-      <Px {...CAMERA} scale={2} />
+    {/* Ring light — center stage */}
+    <div className={`absolute ${isHot ? "ring-hot" : "pulse"}`} style={{ left: "38%", bottom: 48, zIndex: 5 }}>
+      <Px {...RING_LIGHT} scale={3} />
+    </div>
+    {/* Spotlight cone in front of ring light */}
+    <div className="absolute" style={{
+      left: "34%", bottom: 48, width: 160, height: 220,
+      background: "radial-gradient(ellipse at 50% 0%, rgba(253,244,255,0.18) 0%, transparent 65%)",
+      zIndex: 2, pointerEvents: "none",
+    }} />
+
+    {/* Stool in front of ring light */}
+    <div className="absolute" style={{ left: "43%", bottom: 48, zIndex: 6 }}>
+      <Px {...STOOL} scale={3} />
     </div>
 
-    {/* Ring light */}
-    <div className={`absolute ${isHot ? "ring-hot" : "pulse"}`} style={{ left: 44, bottom: 52, zIndex: 4 }}>
-      <Px {...RING_LIGHT} scale={2} />
+    {/* Bookshelf right wall */}
+    <div className="absolute" style={{ right: 6, bottom: 48, zIndex: 5 }}>
+      <Px {...BOOKSHELF} scale={4} />
     </div>
 
-    {/* Desk */}
-    <div className="absolute" style={{ right: 8, bottom: 48, zIndex: 4 }}>
-      <Px {...DESK} scale={2} />
+    {/* Desk in front of bookshelf */}
+    <div className="absolute" style={{ right: 80, bottom: 48, zIndex: 4 }}>
+      <Px {...DESK} scale={3} />
     </div>
 
     {/* Plant */}
-    <div className="absolute" style={{ right: 12, bottom: 48, zIndex: 5 }}>
+    <div className="absolute" style={{ right: 86, bottom: 48, zIndex: 6 }}>
       <PlantSprite accent="#be185d" />
     </div>
 
     {/* Candle */}
-    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ right: 60, bottom: 48, zIndex: 4, animationDelay: "0.4s" }}>
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: 50, bottom: 48, zIndex: 6, animationDelay: "0.4s" }}>
       <CandleSprite color="#f472b6" />
     </div>
-
-    {/* Pink bookshelf */}
-    <div className="absolute" style={{ right: 8, bottom: 48, zIndex: 4 }}>
-      <Px {...BOOKSHELF} scale={2} />
-    </div>
-
-    {/* Pink rug */}
-    <div className="absolute" style={{ left: 10, bottom: 48, right: 50, height: 36, background: "rgba(131,24,67,0.4)", border: "2px solid rgba(244,114,182,0.3)", zIndex: 3 }} />
   </>;
 }
 
@@ -790,6 +1041,7 @@ interface RoomConfig {
   name: string;
   roomKey?: string;
   stats: { label: string; value: string }[];
+  interactions?: Partial<Record<ActivityState, { x: number; y: number }>>;
 }
 
 function getRoomActivityState(
@@ -819,7 +1071,7 @@ interface RoomProps {
 }
 
 function Room({ config, activityState, isHot, decoration }: RoomProps) {
-  const { shellProps, title, subtitle, accent, sprite, glowColor, name, stats } = config;
+  const { shellProps, title, subtitle, accent, sprite, glowColor, name, stats, interactions } = config;
   return (
     <RoomShell {...shellProps}>
       {decoration}
@@ -840,7 +1092,14 @@ function Room({ config, activityState, isHot, decoration }: RoomProps) {
           </div>
         ))}
       </div>
-      <AgentSprite sprite={sprite} name={name} glowColor={glowColor} activityState={activityState} />
+      <AgentSprite
+        sprite={sprite}
+        name={name}
+        glowColor={glowColor}
+        activityState={activityState}
+        accentColor={accent}
+        interactions={interactions}
+      />
     </RoomShell>
   );
 }
@@ -871,6 +1130,11 @@ export default function FloorPlan() {
         { label: "MRR", value: stats ? `£${stats.lunary.mrr.toFixed(2)}` : "..." },
         { label: "ONLINE", value: fmt(stats?.lunary.activeToday) },
       ],
+      interactions: {
+        typing:    { x: 68, y: 82 }, // desk right
+        searching: { x: 6,  y: 82 }, // bookshelf left
+        thinking:  { x: 30, y: 78 }, // cauldron center
+      },
     },
     {
       shellProps: {
@@ -886,6 +1150,11 @@ export default function FloorPlan() {
         { label: "QUEUED", value: fmt(stats?.spellcast.scheduled) },
         { label: "ACCTS", value: fmt(stats?.spellcast.accounts) },
       ],
+      interactions: {
+        typing:   { x: 58, y: 82 }, // monitors right
+        running:  { x: 8,  y: 82 }, // server rack left
+        thinking: { x: 18, y: 52 }, // whiteboard left wall
+      },
     },
     {
       shellProps: {
@@ -901,6 +1170,11 @@ export default function FloorPlan() {
         { label: "REPOS", value: fmt(stats?.github.repos) },
         { label: "FOLLOWERS", value: fmt(stats?.github.followers) },
       ],
+      interactions: {
+        typing:    { x: 15, y: 82 }, // laptop/desk left
+        searching: { x: 82, y: 82 }, // bookshelf right
+        thinking:  { x: 45, y: 60 }, // centre floor
+      },
     },
     {
       shellProps: {
