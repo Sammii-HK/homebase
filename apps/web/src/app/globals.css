@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #000;
+  font-family: 'Press Start 2P', monospace;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+
+:root {
+  --border: 2px solid rgba(255,255,255,0.12);
+  --pixel-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+}
+
+/* Pixel art border style */
+.pixel-border {
+  border: 2px solid rgba(255,255,255,0.15);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+/* Blinking cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.blink { animation: blink 1s step-end infinite; }
+
+/* Agent bounce */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.agent-bounce { animation: bounce 0.6s ease-in-out infinite; }
+
+/* Agent wander transition */
+.agent { transition: left 2.5s ease-in-out, top 2.5s ease-in-out; }
+
+/* Scanlines overlay */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.08) 3px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Stat chip */
+.stat-chip {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 4px 6px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.2);
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+/* Room title */
+.room-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 8px currentColor;
+}
+
+/* Pulse glow */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.pulse { animation: pulse-glow 2s ease-in-out infinite; }
