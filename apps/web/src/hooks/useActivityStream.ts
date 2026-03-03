@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type ToolState = "typing" | "running" | "searching" | "thinking" | "active" | "";
 
@@ -22,9 +22,11 @@ export function useActivityStream(): ActivityData {
     toolState: "",
     isIdle: true,
   });
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    const load = () =>
+    const load = () => {
+      if (document.hidden) return;
       fetch("/api/activity")
         .then((r) => r.json())
         .then((json) => {
@@ -37,10 +39,29 @@ export function useActivityStream(): ActivityData {
           });
         })
         .catch(console.error);
+    };
 
-    load();
-    const id = setInterval(load, POLL_MS);
-    return () => clearInterval(id);
+    const start = () => {
+      load();
+      timerRef.current = setInterval(load, POLL_MS);
+    };
+
+    const stop = () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
+
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    start();
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   return data;

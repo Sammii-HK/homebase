@@ -25,9 +25,11 @@ export function useLiveStats() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const prevRef = useRef<Stats | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    const load = () =>
+    const load = () => {
+      if (document.hidden) return;
       fetch("/api/stats")
         .then((r) => r.json())
         .then((next: Stats) => {
@@ -35,35 +37,44 @@ export function useLiveStats() {
           if (prev) {
             const newEvents: LiveEvent[] = [];
             const now = Date.now();
-            if (next.lunary.mau > prev.lunary.mau) {
+            if (next.lunary.mau > prev.lunary.mau)
               newEvents.push({ id: ++eventCounter, type: "new-user", ts: now });
-            }
-            if (next.lunary.mrr > prev.lunary.mrr) {
+            if (next.lunary.mrr > prev.lunary.mrr)
               newEvents.push({ id: ++eventCounter, type: "new-sub", ts: now });
-            }
-            if (next.lunary.activeToday > 0 && prev.lunary.activeToday === 0) {
-              newEvents.push({
-                id: ++eventCounter,
-                type: "online",
-                ts: now,
-                label: String(next.lunary.activeToday),
-              });
-            }
-            if (next.lunary.activeToday === 0 && prev.lunary.activeToday > 0) {
+            if (next.lunary.activeToday > 0 && prev.lunary.activeToday === 0)
+              newEvents.push({ id: ++eventCounter, type: "online", ts: now, label: String(next.lunary.activeToday) });
+            if (next.lunary.activeToday === 0 && prev.lunary.activeToday > 0)
               newEvents.push({ id: ++eventCounter, type: "offline", ts: now });
-            }
-            if (newEvents.length > 0) {
-              setEvents((prev) => [...prev, ...newEvents].slice(-5));
-            }
+            if (newEvents.length > 0)
+              setEvents((e) => [...e, ...newEvents].slice(-5));
           }
           prevRef.current = next;
           setStats(next);
         })
         .catch(console.error);
+    };
 
-    load();
-    const id = setInterval(load, POLL_MS);
-    return () => clearInterval(id);
+    const start = () => {
+      load();
+      timerRef.current = setInterval(load, POLL_MS);
+    };
+
+    const stop = () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
+
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    start();
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   // Auto-expire events older than EVENT_TTL
