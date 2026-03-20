@@ -12,6 +12,8 @@ import FloorPlan from "./FloorPlan";
 import CommandPalette from "./CommandPalette";
 import AlertFeed from "./AlertFeed";
 import RoomDetail from "./RoomDetail";
+import ApprovalQueue from "./ApprovalQueue";
+import BriefingCard from "./BriefingCard";
 
 const POLL_MS = 60_000;
 
@@ -26,6 +28,7 @@ export default function Dashboard() {
   const [loginError, setLoginError] = useState("");
   const [view, setView] = useState<ViewMode>("pixel");
   const [selectedRoom, setSelectedRoom] = useState<"lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement" | null>(null);
+  const [showApprovalQueue, setShowApprovalQueue] = useState(false);
 
   useEffect(() => {
     setToken(localStorage.getItem("homebase_token"));
@@ -146,6 +149,34 @@ export default function Dashboard() {
         {/* Room dock — quick access to all rooms */}
         {view === "pixel" && (
           <>
+            <button
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); setShowApprovalQueue(true); }}
+              style={{
+                fontFamily: "'Press Start 2P', monospace",
+                fontSize: 6,
+                color: "#a78bfa",
+                background: "rgba(0,0,0,0.8)",
+                border: `1px solid rgba(167,139,250,0.4)`,
+                padding: "4px 8px",
+                cursor: "pointer",
+                borderRadius: 3,
+                position: "relative",
+              }}
+            >
+              APPROVE
+              {stats?.content.pendingReview ? (
+                <span style={{
+                  position: "absolute", top: -4, right: -4,
+                  background: "#facc15", color: "#000",
+                  fontFamily: "'Press Start 2P', monospace", fontSize: 5,
+                  width: 14, height: 14, borderRadius: 7,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {stats.content.pendingReview}
+                </span>
+              ) : null}
+            </button>
             {([
               { id: "orbit" as const, label: "ORBIT", color: "#f59e0b" },
               { id: "engagement" as const, label: "ENGAGE", color: "#10b981" },
@@ -194,6 +225,48 @@ export default function Dashboard() {
         onRefresh={handleRefresh}
       />
 
+      {/* Morning Briefing — shows once per day if there's something to act on */}
+      <BriefingCard token={token} onOpenApprovalQueue={() => setShowApprovalQueue(true)} />
+
+      {/* Approval Queue — full screen overlay */}
+      {showApprovalQueue && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100,
+            background: "rgba(0,0,0,0.85)",
+            backdropFilter: "blur(8px)",
+            overflowY: "auto",
+            padding: "48px 12px 24px",
+          }}
+        >
+          <div style={{ maxWidth: 480, margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 12, color: "#a78bfa", letterSpacing: 1 }}>
+                APPROVAL QUEUE
+              </div>
+              <button
+                onClick={() => setShowApprovalQueue(false)}
+                style={{
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: 8,
+                  color: "rgba(255,255,255,0.5)",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  padding: "6px 12px",
+                  borderRadius: 3,
+                  cursor: "pointer",
+                }}
+              >
+                CLOSE
+              </button>
+            </div>
+            <ApprovalQueue token={token} />
+          </div>
+        </div>
+      )}
+
       {/* Alert Feed — pixel view only */}
       {view === "pixel" && (
         <AlertFeed stats={stats} heartbeat={heartbeat} token={token} onOpenRoom={handleOpenRoom} onRefresh={handleRefresh} />
@@ -219,6 +292,7 @@ export default function Dashboard() {
         <div className="px-3 pt-14 pb-8 space-y-3 max-w-lg mx-auto">
           <KeyNumbers stats={stats} />
           <ServiceHealth stats={stats} heartbeat={heartbeat} />
+          <ApprovalQueue token={token} compact />
           <ContentPipeline stats={stats} />
           <Opportunities stats={stats} />
           <SEOSnapshot stats={stats} />
