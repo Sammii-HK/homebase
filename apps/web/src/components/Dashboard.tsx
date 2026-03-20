@@ -17,6 +17,7 @@ import EngagementQueue from "./EngagementQueue";
 import BriefingCard from "./BriefingCard";
 import NotificationSetup from "./NotificationSetup";
 import DeployStatus from "./DeployStatus";
+import KeyboardShortcuts from "./KeyboardShortcuts";
 
 const POLL_MS = 60_000;
 
@@ -378,6 +379,8 @@ export default function Dashboard() {
           onClose={() => setSelectedRoom(null)}
         />
       )}
+
+      <KeyboardShortcuts />
 
       {view === "pixel" ? (
         /* Pixel art view — full screen grid */

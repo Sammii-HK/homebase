@@ -56,6 +56,11 @@ export interface IsleStats {
   spellcast: { postsToday: number; scheduled: number; accounts: number };
   infra: { systemsUp: number; totalSystems: number };
   meta: { followers: number; reachThisWeek: number };
+  engagement: { unread: number; total: number };
+  orbit: { online: boolean; runningAgents: number; errorAgents: number; pipelineRunning: boolean };
+  content: { pendingReview: number; failedPosts: number; scheduledToday: number; scheduledTomorrow: number };
+  seo: { clicks: number; impressions: number; ctr: number };
+  github: { commitsToday: number };
   badges: Record<string, BadgeInfo>;
   hotRooms: string[];
 }

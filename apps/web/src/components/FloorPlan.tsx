@@ -125,6 +125,30 @@ export default function FloorPlan({ stats, heartbeat, token, selectedRoom: exter
         followers: stats?.meta.followers ?? 0,
         reachThisWeek: stats?.meta.reachThisWeek ?? 0,
       },
+      engagement: {
+        unread: stats?.engagement.unread ?? 0,
+        total: stats?.engagement.total ?? 0,
+      },
+      orbit: {
+        online: stats?.orbit?.online ?? false,
+        runningAgents: stats?.orbit?.runningAgents ?? 0,
+        errorAgents: stats?.orbit?.errorAgents ?? 0,
+        pipelineRunning: stats?.orbit?.pipelineRunning ?? false,
+      },
+      content: {
+        pendingReview: stats?.content.pendingReview ?? 0,
+        failedPosts: stats?.content.failedPosts ?? 0,
+        scheduledToday: stats?.content.scheduledToday ?? 0,
+        scheduledTomorrow: stats?.content.scheduledTomorrow ?? 0,
+      },
+      seo: {
+        clicks: stats?.seo.clicks ?? 0,
+        impressions: stats?.seo.impressions ?? 0,
+        ctr: stats?.seo.ctr ?? 0,
+      },
+      github: {
+        commitsToday: stats?.github.commitsToday ?? 0,
+      },
       badges: {
         lunary: getRoomBadge("lunary", stats, heartbeat),
         spellcast: getRoomBadge("spellcast", stats, heartbeat),

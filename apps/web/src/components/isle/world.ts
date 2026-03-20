@@ -181,7 +181,9 @@ function gardenOk(tx: number, ty: number): boolean {
     tx <= 31 &&
     ty >= 0 &&
     ty < RIVER_START_ROW && // keep out of river
-    !(tx >= POND_TX && tx < POND_TX + POND_TW && ty >= POND_TY && ty < POND_TY + POND_TH)
+    !(tx >= POND_TX && tx < POND_TX + POND_TW && ty >= POND_TY && ty < POND_TY + POND_TH) &&
+    !(tx >= 25 && tx < 28 && ty === 1) && // scoreboard
+    !(tx === 14 && ty === 3) // mailbox
   );
 }
 
@@ -245,6 +247,12 @@ while (BUSHES.length < 6) {
 
 // Signpost near the office door
 export const SIGNPOST = { tx: 13, ty: 5 };
+
+// Garden scoreboard — shows live metrics as pixel bars
+export const SCOREBOARD = { tx: 25, ty: 1, tw: 3 };
+
+// Mailbox — reacts to engagement queue
+export const MAILBOX = { tx: 14, ty: 3 };
 
 // ---------------------------------------------------------------------------
 // Activity spots
@@ -394,6 +402,19 @@ for (const b of BUSHES) {
 // Signpost
 if (SIGNPOST.ty >= 0 && SIGNPOST.ty < WORLD_ROWS && SIGNPOST.tx >= 0 && SIGNPOST.tx < WORLD_COLS) {
   WALKABLE[SIGNPOST.ty][SIGNPOST.tx] = false;
+}
+
+// Scoreboard (3 tiles wide)
+for (let dx = 0; dx < SCOREBOARD.tw; dx++) {
+  const sc = SCOREBOARD.tx + dx;
+  if (SCOREBOARD.ty >= 0 && SCOREBOARD.ty < WORLD_ROWS && sc >= 0 && sc < WORLD_COLS) {
+    WALKABLE[SCOREBOARD.ty][sc] = false;
+  }
+}
+
+// Mailbox
+if (MAILBOX.ty >= 0 && MAILBOX.ty < WORLD_ROWS && MAILBOX.tx >= 0 && MAILBOX.tx < WORLD_COLS) {
+  WALKABLE[MAILBOX.ty][MAILBOX.tx] = false;
 }
 
 // Lantern tiles

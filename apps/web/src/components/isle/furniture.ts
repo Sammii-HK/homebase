@@ -23,6 +23,7 @@ import {
 const _spriteCache: Record<string, HTMLImageElement> = {};
 function loadSprite(path: string): HTMLImageElement {
   if (_spriteCache[path]) return _spriteCache[path];
+  if (typeof window === "undefined") return {} as HTMLImageElement;
   const img = new Image();
   img.src = path;
   _spriteCache[path] = img;
@@ -1708,5 +1709,142 @@ export function drawRiver(
     const px = rng() * worldW;
     const py = riverY + riverH - 3 + rng() * 2;
     wr(px, py, 1.5 + rng(), 1, "#4a4038");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Garden scoreboard — live metrics as pixel bars on a wooden board
+// ---------------------------------------------------------------------------
+
+export function drawScoreboard(
+  helpers: DrawHelpers,
+  s: { tx: number; ty: number; tw: number },
+  stats: IsleStats | null,
+  animTick: number,
+): void {
+  const { wr, we } = helpers;
+  const x = s.tx * TS;
+  const y = s.ty * TS;
+  const bw = s.tw * TS; // 48px wide
+  const bh = TS;        // 16px tall
+
+  // Wooden posts (left and right)
+  wr(x + 1, y + bh - 2, 2, 6, "#8a6a40");
+  wr(x + bw - 3, y + bh - 2, 2, 6, "#8a6a40");
+  // Post shadow
+  wr(x + 1.5, y + bh + 3, 1.5, 1, "rgba(0,0,0,0.15)");
+  wr(x + bw - 2.5, y + bh + 3, 1.5, 1, "rgba(0,0,0,0.15)");
+
+  // Board background
+  wr(x, y, bw, bh, "#5a4a30");
+  wr(x + 0.5, y + 0.5, bw - 1, bh - 1, "#6a5a40");
+  // Top edge highlight
+  wr(x + 0.5, y + 0.5, bw - 1, 0.8, "#7a6a50");
+  // Bottom edge shadow
+  wr(x + 0.5, y + bh - 1.5, bw - 1, 1, "#4a3a20");
+
+  if (!stats) return;
+
+  // 6 metric bars, each 2px tall, spaced across the board
+  // DAU | MRR | Posts | Queue | Engagement | Orbit
+  const metrics = [
+    { value: stats.lunary.activeToday, max: 50, color: "#c090ff", alert: false },                           // DAU — purple
+    { value: stats.lunary.mrr * 10, max: 100, color: "#4ade80", alert: false },                             // MRR — green (scaled)
+    { value: stats.spellcast.postsToday, max: 8, color: "#38bdf8", alert: false },                          // Posts — cyan
+    { value: stats.content.scheduledToday, max: 12, color: "#f0a040", alert: stats.content.scheduledTomorrow === 0 }, // Queue — amber
+    { value: stats.engagement.unread, max: 20, color: "#10b981", alert: stats.engagement.unread > 5 },      // Engagement — emerald
+    { value: stats.orbit.runningAgents, max: 6, color: "#f59e0b", alert: stats.orbit.errorAgents > 0 },     // Orbit — yellow
+  ];
+
+  const barMaxW = bw - 6;
+  const barH = 1.5;
+  const startY = y + 1.5;
+  const gap = 2.2;
+
+  for (let i = 0; i < metrics.length; i++) {
+    const m = metrics[i];
+    const by = startY + i * gap;
+    const norm = Math.min(1, m.value / m.max);
+    const barW = Math.max(0.5, norm * barMaxW);
+
+    // Bar background (dark groove)
+    wr(x + 3, by, barMaxW, barH, "rgba(0,0,0,0.25)");
+
+    // Filled bar
+    const col = m.alert && animTick % 3 === 0 ? "#f87171" : m.color;
+    wr(x + 3, by, barW, barH, col);
+
+    // Bright leading edge
+    if (barW > 1) {
+      wr(x + 3 + barW - 0.8, by, 0.8, barH, m.alert ? "#fca5a5" : "#ffffff");
+    }
+
+    // Pip dot on the left (metric identifier)
+    wr(x + 1.2, by + 0.2, 1, 1, m.color);
+  }
+
+  // Subtle pulse glow when something needs attention
+  const hasAlert = metrics.some(m => m.alert);
+  if (hasAlert) {
+    const pulse = 0.08 + 0.04 * Math.sin(animTick * 0.5);
+    we(x + bw / 2, y + bh / 2, bw / 2 + 4, bh / 2 + 4, "#f87171", pulse);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mailbox — reacts to engagement queue / pending reviews
+// ---------------------------------------------------------------------------
+
+export function drawMailbox(
+  helpers: DrawHelpers,
+  m: { tx: number; ty: number },
+  stats: IsleStats | null,
+  animTick: number,
+): void {
+  const { wr, we } = helpers;
+  const x = m.tx * TS + TS / 2;
+  const y = m.ty * TS;
+
+  // Post
+  wr(x - 1, y + 6, 2, 10, "#8a7a60");
+  // Shadow
+  wr(x - 0.5, y + 15.5, 3, 1, "rgba(0,0,0,0.12)");
+
+  // Box body
+  wr(x - 5, y + 2, 10, 5, "#5070a0");
+  // Box top (lid)
+  wr(x - 5.5, y + 1, 11, 2, "#6080b0");
+  // Front slot
+  wr(x - 3, y + 4, 6, 0.8, "#304060");
+
+  const hasEngagement = (stats?.engagement.unread ?? 0) > 0;
+  const hasPending = (stats?.content.pendingReview ?? 0) > 0;
+  const hasAnything = hasEngagement || hasPending;
+
+  // Flag on the side — up when there's mail
+  if (hasAnything) {
+    // Flag pole
+    wr(x + 5, y + 1, 1.5, 5, "#8a7a60");
+    // Flag (raised = things to action)
+    const flagColor = hasEngagement ? "#10b981" : "#f0a040";
+    wr(x + 6.5, y + 1, 4, 2.5, flagColor);
+    wr(x + 6.5, y + 1, 4, 0.8, "#ffffff");
+    // Pulse glow
+    const pulse = 0.1 + 0.06 * Math.sin(animTick * 0.4);
+    we(x + 7, y + 2, 3, 2, flagColor, pulse);
+  } else {
+    // Flag down
+    wr(x + 5, y + 3, 1.5, 3, "#8a7a60");
+    wr(x + 6.5, y + 4, 3, 2, "#888888");
+  }
+
+  // Letters peeking out of the slot when there's lots of unread
+  const unread = stats?.engagement.unread ?? 0;
+  if (unread > 3) {
+    const letters = Math.min(3, Math.floor(unread / 3));
+    for (let i = 0; i < letters; i++) {
+      wr(x - 2 + i * 2, y + 3 - i * 0.5, 1.8, 2.5, "#f0e8d0");
+      wr(x - 2 + i * 2, y + 3 - i * 0.5, 1.8, 0.4, "#d0c8b0");
+    }
   }
 }

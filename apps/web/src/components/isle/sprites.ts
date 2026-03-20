@@ -38,6 +38,7 @@ const sheetCache: Record<string, HTMLImageElement> = {};
 
 function loadSheet(src: string): HTMLImageElement {
   if (sheetCache[src]) return sheetCache[src];
+  if (typeof window === "undefined") return {} as HTMLImageElement;
   const img = new Image();
   img.src = src;
   sheetCache[src] = img;

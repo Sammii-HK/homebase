@@ -5,7 +5,7 @@ import {
   TS, OFFICE_COLS, WORLD_COLS, WORLD_ROWS, WORLD_W, WORLD_H,
   DOOR_ROW_START, DOOR_ROW_END, RIVER_START_ROW,
   DESK_ZONES, FURNITURE, FLOWERS, TREES, BENCHES,
-  ROCKS, BUSHES, SIGNPOST,
+  ROCKS, BUSHES, SIGNPOST, SCOREBOARD, MAILBOX,
   getSeason, getTOD,
 } from "./world";
 import { drawSky, loadMoonImages, getMoonPhaseName, getWorldOverlay } from "./sky";
@@ -17,7 +17,7 @@ import {
   drawBookshelf, drawLamp, drawPlantFurn, drawBench,
   drawWindow, drawPond, drawTree, drawFlower,
   drawPath, drawLantern, LANTERN_SPOTS, drawWindowLight, drawGrassDetail,
-  drawRock, drawBush, drawSignpost, drawRiver,
+  drawRock, drawBush, drawSignpost, drawRiver, drawScoreboard, drawMailbox,
 } from "./furniture";
 import { Char, drawChar } from "./sprites";
 import { ParticleSystem } from "./particles";
@@ -512,6 +512,12 @@ export class IsleRenderer {
 
     // Signpost
     ds.push({ y: SIGNPOST.ty * TS + TS, draw: () => drawSignpost(helpers, SIGNPOST) });
+
+    // Garden scoreboard
+    ds.push({ y: SCOREBOARD.ty * TS + TS, draw: () => drawScoreboard(helpers, SCOREBOARD, this.stats, this.animTick) });
+
+    // Mailbox
+    ds.push({ y: MAILBOX.ty * TS + TS, draw: () => drawMailbox(helpers, MAILBOX, this.stats, this.animTick) });
 
     // Flowers
     for (const f of FLOWERS) ds.push({ y: f.ty * TS + TS, draw: () => drawFlower(helpers, f, season) });
