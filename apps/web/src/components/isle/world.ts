@@ -78,11 +78,12 @@ export const POND_TH = 4;
 export function inPond(wx: number, wy: number): boolean {
   const tx = Math.floor(wx / TS);
   const ty = Math.floor(wy / TS);
+  // Include 1-tile border so characters don't walk right up to the edge
   return (
-    tx >= POND_TX &&
-    tx < POND_TX + POND_TW &&
-    ty >= POND_TY &&
-    ty < POND_TY + POND_TH
+    tx >= POND_TX - 1 &&
+    tx < POND_TX + POND_TW + 1 &&
+    ty >= POND_TY - 1 &&
+    ty < POND_TY + POND_TH + 1
   );
 }
 
@@ -227,13 +228,7 @@ export const BREAK_SPOTS: [number, number][] = [
   [1.5 * TS, 11 * TS],
 ];
 
-const orRng = seededRng("outdoor-spots");
-export const OUTDOOR_SPOTS: [number, number][] = [
-  ...BENCHES.map(b => [b.tx * TS, b.ty * TS] as [number, number]),
-  ...Array.from({ length: 7 }, () =>
-    [(13 + Math.floor(orRng() * 19)) * TS, (1 + Math.floor(orRng() * (WORLD_ROWS - 2))) * TS] as [number, number]
-  ),
-];
+// OUTDOOR_SPOTS defined after walkability grid (see below)
 
 // ---------------------------------------------------------------------------
 // Activities
@@ -317,12 +312,69 @@ for (const f of FURNITURE) {
   }
 }
 
-// Pond tiles
-for (let r = POND_TY; r < POND_TY + POND_TH; r++) {
-  for (let c = POND_TX; c < POND_TX + POND_TW; c++) {
-    WALKABLE[r][c] = false;
+// Chair tiles + desk-chair gap (don't walk through seated characters)
+// Top row: desk at row 1, gap at row 2, chair at row 3
+for (let dx = 0; dx < 3; dx++) {
+  WALKABLE[2][1 + dx] = false; // LUNA gap
+  WALKABLE[3][1 + dx] = false; // LUNA chair
+  WALKABLE[2][7 + dx] = false; // CASTER gap
+  WALKABLE[3][7 + dx] = false; // CASTER chair
+}
+// Bottom row: desk at row 9, gap at row 8, chair at row 7
+for (let dx = 0; dx < 3; dx++) {
+  WALKABLE[8][1 + dx] = false; // DEV gap
+  WALKABLE[7][1 + dx] = false; // DEV chair
+  WALKABLE[8][7 + dx] = false; // META gap
+  WALKABLE[7][7 + dx] = false; // META chair
+}
+
+// Pond tiles + 1-tile border
+for (let r = POND_TY - 1; r < POND_TY + POND_TH + 1; r++) {
+  for (let c = POND_TX - 1; c < POND_TX + POND_TW + 1; c++) {
+    if (r >= 0 && r < WORLD_ROWS && c >= 0 && c < WORLD_COLS) {
+      WALKABLE[r][c] = false;
+    }
   }
 }
+
+// Tree trunk tiles (block the tile the tree is on)
+for (const t of TREES) {
+  const ttx = Math.floor(t.wx / TS);
+  const tty = Math.floor(t.wy / TS);
+  if (tty >= 0 && tty < WORLD_ROWS && ttx >= 0 && ttx < WORLD_COLS) {
+    WALKABLE[tty][ttx] = false;
+  }
+}
+
+// Bench tiles (3 wide)
+for (const b of BENCHES) {
+  for (let dx = 0; dx < 3; dx++) {
+    const bc = b.tx + dx;
+    if (b.ty >= 0 && b.ty < WORLD_ROWS && bc >= 0 && bc < WORLD_COLS) {
+      WALKABLE[b.ty][bc] = false;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Outdoor spots (must be after walkability grid)
+// ---------------------------------------------------------------------------
+
+const orRng = seededRng("outdoor-spots");
+const _rawOutdoor: [number, number][] = [];
+let _orSafety = 0;
+while (_rawOutdoor.length < 7 && _orSafety < 100) {
+  _orSafety++;
+  const tx = 13 + Math.floor(orRng() * 19);
+  const ty = 1 + Math.floor(orRng() * (WORLD_ROWS - 2));
+  if (gardenOk(tx, ty) && WALKABLE[ty]?.[tx]) {
+    _rawOutdoor.push([tx * TS, ty * TS]);
+  }
+}
+export const OUTDOOR_SPOTS: [number, number][] = [
+  ...BENCHES.map(b => [(b.tx + 1) * TS, (b.ty + 1) * TS] as [number, number]),
+  ..._rawOutdoor,
+];
 
 // ---------------------------------------------------------------------------
 // BFS Pathfinding

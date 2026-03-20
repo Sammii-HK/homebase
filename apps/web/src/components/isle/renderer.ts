@@ -466,17 +466,32 @@ export class IsleRenderer {
       });
     }
 
-    // Desks + chairs
+    // Desks + chairs — always draw BEHIND the seated character
+    // Both desk and chair sort slightly below the character's y so char draws on top
     for (const zone of DESK_ZONES) {
       const isActive = this.stats?.hotRooms.includes(zone.id) ?? false;
       const badge = this.stats?.badges[zone.id] ?? { alert: false };
-      ds.push({
-        y: zone.deskY + TS + 1,
-        draw: () => {
-          drawDesk(helpers, zone, this.animTick, isActive, badge.alert, this.stats);
-          drawChair(helpers, zone);
-        },
-      });
+      if (zone.facing === "up") {
+        // Top-row: desk is above (lower y), chair between desk and character
+        ds.push({
+          y: zone.deskY + TS, // desk behind character ✓
+          draw: () => drawDesk(helpers, zone, this.animTick, isActive, badge.alert, this.stats),
+        });
+        ds.push({
+          y: zone.seatY - 2, // chair just behind character
+          draw: () => drawChair(helpers, zone),
+        });
+      } else {
+        // Bottom-row: desk is below (higher y) — force it behind character
+        ds.push({
+          y: zone.seatY - 1, // desk sorts just before character
+          draw: () => drawDesk(helpers, zone, this.animTick, isActive, badge.alert, this.stats),
+        });
+        ds.push({
+          y: zone.seatY - 5, // chair behind desk and character
+          draw: () => drawChair(helpers, zone),
+        });
+      }
     }
 
     // Benches
