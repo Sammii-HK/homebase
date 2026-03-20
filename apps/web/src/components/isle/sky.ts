@@ -71,15 +71,15 @@ interface Cloud { x: number; y: number; w: number; h: number; speed: number; opa
 
 const CLOUDS: Cloud[] = [];
 {
-  const rng = seededRng("clouds-v2");
-  for (let i = 0; i < 5; i++) {
+  const rng = seededRng("clouds-v3");
+  for (let i = 0; i < 8; i++) {
     CLOUDS.push({
       x: rng() * WORLD_W * 1.5 - WORLD_W * 0.25,
-      y: rng() * 30 + 5,
-      w: 20 + rng() * 35,
-      h: 6 + rng() * 8,
-      speed: 1.5 + rng() * 3,
-      opacity: 0.15 + rng() * 0.2,
+      y: rng() * 25 + 3,
+      w: 25 + rng() * 45,
+      h: 8 + rng() * 10,
+      speed: 1 + rng() * 2.5,
+      opacity: 0.4 + rng() * 0.35,
     });
   }
 }
@@ -169,27 +169,42 @@ export function drawSky(
     }
   }
 
-  // Clouds — daytime and dusk
-  if (avgBright > 30) {
-    const cloudAlpha = Math.min(0.5, avgBright / 200);
+  // Clouds — visible most of the time
+  if (avgBright > 20) {
+    const cloudAlpha = Math.min(0.9, avgBright / 120);
     for (const c of CLOUDS) {
-      const cx = ((c.x + time * c.speed) % (WORLD_W * 1.3)) - WORLD_W * 0.15;
+      const cx = ((c.x + time * c.speed) % (WORLD_W * 1.5)) - WORLD_W * 0.25;
       const screenX = panX + cx * zoom;
       const screenY = panY + c.y * zoom;
       const cw = c.w * zoom;
       const ch = c.h * zoom;
 
       ctx.globalAlpha = c.opacity * cloudAlpha;
-      ctx.fillStyle = avgBright > 100 ? "#ffffff" : "#c0a8b8";
+      const cloudCol = avgBright > 100 ? "#ffffff"
+        : avgBright > 60 ? "#e8e0e8"
+        : "#a898b0";
 
+      // Fluffy multi-blob cloud shape (5 overlapping ellipses)
+      ctx.fillStyle = cloudCol;
+      // Main body
       ctx.beginPath();
-      ctx.ellipse(screenX, screenY, cw * 0.5, ch * 0.4, 0, 0, Math.PI * 2);
+      ctx.ellipse(screenX, screenY, cw * 0.45, ch * 0.35, 0, 0, Math.PI * 2);
       ctx.fill();
+      // Left puff
       ctx.beginPath();
-      ctx.ellipse(screenX - cw * 0.25, screenY + ch * 0.1, cw * 0.35, ch * 0.35, 0, 0, Math.PI * 2);
+      ctx.ellipse(screenX - cw * 0.3, screenY + ch * 0.05, cw * 0.3, ch * 0.3, 0, 0, Math.PI * 2);
       ctx.fill();
+      // Right puff
       ctx.beginPath();
-      ctx.ellipse(screenX + cw * 0.3, screenY + ch * 0.05, cw * 0.4, ch * 0.3, 0, 0, Math.PI * 2);
+      ctx.ellipse(screenX + cw * 0.32, screenY + ch * 0.02, cw * 0.35, ch * 0.28, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Top bump
+      ctx.beginPath();
+      ctx.ellipse(screenX + cw * 0.05, screenY - ch * 0.2, cw * 0.25, ch * 0.22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Top-right bump
+      ctx.beginPath();
+      ctx.ellipse(screenX + cw * 0.2, screenY - ch * 0.12, cw * 0.2, ch * 0.18, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;

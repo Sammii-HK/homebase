@@ -67,19 +67,31 @@ export class ParticleSystem {
           p.opacity = 0.3 + Math.sin(time * 3 + p.phase) * 0.4;
           break;
 
-        case "leaf":
-          p.x += p.vx + Math.sin(time * 0.8 + p.phase) * 15 * dt;
-          p.y += p.vy;
-          p.rotation += dt * 1.5;
-          p.opacity = Math.min(1, p.life / 2) * 0.7;
+        case "leaf": {
+          // Tumbling drift like real leaves
+          const lWind = Math.sin(time * 0.5 + p.phase) * 20 * dt;
+          const lSway = Math.cos(time * 1.2 + p.phase * 1.8) * 10 * dt;
+          p.x += p.vx * dt + lWind + lSway;
+          const lBob = Math.sin(time * 0.7 + p.phase * 2) * 3 * dt;
+          p.y += p.vy * dt + lBob;
+          p.rotation += (Math.sin(time + p.phase) * 2 + 0.5) * dt;
+          p.opacity = Math.min(1, p.life / 2) * 0.75;
           break;
+        }
 
-        case "blossom":
-          p.x += p.vx + Math.sin(time * 0.6 + p.phase) * 12 * dt;
-          p.y += p.vy + Math.sin(time * 0.9 + p.phase * 0.7) * 3 * dt;
-          p.rotation += dt * 0.8;
-          p.opacity = Math.min(1, p.life / 2) * 0.8;
+        case "blossom": {
+          // Animal Crossing style — lazy floating drift, not rain
+          const bWind = Math.sin(time * 0.3 + p.phase) * 18 * dt;
+          const bGust = Math.sin(time * 0.8 + p.phase * 2.3) * 8 * dt;
+          p.x += p.vx * dt + bWind + bGust;
+          // Very slow descent with occasional lift
+          const bLift = Math.sin(time * 0.5 + p.phase * 1.7) * 4 * dt;
+          p.y += p.vy * dt + bLift;
+          // Gentle tumble
+          p.rotation += (Math.sin(time * 0.7 + p.phase) * 1.2 + 0.3) * dt;
+          p.opacity = Math.min(1, p.life / 3) * 0.85;
           break;
+        }
 
         case "snow":
           p.x += Math.sin(time * 0.4 + p.phase) * 10 * dt;
@@ -170,10 +182,10 @@ export class ParticleSystem {
         if (p) {
           p.type = "leaf";
           p.x = gardenLeft + Math.random() * (gardenRight - gardenLeft);
-          p.y = -5;
-          p.vx = (Math.random() - 0.3) * 8;
-          p.vy = 12 + Math.random() * 8;
-          p.life = 8 + Math.random() * 6;
+          p.y = -5 + Math.random() * 15;
+          p.vx = (Math.random() - 0.3) * 10; // horizontal drift
+          p.vy = 3 + Math.random() * 3; // slow fall
+          p.life = 15 + Math.random() * 10;
           p.maxLife = p.life;
           p.size = 2 + Math.random() * 2;
           const leafCols = ["#c05820", "#e07830", "#d0a020", "#a04010", "#cc6020"];
@@ -192,12 +204,12 @@ export class ParticleSystem {
         if (p) {
           p.type = "blossom";
           p.x = gardenLeft + Math.random() * (gardenRight - gardenLeft);
-          p.y = -5;
-          p.vx = (Math.random() - 0.4) * 6;
-          p.vy = 8 + Math.random() * 5;
-          p.life = 10 + Math.random() * 8;
+          p.y = -5 + Math.random() * 20; // some start mid-air
+          p.vx = (Math.random() - 0.3) * 12; // strong horizontal drift
+          p.vy = 2 + Math.random() * 2; // very slow descent
+          p.life = 18 + Math.random() * 14; // longer life = more floating time
           p.maxLife = p.life;
-          p.size = 1.5 + Math.random() * 1.5;
+          p.size = 1.5 + Math.random() * 2;
           const blossomCols = ["#ffb8d0", "#ffc8e0", "#ffe0ef", "#ff90b0", "#ffd0e8"];
           p.color = blossomCols[Math.floor(Math.random() * blossomCols.length)];
           p.opacity = 0.8;
@@ -229,7 +241,7 @@ export class ParticleSystem {
     }
 
     // Butterflies — daytime, garden area, spring/summer
-    if ((tod === "morning" || tod === "afternoon") && (season === "spring" || season === "summer")) {
+    if (tod !== "night" && (season === "spring" || season === "summer")) {
       if (this.particles.filter(p => p.type === "butterfly").length < 6) {
         if (Math.random() < 0.4) {
           const p = this.spawn();
