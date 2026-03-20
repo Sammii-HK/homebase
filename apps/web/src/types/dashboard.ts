@@ -50,7 +50,8 @@ export interface DashboardStats {
     scheduledToday: number;
     scheduledTomorrow: number;
   };
-  engagement: { unread: number };
+  engagement: { unread: number; total: number; byPlatform: Record<string, number> };
+  orbit: { online: boolean; agentCount: number; runningAgents: number; errorAgents: number; pipelineRunning: boolean };
   seo: {
     impressions: number;
     clicks: number;

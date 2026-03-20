@@ -327,6 +327,55 @@ async function getOpportunities() {
   }
 }
 
+// ── Orbit summary (lightweight check) ────────────────────────────────
+
+async function getOrbitSummary() {
+  const orbitUrl = process.env.ORBIT_URL ?? "http://localhost:3001";
+  try {
+    const res = await fetch(`${orbitUrl}/api/state`, {
+      signal: AbortSignal.timeout(3000),
+      cache: "no-store",
+    });
+    if (!res.ok) return { online: false, agentCount: 0, runningAgents: 0, errorAgents: 0, pipelineRunning: false };
+    const state = await res.json();
+    const agents = Object.values(state.agents ?? {}) as Record<string, unknown>[];
+    return {
+      online: true,
+      agentCount: agents.length,
+      runningAgents: agents.filter((a) => a.status === "running").length,
+      errorAgents: agents.filter((a) => a.status === "error" || a.status === "failed").length,
+      pipelineRunning: agents.some((a) => a.status === "running"),
+    };
+  } catch {
+    return { online: false, agentCount: 0, runningAgents: 0, errorAgents: 0, pipelineRunning: false };
+  }
+}
+
+// ── Engagement summary ───────────────────────────────────────────────
+
+async function getEngagementSummary() {
+  const apiKey = process.env.SPELLCAST_API_KEY;
+  const url = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
+  if (!apiKey) return { unread: 0, total: 0, byPlatform: {} as Record<string, number> };
+
+  try {
+    const res = await fetch(`${url}/api/engagement/stats`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(5000),
+      cache: "no-store",
+    });
+    if (!res.ok) return { unread: 0, total: 0, byPlatform: {} };
+    const data = await res.json();
+    return {
+      unread: Number(data.unread ?? 0),
+      total: Number(data.total ?? 0),
+      byPlatform: data.byPlatform ?? {},
+    };
+  } catch {
+    return { unread: 0, total: 0, byPlatform: {} };
+  }
+}
+
 // ── Trend computation ───────────────────────────────────────────────
 
 interface Trend {
@@ -365,7 +414,7 @@ export async function GET(req: NextRequest) {
   const denied = checkAuth(req);
   if (denied) return denied;
 
-  const [github, lunary, spellcast, health, content, seo, opportunities] =
+  const [github, lunary, spellcast, health, content, seo, opportunities, orbit, engagement] =
     await Promise.all([
       getGitHub(),
       getLunary(),
@@ -374,6 +423,8 @@ export async function GET(req: NextRequest) {
       getContentPipeline(),
       getSEO(),
       getOpportunities(),
+      getOrbitSummary(),
+      getEngagementSummary(),
     ]);
 
   // Compute trends from previous snapshot
@@ -401,7 +452,8 @@ export async function GET(req: NextRequest) {
     },
     health,
     content,
-    engagement: { unread: 0 }, // TODO: wire up when Spellcast engagement endpoint is ready
+    engagement,
+    orbit,
     seo,
     opportunities,
     trends,

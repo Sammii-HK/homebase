@@ -29,6 +29,14 @@ function getInsights(stats: DashboardStats): string[] {
     insights.push(`${stats.opportunities.length} opportunit${stats.opportunities.length !== 1 ? "ies" : "y"}`);
   }
 
+  if (stats.orbit?.errorAgents > 0) {
+    insights.push(`${stats.orbit.errorAgents} agent${stats.orbit.errorAgents !== 1 ? "s" : ""} failed`);
+  }
+
+  if (stats.orbit?.pipelineRunning) {
+    insights.push(`Orbit pipeline active`);
+  }
+
   return insights;
 }
 
@@ -68,6 +76,10 @@ export default function StatusBar({ stats, heartbeat }: Props) {
         ? "text-red-400 animate-pulse"
         : "text-white/30";
 
+  const orbitOnline = stats?.orbit?.online ?? false;
+  const orbitRunning = stats?.orbit?.runningAgents ?? 0;
+  const orbitErrors = stats?.orbit?.errorAgents ?? 0;
+
   const insights = stats ? getInsights(stats) : [];
   const hasInsights = insights.length > 0;
 
@@ -85,9 +97,22 @@ export default function StatusBar({ stats, heartbeat }: Props) {
           </span>
         )}
       </div>
-      <div className="flex items-center gap-1.5">
-        <span className="text-[7px] text-white/40">MAC</span>
-        <span className={`text-[8px] ${macColor}`}>{macLabel}</span>
+      <div className="flex items-center gap-3">
+        {/* Orbit indicator */}
+        {stats?.orbit && (
+          <div className="flex items-center gap-1">
+            <span className="text-[7px] text-white/40">ORBIT</span>
+            <div className={`w-1.5 h-1.5 rounded-full ${orbitOnline ? (orbitErrors > 0 ? "bg-red-400" : orbitRunning > 0 ? "bg-amber-400 animate-pulse" : "bg-green-400") : "bg-gray-500"}`} />
+            {orbitRunning > 0 && (
+              <span className="text-[7px] text-amber-400">{orbitRunning}</span>
+            )}
+          </div>
+        )}
+        {/* MAC status */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[7px] text-white/40">MAC</span>
+          <span className={`text-[8px] ${macColor}`}>{macLabel}</span>
+        </div>
       </div>
     </div>
   );

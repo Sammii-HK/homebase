@@ -196,7 +196,7 @@ export default function Dashboard() {
 
       {/* Alert Feed — pixel view only */}
       {view === "pixel" && (
-        <AlertFeed stats={stats} heartbeat={heartbeat} onOpenRoom={handleOpenRoom} />
+        <AlertFeed stats={stats} heartbeat={heartbeat} token={token} onOpenRoom={handleOpenRoom} onRefresh={handleRefresh} />
       )}
 
       {/* Rooms without pixel art desks — rendered at dashboard level */}
