@@ -3,6 +3,8 @@ import type { DashboardStats, HeartbeatResponse } from "@/types/dashboard";
 interface Props {
   stats: DashboardStats | null;
   heartbeat: HeartbeatResponse | null;
+  onOpenApprovalQueue?: () => void;
+  onOpenEngagementQueue?: () => void;
 }
 
 function getInsights(stats: DashboardStats): string[] {
@@ -40,7 +42,7 @@ function getInsights(stats: DashboardStats): string[] {
   return insights;
 }
 
-export default function StatusBar({ stats, heartbeat }: Props) {
+export default function StatusBar({ stats, heartbeat, onOpenApprovalQueue, onOpenEngagementQueue }: Props) {
   const h = stats?.health;
   const anyDown =
     h &&
@@ -98,6 +100,25 @@ export default function StatusBar({ stats, heartbeat }: Props) {
         )}
       </div>
       <div className="flex items-center gap-3">
+        {/* Action badges */}
+        {(stats?.content.pendingReview ?? 0) > 0 && (
+          <button
+            onClick={onOpenApprovalQueue}
+            className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 rounded px-1.5 py-0.5 cursor-pointer hover:bg-amber-500/25 transition-colors"
+          >
+            <span className="text-[7px] text-amber-400 font-bold">{stats!.content.pendingReview}</span>
+            <span className="text-[6px] text-amber-400/70">REVIEW</span>
+          </button>
+        )}
+        {(stats?.engagement.unread ?? 0) > 0 && (
+          <button
+            onClick={onOpenEngagementQueue}
+            className="flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 rounded px-1.5 py-0.5 cursor-pointer hover:bg-emerald-500/25 transition-colors"
+          >
+            <span className="text-[7px] text-emerald-400 font-bold">{stats!.engagement.unread}</span>
+            <span className="text-[6px] text-emerald-400/70">ENGAGE</span>
+          </button>
+        )}
         {/* Orbit indicator */}
         {stats?.orbit && (
           <div className="flex items-center gap-1">

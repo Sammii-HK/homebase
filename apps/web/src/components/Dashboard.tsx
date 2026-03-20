@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [view, setView] = useState<ViewMode>("pixel");
   const [selectedRoom, setSelectedRoom] = useState<"lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement" | null>(null);
   const [showApprovalQueue, setShowApprovalQueue] = useState(false);
+  const [showEngagementQueue, setShowEngagementQueue] = useState(false);
 
   useEffect(() => {
     setToken(localStorage.getItem("homebase_token"));
@@ -144,7 +145,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <StatusBar stats={stats} heartbeat={heartbeat} />
+      <StatusBar stats={stats} heartbeat={heartbeat} onOpenApprovalQueue={() => setShowApprovalQueue(true)} onOpenEngagementQueue={() => setShowEngagementQueue(true)} />
 
       {/* Top-right controls */}
       <div style={{ position: "fixed", top: 42, right: 8, zIndex: 40, display: "flex", gap: 4, alignItems: "center" }}>
@@ -179,28 +180,50 @@ export default function Dashboard() {
                 </span>
               ) : null}
             </button>
-            {([
-              { id: "orbit" as const, label: "ORBIT", color: "#f59e0b" },
-              { id: "engagement" as const, label: "ENGAGE", color: "#10b981" },
-            ]).map((room) => (
-              <button
-                key={room.id}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => { e.stopPropagation(); handleOpenRoom(room.id); }}
-                style={{
-                  fontFamily: "'Press Start 2P', monospace",
-                  fontSize: 6,
-                  color: room.color,
-                  background: "rgba(0,0,0,0.8)",
-                  border: `1px solid ${room.color}40`,
-                  padding: "4px 8px",
-                  cursor: "pointer",
-                  borderRadius: 3,
-                }}
-              >
-                {room.label}
-              </button>
-            ))}
+            <button
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); setShowEngagementQueue(true); }}
+              style={{
+                fontFamily: "'Press Start 2P', monospace",
+                fontSize: 6,
+                color: "#10b981",
+                background: "rgba(0,0,0,0.8)",
+                border: `1px solid rgba(16,185,129,0.4)`,
+                padding: "4px 8px",
+                cursor: "pointer",
+                borderRadius: 3,
+                position: "relative",
+              }}
+            >
+              ENGAGE
+              {(stats?.engagement.unread ?? 0) > 0 ? (
+                <span style={{
+                  position: "absolute", top: -4, right: -4,
+                  background: "#10b981", color: "#000",
+                  fontFamily: "'Press Start 2P', monospace", fontSize: 5,
+                  width: 14, height: 14, borderRadius: 7,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {stats!.engagement.unread}
+                </span>
+              ) : null}
+            </button>
+            <button
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); handleOpenRoom("orbit"); }}
+              style={{
+                fontFamily: "'Press Start 2P', monospace",
+                fontSize: 6,
+                color: "#f59e0b",
+                background: "rgba(0,0,0,0.8)",
+                border: `1px solid rgba(245,158,11,0.4)`,
+                padding: "4px 8px",
+                cursor: "pointer",
+                borderRadius: 3,
+              }}
+            >
+              ORBIT
+            </button>
           </>
         )}
         <button
@@ -225,6 +248,7 @@ export default function Dashboard() {
         token={token}
         onOpenRoom={handleOpenRoom}
         onOpenApprovalQueue={() => setShowApprovalQueue(true)}
+        onOpenEngagementQueue={() => setShowEngagementQueue(true)}
         onRefresh={handleRefresh}
       />
 
@@ -266,6 +290,45 @@ export default function Dashboard() {
               </button>
             </div>
             <ApprovalQueue token={token} />
+          </div>
+        </div>
+      )}
+
+      {/* Engagement Queue — full screen overlay */}
+      {showEngagementQueue && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100,
+            background: "rgba(0,0,0,0.85)",
+            backdropFilter: "blur(8px)",
+            overflowY: "auto",
+            padding: "48px 12px 24px",
+          }}
+        >
+          <div style={{ maxWidth: 480, margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 12, color: "#10b981", letterSpacing: 1 }}>
+                ENGAGEMENT QUEUE
+              </div>
+              <button
+                onClick={() => setShowEngagementQueue(false)}
+                style={{
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: 8,
+                  color: "rgba(255,255,255,0.5)",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  padding: "6px 12px",
+                  borderRadius: 3,
+                  cursor: "pointer",
+                }}
+              >
+                CLOSE
+              </button>
+            </div>
+            <EngagementQueue token={token} />
           </div>
         </div>
       )}
