@@ -186,7 +186,7 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <Stat label="MAU" value={String(stats.lunary.mau)} trend={trend?.mau?.delta} />
-            <Stat label="DAU" value={String(stats.lunary.activeToday)} trend={trend?.dau?.delta} />
+            <Stat label="DAU (LAST FULL DAY)" value={String(stats.lunary.activeToday)} trend={trend?.dau?.delta} />
             <Stat label="MRR" value={`\u00A3${stats.lunary.mrr.toFixed(2)}`} trend={trend?.mrr?.delta} />
             <Stat label="SUBSCRIBERS" value={String(stats.lunary.subscribers)} />
           </div>

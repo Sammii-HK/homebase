@@ -26,7 +26,7 @@ export default function KeyNumbers({ stats }: Props) {
 
   const items = [
     {
-      label: "DAU",
+      label: "DAU (yesterday)",
       value: fmt(stats?.lunary.activeToday),
       color: "text-purple-400",
       trend: trends?.dau,
