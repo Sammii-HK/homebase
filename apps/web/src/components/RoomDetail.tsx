@@ -13,6 +13,7 @@ import type {
 } from "@/types/dashboard";
 import { useRoomData } from "@/hooks/useRoomData";
 import Opportunities from "./Opportunities";
+import ApprovalQueue from "./ApprovalQueue";
 import RoomTabs from "./RoomTabs";
 import Sparkline from "./viz/Sparkline";
 import ProgressBar from "./viz/ProgressBar";
@@ -25,6 +26,7 @@ interface Props {
   roomId: RoomId;
   stats: DashboardStats;
   heartbeat: HeartbeatResponse | null;
+  token: string;
   onClose: () => void;
 }
 
@@ -591,10 +593,10 @@ function MetaDetail({ stats }: { stats: DashboardStats }) {
 
 // ── Orbit detail (tabbed) ──
 
-const ORBIT_TABS = ["AGENTS", "APPROVED", "TRENDING", "SCOUT", "ACTIVITY"];
+const ORBIT_TABS = ["REVIEW", "AGENTS", "APPROVED", "TRENDING", "SCOUT", "ACTIVITY"];
 
-function OrbitDetail({ deepData, loading }: { deepData: OrbitDeepData | null; loading: boolean }) {
-  const [tab, setTab] = useState("AGENTS");
+function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | null; loading: boolean; token: string }) {
+  const [tab, setTab] = useState("REVIEW");
 
   const AGENT_STATUS_COLORS: Record<string, string> = {
     running: "#facc15", completed: "#4ade80", failed: "#f87171", idle: "#71717a",
@@ -609,6 +611,10 @@ function OrbitDetail({ deepData, loading }: { deepData: OrbitDeepData | null; lo
           <div style={{ fontFamily: PS2P, fontSize: 10, color: "#f87171", marginBottom: 8 }}>ORBIT OFFLINE</div>
           <div style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.3)" }}>Start Orbit on port 3001</div>
         </div>
+      )}
+
+      {tab === "REVIEW" && (
+        <ApprovalQueue token={token} />
       )}
 
       {tab === "AGENTS" && deepData?.online && (
@@ -913,7 +919,7 @@ const ROOM_TITLES: Record<RoomId, { title: string; accent: string }> = {
   engagement: { title: "ENGAGEMENT", accent: "#10b981" },
 };
 
-export default function RoomDetail({ roomId, stats, heartbeat, onClose }: Props) {
+export default function RoomDetail({ roomId, stats, heartbeat, token, onClose }: Props) {
   const { title, accent } = ROOM_TITLES[roomId];
   const deepRoomId = roomId === "dev" ? "infra" : roomId === "meta" ? null : roomId === "orbit" ? "orbit" : roomId === "engagement" ? "engagement" : roomId;
   const { data: deepData, loading } = useRoomData(deepRoomId);
@@ -963,7 +969,7 @@ export default function RoomDetail({ roomId, stats, heartbeat, onClose }: Props)
         {roomId === "spellcast" && <SpellcastDetail stats={stats} deepData={deepData as SpellcastDeepData | null} loading={loading} />}
         {roomId === "dev" && <DevDetail stats={stats} heartbeat={heartbeat} deepData={deepData as InfraDeepData | null} loading={loading} />}
         {roomId === "meta" && <MetaDetail stats={stats} />}
-        {roomId === "orbit" && <OrbitDetail deepData={deepData as OrbitDeepData | null} loading={loading} />}
+        {roomId === "orbit" && <OrbitDetail deepData={deepData as OrbitDeepData | null} loading={loading} token={token} />}
         {roomId === "engagement" && <EngagementDetail deepData={deepData as EngagementDeepData | null} loading={loading} />}
 
         {/* Updated timestamp */}

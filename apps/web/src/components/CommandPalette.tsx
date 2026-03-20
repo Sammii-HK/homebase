@@ -21,6 +21,7 @@ interface Props {
   stats: DashboardStats | null;
   token: string | null;
   onOpenRoom: (room: "lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement") => void;
+  onOpenApprovalQueue: () => void;
   onRefresh: () => void;
 }
 
@@ -32,7 +33,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   link: "OPEN",
 };
 
-export default function CommandPalette({ stats, token, onOpenRoom, onRefresh }: Props) {
+export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprovalQueue, onRefresh }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -70,6 +71,16 @@ export default function CommandPalette({ stats, token, onOpenRoom, onRefresh }: 
     { id: "room-engagement", label: "Engagement", category: "navigate", icon: "💬", shortcut: "6", action: () => { onOpenRoom("engagement"); setOpen(false); } },
 
     // Actions
+    {
+      id: "approval-queue",
+      label: "Review Approval Queue",
+      category: "action",
+      icon: "📋",
+      shortcut: "A",
+      description: `${stats?.content.pendingReview ?? 0} pending`,
+      action: () => { onOpenApprovalQueue(); setOpen(false); },
+      alert: (s) => (s?.content.pendingReview ?? 0) > 0,
+    },
     {
       id: "retry-failed",
       label: "Retry All Failed Posts",

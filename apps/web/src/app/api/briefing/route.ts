@@ -151,16 +151,41 @@ export async function GET(req: NextRequest) {
       alerts.push(`${unread} unread comments/DMs`);
     }
 
+    // Extract Orbit-specific fields if available
+    const orbitData = orbitBriefing as Record<string, unknown> | null;
+    const orbitMetrics = orbitData?.metrics as Record<string, number> | null;
+    const overnightWork = (orbitData?.overnight_work as Record<string, number>) ?? null;
+    const todaySchedule = orbitData?.today as Record<string, unknown> | null;
+    const systemStatus = orbitData?.system as Record<string, unknown> | null;
+    const compiledAt = (orbitData?.compiled_at as string) ?? null;
+
+    // Use Orbit metrics as fallback/supplement (deltas)
+    const dauDelta = orbitMetrics?.dau_delta ?? 0;
+    const mauDelta = orbitMetrics?.mau_delta ?? 0;
+
+    // Platform breakdown from Orbit's today.posts_by_platform
+    const postsByPlatform = (todaySchedule?.posts_by_platform as Record<string, number>) ?? {};
+
     return NextResponse.json({
       date: today,
       orbitBriefing,
-      metrics: { dau, mau, mrr },
+      compiledAt,
+      metrics: { dau, mau, mrr, dauDelta, mauDelta },
+      overnightWork,
       content: {
         pendingReview,
         scheduledToday,
         failedPosts,
+        postsByPlatform,
       },
       engagement: { unread },
+      system: systemStatus
+        ? {
+            authStatus: String(systemStatus.auth_status ?? "unknown"),
+            agentsOnline: Number(systemStatus.agents_online ?? 0),
+            lastPipelineRun: String(systemStatus.last_pipeline_run ?? ""),
+          }
+        : null,
       alerts,
       generatedAt: new Date().toISOString(),
     });

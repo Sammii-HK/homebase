@@ -222,6 +222,7 @@ export default function Dashboard() {
         stats={stats}
         token={token}
         onOpenRoom={handleOpenRoom}
+        onOpenApprovalQueue={() => setShowApprovalQueue(true)}
         onRefresh={handleRefresh}
       />
 
@@ -278,6 +279,7 @@ export default function Dashboard() {
           roomId={selectedRoom as "orbit" | "engagement"}
           stats={stats}
           heartbeat={heartbeat}
+          token={token}
           onClose={() => setSelectedRoom(null)}
         />
       )}
@@ -285,11 +287,12 @@ export default function Dashboard() {
       {view === "pixel" ? (
         /* Pixel art view — full screen grid */
         <div style={{ position: "fixed", inset: 0, top: 32 }}>
-          <FloorPlan stats={stats} heartbeat={heartbeat} selectedRoom={selectedRoom} onRoomChange={setSelectedRoom} />
+          <FloorPlan stats={stats} heartbeat={heartbeat} token={token} selectedRoom={selectedRoom} onRoomChange={setSelectedRoom} />
         </div>
       ) : (
         /* Data list view — scrollable cards */
         <div className="px-3 pt-14 pb-8 space-y-3 max-w-lg mx-auto">
+          <BriefingCard token={token} onOpenApprovalQueue={() => setShowApprovalQueue(true)} inline />
           <KeyNumbers stats={stats} />
           <ServiceHealth stats={stats} heartbeat={heartbeat} />
           <ApprovalQueue token={token} compact />

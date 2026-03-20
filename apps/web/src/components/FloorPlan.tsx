@@ -52,11 +52,12 @@ type RoomId = "lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement";
 interface FloorPlanProps {
   stats: DashboardStats | null;
   heartbeat: HeartbeatResponse | null;
+  token: string;
   selectedRoom?: RoomId | null;
   onRoomChange?: (room: RoomId | null) => void;
 }
 
-export default function FloorPlan({ stats, heartbeat, selectedRoom: externalRoom, onRoomChange }: FloorPlanProps) {
+export default function FloorPlan({ stats, heartbeat, token, selectedRoom: externalRoom, onRoomChange }: FloorPlanProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<IsleRenderer | null>(null);
   const activity = useActivityStream();
@@ -153,6 +154,7 @@ export default function FloorPlan({ stats, heartbeat, selectedRoom: externalRoom
           roomId={selectedRoom as RoomId}
           stats={stats}
           heartbeat={heartbeat}
+          token={token}
           onClose={() => setSelectedRoom(null)}
         />
       )}
