@@ -10,6 +10,7 @@ import {
   POND_TY,
   POND_TW,
   POND_TH,
+  RIVER_START_ROW,
   fv,
   seededRng,
   FLOWER_COLS,
@@ -1543,5 +1544,95 @@ export function drawGrassDetail(
     const py = y + ((v * 9) % 12);
     wr(px, py, 1.5, 1, "#888078");
     wr(px + 3, py + 2, 1, 0.8, "#908880");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// River / stream at the bottom of the world
+// ---------------------------------------------------------------------------
+
+export function drawRiver(
+  helpers: DrawHelpers,
+  tod: TOD,
+  animTick: number,
+): void {
+  const { wr, we, ctx, zoom, panX, panY } = helpers;
+  const riverY = RIVER_START_ROW * TS;
+  const riverH = (WORLD_ROWS - RIVER_START_ROW) * TS;
+  const worldW = WORLD_COLS * TS;
+  const time = Date.now() / 1000;
+
+  // Riverbank — earthy strip along the top edge
+  wr(0, riverY - 2, worldW, 4, "#6a5838");
+  wr(0, riverY - 1, worldW, 2, "#7a6848");
+  // Bank grass edge
+  for (let tx = 0; tx < WORLD_COLS; tx++) {
+    const v = fv(tx, RIVER_START_ROW);
+    const gx = tx * TS;
+    // Irregular grass tufts hanging over the bank
+    if (v > 0.3) {
+      wr(gx + ((v * 7) % 12), riverY - 3, 2, 3, "#4a8038");
+      wr(gx + ((v * 11) % 14), riverY - 2, 1.5, 2, "#58a044");
+    }
+    // Small rocks on bank
+    if (v > 0.8) {
+      wr(gx + ((v * 5) % 10), riverY - 1, 2, 1.5, "#808078");
+    }
+  }
+
+  // Water body — base colour shifts with time of day
+  let waterBase: string, waterLight: string, waterDark: string;
+  if (tod === "night") {
+    waterBase = "#0a1830"; waterLight = "#101e3a"; waterDark = "#060e20";
+  } else if (tod === "dusk" || tod === "dawn") {
+    waterBase = "#2a3878"; waterLight = "#3a4888"; waterDark = "#1a2860";
+  } else {
+    waterBase = "#1870b8"; waterLight = "#2088d0"; waterDark = "#1060a0";
+  }
+
+  wr(0, riverY + 2, worldW, riverH - 2, waterBase);
+
+  // Flowing water ripple lines — horizontal streaks that scroll
+  const flowSpeed = time * 18; // pixels per second horizontal flow
+  for (let row = 0; row < 3; row++) {
+    const ry = riverY + 4 + row * TS;
+    const offset = (flowSpeed + row * 40) % worldW;
+
+    // Multiple ripple streaks per row
+    for (let i = 0; i < 6; i++) {
+      const rx = ((offset + i * 90 + row * 30) % (worldW + 40)) - 20;
+      const rw = 12 + (i % 3) * 8;
+      const alpha = 0.12 + Math.sin(time * 0.8 + i + row) * 0.05;
+      wr(rx, ry + Math.sin(time * 0.5 + i * 2) * 1.5, rw, 1, waterLight);
+    }
+
+    // Darker current lines
+    for (let i = 0; i < 4; i++) {
+      const dx = ((offset * 0.7 + i * 130 + row * 50) % (worldW + 60)) - 30;
+      wr(dx, ry + 5, 8 + (i % 3) * 5, 0.8, waterDark);
+    }
+  }
+
+  // Shimmer/sparkle highlights on the water (daytime)
+  if (tod !== "night") {
+    const shimmerCol = tod === "dusk" || tod === "dawn" ? "#f0a860" : "#c0e8ff";
+    for (let i = 0; i < 10; i++) {
+      const sx = ((flowSpeed * 0.5 + i * 53) % worldW);
+      const sy = riverY + 6 + ((i * 7 + Math.floor(time * 0.3)) % (riverH - 10));
+      const sa = 0.15 + Math.sin(time * 2 + i * 1.7) * 0.1;
+      if (sa > 0.1) {
+        wr(sx, sy, 2, 0.8, shimmerCol);
+      }
+    }
+  }
+
+  // Bottom bank / riverbed hint at the very bottom
+  wr(0, riverY + riverH - 3, worldW, 3, waterDark);
+  // Sand/pebble strip at bottom
+  const rng = seededRng("river-bed");
+  for (let i = 0; i < 15; i++) {
+    const px = rng() * worldW;
+    const py = riverY + riverH - 2 + rng();
+    wr(px, py, 1 + rng(), 0.8, "#5a5048");
   }
 }

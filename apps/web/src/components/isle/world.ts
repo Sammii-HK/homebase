@@ -9,9 +9,10 @@ import type { Dir, Season, TOD, DeskZone, FurniturePiece } from "./types";
 export const TS = 16;
 export const OFFICE_COLS = 12;
 export const WORLD_COLS = 32;
-export const WORLD_ROWS = 14;
+export const WORLD_ROWS = 17; // 14 land + 3 river
+export const RIVER_START_ROW = 14; // rows 14-16 are river
 export const WORLD_W = WORLD_COLS * TS; // 512
-export const WORLD_H = WORLD_ROWS * TS; // 224
+export const WORLD_H = WORLD_ROWS * TS; // 272
 
 // Door in the right office wall (col 11)
 export const DOOR_ROW_START = 5;
@@ -366,6 +367,13 @@ for (const t of TREES) {
   const tty = Math.floor(t.wy / TS);
   if (tty >= 0 && tty < WORLD_ROWS && ttx >= 0 && ttx < WORLD_COLS) {
     WALKABLE[tty][ttx] = false;
+  }
+}
+
+// River tiles (rows 14-16, full width)
+for (let r = RIVER_START_ROW; r < WORLD_ROWS; r++) {
+  for (let c = 0; c < WORLD_COLS; c++) {
+    WALKABLE[r][c] = false;
   }
 }
 

@@ -3,7 +3,7 @@
 import type { ClickTarget, IsleStats, DeskZone, BadgeInfo } from "./types";
 import {
   TS, OFFICE_COLS, WORLD_COLS, WORLD_ROWS, WORLD_W, WORLD_H,
-  DOOR_ROW_START, DOOR_ROW_END,
+  DOOR_ROW_START, DOOR_ROW_END, RIVER_START_ROW,
   DESK_ZONES, FURNITURE, FLOWERS, TREES, BENCHES,
   ROCKS, BUSHES, SIGNPOST,
   getSeason, getTOD,
@@ -17,7 +17,7 @@ import {
   drawBookshelf, drawLamp, drawPlantFurn, drawBench,
   drawWindow, drawPond, drawTree, drawFlower,
   drawPath, drawLantern, LANTERN_SPOTS, drawWindowLight, drawGrassDetail,
-  drawRock, drawBush, drawSignpost,
+  drawRock, drawBush, drawSignpost, drawRiver,
 } from "./furniture";
 import { Char, drawChar } from "./sprites";
 import { ParticleSystem } from "./particles";
@@ -409,12 +409,12 @@ export class IsleRenderer {
     // Sky (now full width!)
     drawSky(ctx, tod, season, this.zoom, this.panX, this.panY, this.moonImgs, this.moonPhase);
 
-    // Tiles
-    for (let ty = 0; ty < WORLD_ROWS; ty++) {
+    // Tiles (land rows only — river is drawn separately)
+    for (let ty = 0; ty < RIVER_START_ROW; ty++) {
       for (let tx = 0; tx < WORLD_COLS; tx++) {
         const inOffice = tx < OFFICE_COLS;
         const isTopWall = ty === 0;
-        const isBotWall = ty === WORLD_ROWS - 1;
+        const isBotWall = ty === RIVER_START_ROW - 1; // last land row
         const isLeftWall = tx === 0 && inOffice;
         const isRightWall = tx === OFFICE_COLS - 1;
         const isDoor = ty >= DOOR_ROW_START && ty <= DOOR_ROW_END;
@@ -436,6 +436,7 @@ export class IsleRenderer {
       if (f.type === "rug") drawRug(helpers, f);
     }
     drawPath(helpers);
+    drawRiver(helpers, tod, this.animTick);
     drawPond(helpers, tod, this.stats, this.animTick);
 
     // Z-sorted drawables
