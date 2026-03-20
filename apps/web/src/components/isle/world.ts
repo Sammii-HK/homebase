@@ -98,7 +98,7 @@ export const DESK_ZONES: DeskZone[] = [
     deskX: 1 * TS,
     deskY: 1 * TS,
     seatX: 2.5 * TS,
-    seatY: 3 * TS,
+    seatY: 2.5 * TS,
     facing: "up" as Dir,
     monitorGlow: "#7c3aed",
     label: "LUNA",
@@ -112,7 +112,7 @@ export const DESK_ZONES: DeskZone[] = [
     deskX: 7 * TS,
     deskY: 1 * TS,
     seatX: 8.5 * TS,
-    seatY: 3 * TS,
+    seatY: 2.5 * TS,
     facing: "up" as Dir,
     monitorGlow: "#0e7490",
     label: "CASTER",
@@ -127,12 +127,12 @@ export const DESK_ZONES: DeskZone[] = [
     deskX: 1 * TS,
     deskY: 9 * TS,
     seatX: 2.5 * TS,
-    seatY: 7.5 * TS,
+    seatY: 8.5 * TS,
     facing: "down" as Dir,
     monitorGlow: "#166534",
     label: "DEV",
     hitX: 1 * TS - TS,
-    hitY: 7.5 * TS - TS,
+    hitY: 8 * TS - TS,
     hitW: 5 * TS,
     hitH: 5 * TS,
   },
@@ -141,12 +141,12 @@ export const DESK_ZONES: DeskZone[] = [
     deskX: 7 * TS,
     deskY: 9 * TS,
     seatX: 8.5 * TS,
-    seatY: 7.5 * TS,
+    seatY: 8.5 * TS,
     facing: "down" as Dir,
     monitorGlow: "#9d174d",
     label: "META",
     hitX: 7 * TS - TS,
-    hitY: 7.5 * TS - TS,
+    hitY: 8 * TS - TS,
     hitW: 5 * TS,
     hitH: 5 * TS,
   },
@@ -312,20 +312,16 @@ for (const f of FURNITURE) {
   }
 }
 
-// Chair tiles + desk-chair gap (don't walk through seated characters)
-// Top row: desk at row 1, gap at row 2, chair at row 3
+// Chair tiles (don't walk through seated characters)
+// Top row: desk at row 1, seat at row 2
 for (let dx = 0; dx < 3; dx++) {
-  WALKABLE[2][1 + dx] = false; // LUNA gap
-  WALKABLE[3][1 + dx] = false; // LUNA chair
-  WALKABLE[2][7 + dx] = false; // CASTER gap
-  WALKABLE[3][7 + dx] = false; // CASTER chair
+  WALKABLE[2][1 + dx] = false; // LUNA seat
+  WALKABLE[2][7 + dx] = false; // CASTER seat
 }
-// Bottom row: desk at row 9, gap at row 8, chair at row 7
+// Bottom row: desk at row 9, seat at row 8
 for (let dx = 0; dx < 3; dx++) {
-  WALKABLE[8][1 + dx] = false; // DEV gap
-  WALKABLE[7][1 + dx] = false; // DEV chair
-  WALKABLE[8][7 + dx] = false; // META gap
-  WALKABLE[7][7 + dx] = false; // META chair
+  WALKABLE[8][1 + dx] = false; // DEV seat
+  WALKABLE[8][7 + dx] = false; // META seat
 }
 
 // Pond tiles + 1-tile border

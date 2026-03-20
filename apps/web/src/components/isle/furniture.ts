@@ -16,6 +16,74 @@ import {
 } from "./world";
 
 // ---------------------------------------------------------------------------
+// Sprite image loader (PNG furniture from pixel-agents, CC0)
+// ---------------------------------------------------------------------------
+
+const _spriteCache: Record<string, HTMLImageElement> = {};
+function loadSprite(path: string): HTMLImageElement {
+  if (_spriteCache[path]) return _spriteCache[path];
+  const img = new Image();
+  img.src = path;
+  _spriteCache[path] = img;
+  return img;
+}
+
+// Pre-load all furniture sprites
+const SPR = {
+  deskFront: loadSprite("/sprites/furniture/DESK/DESK_FRONT.png"),
+  chairFront: loadSprite("/sprites/furniture/CUSHIONED_CHAIR/CUSHIONED_CHAIR_FRONT.png"),
+  chairBack: loadSprite("/sprites/furniture/CUSHIONED_CHAIR/CUSHIONED_CHAIR_BACK.png"),
+  chairSide: loadSprite("/sprites/furniture/CUSHIONED_CHAIR/CUSHIONED_CHAIR_SIDE.png"),
+  sofaFront: loadSprite("/sprites/furniture/SOFA/SOFA_FRONT.png"),
+  sofaBack: loadSprite("/sprites/furniture/SOFA/SOFA_BACK.png"),
+  sofaSide: loadSprite("/sprites/furniture/SOFA/SOFA_SIDE.png"),
+  coffeeTable: loadSprite("/sprites/furniture/COFFEE_TABLE/COFFEE_TABLE.png"),
+  whiteboard: loadSprite("/sprites/furniture/WHITEBOARD/WHITEBOARD.png"),
+  bookshelf: loadSprite("/sprites/furniture/BOOKSHELF/BOOKSHELF.png"),
+  doubleBookshelf: loadSprite("/sprites/furniture/DOUBLE_BOOKSHELF/DOUBLE_BOOKSHELF.png"),
+  plant: loadSprite("/sprites/furniture/PLANT/PLANT.png"),
+  plant2: loadSprite("/sprites/furniture/PLANT_2/PLANT_2.png"),
+  largePlant: loadSprite("/sprites/furniture/LARGE_PLANT/LARGE_PLANT.png"),
+  cactus: loadSprite("/sprites/furniture/CACTUS/CACTUS.png"),
+  hangingPlant: loadSprite("/sprites/furniture/HANGING_PLANT/HANGING_PLANT.png"),
+  bin: loadSprite("/sprites/furniture/BIN/BIN.png"),
+  pcOn1: loadSprite("/sprites/furniture/PC/PC_FRONT_ON_1.png"),
+  pcOn2: loadSprite("/sprites/furniture/PC/PC_FRONT_ON_2.png"),
+  pcOn3: loadSprite("/sprites/furniture/PC/PC_FRONT_ON_3.png"),
+  pcOff: loadSprite("/sprites/furniture/PC/PC_FRONT_OFF.png"),
+  pcBack: loadSprite("/sprites/furniture/PC/PC_BACK.png"),
+  smallPainting: loadSprite("/sprites/furniture/SMALL_PAINTING/SMALL_PAINTING.png"),
+  smallPainting2: loadSprite("/sprites/furniture/SMALL_PAINTING_2/SMALL_PAINTING_2.png"),
+  largePainting: loadSprite("/sprites/furniture/LARGE_PAINTING/LARGE_PAINTING.png"),
+  woodenChairBack: loadSprite("/sprites/furniture/WOODEN_CHAIR/WOODEN_CHAIR_BACK.png"),
+  woodenBench: loadSprite("/sprites/furniture/WOODEN_BENCH/WOODEN_BENCH.png"),
+};
+
+/** Draw a sprite image at world coordinates with zoom/pan */
+function drawSpriteAt(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  wx: number, wy: number,
+  zoom: number, panX: number, panY: number,
+  flipH = false,
+) {
+  if (!img.complete || !img.naturalWidth) return;
+  const dw = img.naturalWidth * zoom;
+  const dh = img.naturalHeight * zoom;
+  const dx = Math.round(panX + wx * zoom);
+  const dy = Math.round(panY + wy * zoom);
+  if (flipH) {
+    ctx.save();
+    ctx.translate(dx + dw, dy);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, 0, 0, Math.round(dw), Math.round(dh));
+    ctx.restore();
+  } else {
+    ctx.drawImage(img, dx, dy, Math.round(dw), Math.round(dh));
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Draw helpers
 // ---------------------------------------------------------------------------
 
@@ -65,7 +133,11 @@ export function createDrawHelpers(
     return `rgb(${cl((n >> 16) + amt)},${cl(((n >> 8) & 255) + amt)},${cl((n & 255) + amt)})`;
   }
 
-  return { wr, we, lighten };
+  function spr(img: HTMLImageElement, wx: number, wy: number, flipH = false) {
+    drawSpriteAt(ctx, img, wx, wy, zoom, panX, panY, flipH);
+  }
+
+  return { wr, we, lighten, spr, ctx, zoom, panX, panY };
 }
 
 export type DrawHelpers = ReturnType<typeof createDrawHelpers>;
@@ -244,86 +316,52 @@ export function drawDesk(
   hasBadge: boolean,
   stats: IsleStats | null,
 ): void {
-  const { wr, we } = helpers;
-  const x = zone.deskX,
-    y = zone.deskY,
-    dw = 3 * TS,
-    dh = TS;
+  const { wr, we, spr } = helpers;
+  const x = zone.deskX;
+  const y = zone.deskY;
+  const dw = 3 * TS;
 
-  // Desk legs (4 thin dark rectangles at corners)
-  wr(x + 1, y + dh - 1, 2, 3, "#2a1408");
-  wr(x + dw - 3, y + dh - 1, 2, 3, "#2a1408");
-  wr(x + 1, y - 1, 2, 2, "#2a1408");
-  wr(x + dw - 3, y - 1, 2, 2, "#2a1408");
+  // PNG desk sprite (48x32) — tabletop surface aligns with deskY
+  spr(SPR.deskFront, x, y - 16);
 
-  // Modesty panel (front edge)
-  const panelY = zone.facing === "up" ? y + dh - 2 : y;
-  wr(x + 2, panelY, dw - 4, 3, "#4a2810");
-  wr(x + 3, panelY + 1, dw - 6, 1, "#5a3418");
-
-  // Tabletop — thicker with edge highlight
-  wr(x, y, dw, dh, "#5a3418");
-  wr(x + 1, y + 1, dw - 2, dh - 2, "#6e4228");
-  // Top edge highlight
-  wr(x, y, dw, 2, "#8a5830");
-  // Left edge
-  wr(x, y, 1, dh, "#7a4a20");
-  // Right edge shadow
-  wr(x + dw - 1, y, 1, dh, "#3a1e08");
-  // Bottom edge shadow
-  wr(x, y + dh - 1, dw, 1, "#3a1e08");
-  // Inner highlight line
-  wr(x + 2, y + 2, dw - 4, 1, "#7a4c28");
-
-  // Desk mat (zone-coloured) with subtle border
-  const matCol = DESK_MAT_COLS[zone.id] ?? "#404040";
-  wr(x + 2, y + 2, dw - 4, dh - 4, matCol);
-  wr(x + 3, y + 3, dw - 6, dh - 6, matCol + "cc");
-  // Mat border
-  wr(x + 2, y + 2, dw - 4, 1, matCol + "60");
-  wr(x + 2, y + dh - 3, dw - 4, 1, matCol + "60");
-
-  // Monitor
-  const monitorAtBottom = zone.facing === "down";
-  const mx = x + dw / 2 - 5;
-  const my = monitorAtBottom ? y + dh - 9 : y + 1;
-  wr(mx, my, 10, 8, "#1a1a28");
-
-  if (isActive) {
-    // Working — code lines in zone accent colour
-    wr(mx + 1, my + 1, 8, 6, "#081a10");
-    const g = zone.monitorGlow;
-    const offset = animTick % 4;
-    const lines = [
-      { w: 4, x: 0 },
-      { w: 7, x: 0 },
-      { w: 3, x: 1 },
-      { w: 6, x: 0 },
-      { w: 5, x: 0 },
-    ];
-    for (let i = 0; i < 4; i++) {
-      const li = lines[(i + offset) % lines.length];
-      if (i !== animTick % 4) {
-        wr(mx + 1 + li.x, my + 1 + i * 1.4, li.w, 0.9, g);
+  // PC on desk — sprite (16x32), placed on the desk surface
+  const pcX = x + dw / 2 - 8;
+  const pcY = y - 24; // sits on top of desk
+  if (zone.facing === "up") {
+    // Player sees the front of the monitor
+    spr(SPR.pcOff, pcX, pcY);
+    // Overlay data-reactive screen content on the PC monitor
+    // PC screen area is roughly 10x7 pixels, starting at pcX+3, pcY+4
+    const mx = pcX + 3;
+    const my = pcY + 3;
+    if (isActive) {
+      // Working — code lines in zone accent colour
+      wr(mx, my, 10, 7, "#081a10");
+      const g = zone.monitorGlow;
+      const offset = animTick % 4;
+      const lines = [
+        { w: 4, x: 0 }, { w: 7, x: 0 }, { w: 3, x: 1 },
+        { w: 6, x: 0 }, { w: 5, x: 0 },
+      ];
+      for (let i = 0; i < 4; i++) {
+        const li = lines[(i + offset) % lines.length];
+        if (i !== animTick % 4) {
+          wr(mx + 1 + li.x, my + 1 + i * 1.4, li.w, 0.9, g);
+        }
       }
+      if (animTick % 2 === 0)
+        wr(mx + 1 + ((animTick * 2) % 6), my + 1 + (animTick % 4) * 1.4, 1, 1, "#ffffff");
+    } else {
+      drawMonitorData(wr, we, mx, my, zone, stats, animTick);
     }
-    if (animTick % 2 === 0)
-      wr(mx + 1 + ((animTick * 2) % 6), my + 1 + (animTick % 4) * 1.4, 1, 1, "#ffffff");
   } else {
-    // Data display — show zone-specific info on the monitor screen
-    drawMonitorData(wr, we, mx, my, zone, stats, animTick);
+    // Player sees the back of the monitor
+    spr(SPR.pcBack, pcX, pcY);
   }
 
-  // Monitor stand
-  wr(mx + 4, my + (monitorAtBottom ? -3 : 8), 2, 3, "#2a2a2a");
-  wr(mx + 2, my + (monitorAtBottom ? -5 : 10), 6, 1.5, "#2a2a2a");
-
-  // Keyboard
-  const ky = monitorAtBottom ? y + 2 : y + dh - 5;
-  wr(x + 3, ky, 8, 3, "#202020");
-  wr(x + 4, ky + 1, 6, 1.5, "#303030");
-
-  // Zone-specific desk decorations (data-reactive)
+  // Zone-specific desk decorations
+  const mx = x + dw / 2 - 5;
+  const my = y + 1;
   drawDeskDecorations(wr, we, x, y, dw, mx, my, zone, stats, animTick);
 }
 
@@ -646,40 +684,12 @@ export function drawWhiteboardData(
 // ---------------------------------------------------------------------------
 
 export function drawChair(helpers: DrawHelpers, zone: DeskZone): void {
-  const { wr } = helpers;
-  const sz = 12;
-  const cx = zone.seatX - sz / 2,
-    cy = zone.seatY - sz / 2;
-
-  // Caster wheels (4 small dots at base)
-  wr(cx, cy + sz - 1, 2, 2, "#1a0a04");
-  wr(cx + sz - 2, cy + sz - 1, 2, 2, "#1a0a04");
-  wr(cx, cy - 1, 2, 2, "#1a0a04");
-  wr(cx + sz - 2, cy - 1, 2, 2, "#1a0a04");
-
-  // Seat base
-  wr(cx, cy + 2, sz, sz - 3, "#4a3020");
-  // Cushion top highlight
-  wr(cx + 1, cy + 3, sz - 2, sz - 5, "#6a4830");
-  // Cushion centre padding
-  wr(cx + 2, cy + 4, sz - 4, sz - 7, "#7a5838");
-  // Seat side shadow
-  wr(cx, cy + sz - 2, sz, 1, "#3a2018");
-
-  // Armrests connecting to seat
-  wr(cx - 2, cy + 3, 2, sz - 6, "#5a3828");
-  wr(cx + sz, cy + 3, 2, sz - 6, "#5a3828");
-  // Armrest top caps
-  wr(cx - 2, cy + 3, 2, 2, "#6a4830");
-  wr(cx + sz, cy + 3, 2, 2, "#6a4830");
-
-  // Backrest
-  const brAtTop = zone.facing === "up";
-  const bry = brAtTop ? cy - 1 : cy + sz - 2;
-  wr(cx, bry, sz, 4, "#4a3020");
-  // Fabric texture — lighter stripe
-  wr(cx + 1, bry + 1, sz - 2, 1, "#6a4830");
-  wr(cx + 1, bry + 2, sz - 2, 1, "#5a3828");
+  const { spr } = helpers;
+  // Chair sprite is 16x16 — centre on seat position
+  const cx = zone.seatX - 8;
+  const cy = zone.seatY - 8;
+  const img = zone.facing === "up" ? SPR.chairBack : SPR.chairFront;
+  spr(img, cx, cy);
 }
 
 // ---------------------------------------------------------------------------
@@ -786,228 +796,54 @@ export function drawRug(helpers: DrawHelpers, f: FurniturePiece): void {
 }
 
 export function drawSofa(helpers: DrawHelpers, f: FurniturePiece): void {
-  const { wr, lighten } = helpers;
-  const x = f.tx * TS,
-    y = f.ty * TS,
-    sw = (f.tw ?? 3) * TS,
-    sh = (f.th ?? 2) * TS;
-
-  // --- Visible legs beneath sofa ---
-  wr(x + 2, y + sh - 1, 2, 3, "#3a2818");
-  wr(x + sw - 4, y + sh - 1, 2, 3, "#3a2818");
-  // Middle support leg
-  wr(x + sw / 2 - 1, y + sh - 1, 2, 2.5, "#3a2818");
-  // Leg highlight
-  wr(x + 2, y + sh - 1, 2, 0.5, "#5a4030");
-  wr(x + sw - 4, y + sh - 1, 2, 0.5, "#5a4030");
-
-  // --- Sofa body / frame ---
-  wr(x, y, sw, sh, "#5848a0");
-  // Bottom shadow under sofa body
-  wr(x, y + sh - 1.5, sw, 1.5, "#383888");
-
-  // --- Backrest ---
-  wr(x, y, sw, 4, "#3838a0");
-  wr(x + 1, y + 1, sw - 2, 1, "#6868c0"); // top highlight
-  wr(x + 1, y + 2, sw - 2, 1.5, "#4848a8"); // backrest body
-  wr(x, y + 3.5, sw, 0.5, "#282888"); // backrest bottom shadow
-
-  // --- Armrests with rounded top ---
-  // Left armrest
-  wr(x, y, 4, sh, "#4848a0");
-  wr(x + 0.5, y + 1, 3, sh - 3, "#5050a8");
-  wr(x + 0.5, y + 1, 3, 1, "#6868c0"); // top cap
-  wr(x, y, 0.5, sh, "#383890"); // outer shadow
-  // Right armrest
-  wr(x + sw - 4, y, 4, sh, "#4848a0");
-  wr(x + sw - 3.5, y + 1, 3, sh - 3, "#5050a8");
-  wr(x + sw - 3.5, y + 1, 3, 1, "#6868c0"); // top cap
-  wr(x + sw - 0.5, y, 0.5, sh, "#303088"); // outer shadow
-
-  // --- Seat area ---
-  wr(x + 4, y + 4, sw - 8, sh - 5, "#7868b8");
-
-  // --- Individual cushions with shadows and tufting ---
-  const cw = Math.floor((sw - 8) / 3);
-  for (let i = 0; i < 3; i++) {
-    const cx = x + 4 + i * (cw + 0.5);
-    const cy = y + 4;
-    const ch = sh - 6;
-    // Cushion base
-    wr(cx + 0.5, cy, cw - 1, ch, "#8878c8");
-    // Top highlight on cushion
-    wr(cx + 1, cy + 0.5, cw - 2, 1, "#a098d8");
-    // Bottom shadow on cushion
-    wr(cx + 0.5, cy + ch - 1, cw - 1, 1, "#6858a8");
-    // Side shadow between cushions
-    if (i < 2) wr(cx + cw - 0.5, cy, 1, ch, "#6050a0");
-    // Pillow tufting — button dimple detail
-    const btnX = cx + cw / 2 - 0.5;
-    const btnY = cy + ch * 0.35;
-    wr(btnX, btnY, 1, 1, "#7060b0");
-    // Tufting lines radiating from button
-    wr(btnX - 2, btnY + 0.3, 2, 0.3, "#7868b0");
-    wr(btnX + 1, btnY + 0.3, 2, 0.3, "#7868b0");
-    wr(btnX + 0.3, btnY - 1.5, 0.3, 1.5, "#7868b0");
-    wr(btnX + 0.3, btnY + 1, 0.3, 1.5, "#7868b0");
+  const { spr } = helpers;
+  const x = f.tx * TS;
+  const y = f.ty * TS;
+  // Sofa sprite is 32x16 — draw it scaled to fill the furniture area
+  // Draw two sofa sprites side by side for the 3-tile width, or stretch one
+  const sw = (f.tw ?? 3) * TS;
+  const sh = (f.th ?? 2) * TS;
+  // Centre the sofa sprite in the furniture area
+  const sx = x + (sw - 32) / 2;
+  const sy = y + (sh - 16) / 2;
+  spr(SPR.sofaFront, sx, sy);
+  // Draw a second one next to it for wider sofas
+  if (sw > 40) {
+    spr(SPR.sofaFront, sx + 32, sy);
   }
-
-  // --- Decorative throw pillow on left cushion ---
-  const px = x + 5, py = y + 5;
-  wr(px, py, 5, 4, "#e0a0c0");
-  wr(px + 0.5, py + 0.5, 4, 1, lighten("#e0a0c0", 15));
-  wr(px + 0.5, py + 3, 4, 0.5, lighten("#e0a0c0", -10));
 }
 
 export function drawCoffeeTable(helpers: DrawHelpers, f: FurniturePiece): void {
-  const { wr } = helpers;
-  const x = f.tx * TS,
-    y = f.ty * TS;
-  wr(x, y, 2 * TS, TS, "#7a5830");
-  wr(x + 1, y + 1, 2 * TS - 2, TS - 2, "#9a7040");
-  wr(x, y, 2 * TS, 1, "#b09050");
-  wr(x + 4, y + 3, 4, 6, "#e0a030");
-  wr(x + 11, y + 4, 3, 5, "#d03020");
-  wr(x + 11, y + 5, 3, 3, "#f0f0f0");
+  const { spr } = helpers;
+  // COFFEE_TABLE.png is 32x32 — draw at tile position
+  spr(SPR.coffeeTable, f.tx * TS, f.ty * TS);
 }
 
 export function drawWhiteboard(helpers: DrawHelpers, f: FurniturePiece): void {
-  const { wr } = helpers;
-  const x = f.tx * TS,
-    y = f.ty * TS;
-  wr(x, y, 3 * TS, TS, "#f8f8f8");
-  wr(x, y, 3 * TS, 2, "#c0c0c0");
-  wr(x, y + TS - 2, 3 * TS, 2, "#c0c0c0");
-  wr(x, y, 2, TS, "#c0c0c0");
-  wr(x + 3 * TS - 2, y, 2, TS, "#c0c0c0");
-  wr(x + 3, y + 4, 10, 1, "#6868d0");
-  wr(x + 3, y + 7, 7, 1, "#6868d0");
-  wr(x + 3, y + 10, 12, 1, "#6868d0");
-  wr(x + 16, y + 4, 8, 1, "#e04848");
-  wr(x + 16, y + 7, 10, 1, "#e04848");
-  wr(x + 2, y + TS - 4, 3 * TS - 4, 2, "#a0a0a0");
+  const { spr } = helpers;
+  // WHITEBOARD.png is 32x32 — centre in the 3-tile space
+  const x = f.tx * TS;
+  const y = f.ty * TS;
+  spr(SPR.whiteboard, x + 8, y - 8);
 }
 
 export function drawWaterCooler(helpers: DrawHelpers, f: FurniturePiece): void {
-  const { wr } = helpers;
-  const x = f.tx * TS + 3,
-    y = f.ty * TS + 1;
-  wr(x, y, 10, 6, "#a8c8e0");
-  wr(x + 1, y + 1, 8, 4, "#c0ddf0");
-  wr(x + 1, y, 8, 2, "#80a8c8");
-  wr(x + 2, y + 5, 6, 10, "#d0d0d0");
-  wr(x + 3, y + 6, 4, 8, "#e0e0e0");
-  wr(x + 4, y + 9, 2, 2, "#4080c0");
-  wr(x + 2, y + 14, 6, 2, "#b0b0b0");
+  const { spr } = helpers;
+  // Use the cactus sprite as a water cooler stand-in (similar tall shape)
+  // Or just use plant_2 for now
+  spr(SPR.plant2, f.tx * TS, f.ty * TS - 16);
 }
 
 export function drawFilingCabinet(helpers: DrawHelpers, f: FurniturePiece): void {
-  const { wr } = helpers;
-  const x = f.tx * TS + 1,
-    y = f.ty * TS;
-  wr(x, y, TS - 2, 2 * TS, "#808898");
-  wr(x + 1, y + 1, TS - 4, 2 * TS - 2, "#9090a0");
-  for (let d = 0; d < 2; d++) {
-    const dy = y + 2 + d * (TS - 2);
-    wr(x + 2, dy, TS - 6, TS - 4, "#a0a8b0");
-    wr(x + 3, dy + 1, TS - 8, TS - 6, "#b0b8c0");
-    wr(x + (TS - 2) / 2 - 3, dy + TS / 2 - 5, 6, 4, "#707880");
-    wr(x + (TS - 2) / 2 - 2, dy + TS / 2 - 4, 4, 2, "#808890");
-  }
+  const { spr } = helpers;
+  // Use double bookshelf sprite (32x32) — fits 1x2 tile filing cabinet
+  spr(SPR.doubleBookshelf, f.tx * TS - 8, f.ty * TS);
 }
 
 export function drawBookshelf(helpers: DrawHelpers, tx: number, ty: number): void {
-  const { wr, we, lighten } = helpers;
-  const x = tx * TS,
-    y = ty * TS;
-  const bw = 2 * TS;
-
-  // --- Shelf frame ---
-  // Back panel
-  wr(x, y, bw, TS, "#4a2808");
-  // Top surface with highlight
-  wr(x, y, bw, 2, "#7a4820");
-  wr(x, y, bw, 0.8, "#8a5830"); // top edge shine
-  // Left side
-  wr(x, y, 2, TS, "#5a3010");
-  wr(x + 0.5, y, 0.5, TS, "#6a4018"); // inner edge highlight
-  // Right side — shadow
-  wr(x + bw - 2, y, 2, TS, "#3a1a08");
-  // Bottom shelf board
-  wr(x, y + TS - 2, bw, 2, "#5a3010");
-  wr(x, y + TS - 2, bw, 0.6, "#7a4820"); // shelf edge highlight
-
-  // --- Books with varying width, height, and tilt ---
-  const bc = [
-    "#c83838", "#3860d0", "#38903a", "#d8b828",
-    "#d04880", "#5838b8", "#38a8c8", "#d06828",
-    "#902890", "#289898", "#c06030", "#4870a0",
-  ];
-  const rng = seededRng(`shelf${tx},${ty}`);
-
-  let bx = x + 2.5;
-  let bookIdx = 0;
-  while (bx < x + bw - 4) {
-    const col = bc[bookIdx % bc.length];
-    const bookW = 1.8 + rng() * 1.8; // varied width
-    const bookH = TS - 5 - rng() * 4; // varied height
-    const bookY = y + TS - 2 - bookH; // sit on shelf
-
-    // Occasional leaning book
-    const isLeaning = rng() > 0.8 && bx > x + 6;
-
-    if (isLeaning) {
-      // Leaning book — drawn as a slight slant (two offset rects)
-      wr(bx - 0.5, bookY + 1, bookW, bookH - 1, col);
-      wr(bx, bookY, bookW, bookH - 2, col);
-      wr(bx + 0.2, bookY + 0.5, bookW * 0.3, bookH - 3, lighten(col, 15)); // spine highlight
-      bx += bookW + 0.3;
-    } else {
-      // Upright book
-      wr(bx, bookY, bookW, bookH, col);
-      // Spine highlight
-      wr(bx + 0.3, bookY + 0.5, bookW * 0.25, bookH - 1, lighten(col, 18));
-      // Spine shadow on right
-      wr(bx + bookW - 0.4, bookY, 0.4, bookH, lighten(col, -20));
-      // Top page edge (cream line visible at top)
-      wr(bx + 0.3, bookY, bookW - 0.6, 0.5, "#e8e0d0");
-      bx += bookW + 0.4;
-    }
-
-    // Decorative objects in gaps — globe, figurine, small vase
-    if (rng() > 0.75 && bx < x + bw - 8) {
-      const objType = (bookIdx * 3 + tx) % 3;
-      if (objType === 0) {
-        // Small globe on stand
-        const globeY = y + TS - 6;
-        wr(bx + 0.5, globeY + 3, 2, 1, "#6a5030"); // stand base
-        wr(bx + 1, globeY + 1, 1, 2, "#6a5030"); // stand pole
-        we(bx + 1.5, globeY, 1.8, 1.8, "#3080b0"); // globe
-        wr(bx + 0.5, globeY - 0.5, 1, 0.5, "#40a060"); // land mass
-        bx += 3.5;
-      } else if (objType === 1) {
-        // Small figurine / trophy
-        const figY = y + TS - 5.5;
-        wr(bx + 0.5, figY + 2, 2, 1.5, "#c0a030"); // base
-        wr(bx + 1, figY, 1, 2.5, "#c0a030"); // body
-        wr(bx + 0.5, figY - 0.5, 2, 1, "#d4b440"); // top
-        bx += 3;
-      } else {
-        // Small vase
-        const vaseY = y + TS - 6;
-        wr(bx + 0.5, vaseY + 2, 2, 2, "#8870b0"); // body
-        wr(bx + 0.8, vaseY + 1, 1.5, 1.5, "#9880c0"); // neck
-        wr(bx + 0.3, vaseY + 2, 2.5, 0.5, "#7060a0"); // rim shadow
-        // tiny flower poking out
-        wr(bx + 1, vaseY, 0.8, 1.5, "#388028");
-        wr(bx + 0.5, vaseY - 0.5, 1.5, 1, "#e06080");
-        bx += 3.5;
-      }
-    }
-
-    bookIdx++;
-    if (bookIdx > 14) break; // safety
-  }
+  const { spr } = helpers;
+  // DOUBLE_BOOKSHELF.png is 32x32 — sits on the wall (2 tiles wide)
+  spr(SPR.doubleBookshelf, tx * TS, ty * TS);
 }
 
 export function drawLamp(helpers: DrawHelpers, tx: number, ty: number, tod: TOD): void {
@@ -1056,34 +892,19 @@ export function drawLamp(helpers: DrawHelpers, tx: number, ty: number, tod: TOD)
 }
 
 export function drawPlantFurn(helpers: DrawHelpers, f: FurniturePiece): void {
-  const { wr } = helpers;
-  const x = f.tx * TS,
-    y = f.ty * TS,
-    t = (f.variant ?? 0) % 5;
-  // Pot
-  wr(x + 4, y + 10, 8, 6, "#b06030");
-  wr(x + 3, y + 9, 10, 2, "#c07040");
-  // Plant variants
-  if (t === 0) {
-    wr(x + 5, y + 2, 6, 8, "#2a8030");
-    wr(x + 2, y + 5, 12, 5, "#308838");
-    wr(x + 6, y, 4, 4, "#388040");
-  } else if (t === 1) {
-    wr(x + 6, y + 2, 4, 8, "#38803a");
-    wr(x + 2, y + 5, 5, 3, "#38803a");
-    wr(x + 9, y + 6, 5, 2, "#38803a");
-  } else if (t === 2) {
-    wr(x + 3, y + 3, 10, 7, "#2a7828");
-    wr(x + 5, y + 1, 6, 5, "#309030");
-    wr(x + 9, y + 5, 4, 5, "#309030");
-  } else if (t === 3) {
-    wr(x + 6, y + 3, 2, 7, "#408030");
-    wr(x + 4, y + 2, 8, 5, "#e04070");
-    wr(x + 6, y + 1, 4, 4, "#f8e0e8");
+  const { spr } = helpers;
+  const x = f.tx * TS;
+  const y = f.ty * TS;
+  const t = (f.variant ?? 0) % 4;
+  // Plant sprites are 16x32 or 32x48 — draw anchored at bottom of tile
+  const plants = [SPR.plant, SPR.plant2, SPR.cactus, SPR.largePlant];
+  const img = plants[t];
+  if (t === 3) {
+    // Large plant is 32x48 — offset up and left
+    spr(img, x - 8, y - 32);
   } else {
-    wr(x + 5, y, 2, 11, "#50a020");
-    wr(x + 9, y + 2, 2, 9, "#60b030");
-    wr(x + 7, y + 1, 2, 10, "#48a018");
+    // Small plants are 16x32 — offset up
+    spr(img, x, y - 16);
   }
 }
 
@@ -1092,50 +913,11 @@ export function drawPlantFurn(helpers: DrawHelpers, f: FurniturePiece): void {
 // ---------------------------------------------------------------------------
 
 export function drawBench(helpers: DrawHelpers, b: { tx: number; ty: number }): void {
-  const { wr, lighten } = helpers;
-  const x = b.tx * TS,
-    y = b.ty * TS;
-  const bw = 3 * TS;
-
-  // --- Support legs (front pair visible) ---
-  wr(x + 3, y + TS - 1, 2, 3, "#5a3818");
-  wr(x + bw - 5, y + TS - 1, 2, 3, "#5a3818");
-  // Back legs (slightly darker, behind seat)
-  wr(x + 3, y + 1, 2, 2, "#4a2810");
-  wr(x + bw - 5, y + 1, 2, 2, "#4a2810");
-  // Cross brace between front legs
-  wr(x + 5, y + TS + 1, bw - 10, 1, "#5a3818");
-
-  // --- Seat slats with gaps ---
-  const slatW = bw - 6;
-  const slatX = x + 3;
-  for (let s = 0; s < 4; s++) {
-    const sy = y + 3 + s * 2.8;
-    const slatCol = s % 2 === 0 ? "#8a5828" : "#7e5024";
-    wr(slatX, sy, slatW, 2, slatCol);
-    // Top highlight on each slat
-    wr(slatX, sy, slatW, 0.5, lighten(slatCol, 12));
-    // Bottom shadow
-    wr(slatX, sy + 1.7, slatW, 0.3, lighten(slatCol, -10));
-    // Plank gap (dark line between slats)
-    if (s < 3) wr(slatX, sy + 2, slatW, 0.6, "#3a1a0a");
-  }
-
-  // --- Armrests at each end ---
-  // Left armrest
-  wr(x, y + 2, 4, 2, "#7a5028");
-  wr(x, y + 2, 4, 0.6, "#9a6830"); // highlight
-  wr(x, y + 2, 1, TS - 2, "#6a4018"); // vertical support
-  wr(x + 0.3, y + 2, 0.5, TS - 2, "#7a5028"); // support highlight
-  // Right armrest
-  wr(x + bw - 4, y + 2, 4, 2, "#7a5028");
-  wr(x + bw - 4, y + 2, 4, 0.6, "#9a6830");
-  wr(x + bw - 1, y + 2, 1, TS - 2, "#6a4018");
-  wr(x + bw - 1.3, y + 2, 0.5, TS - 2, "#7a5028");
-
-  // --- Subtle wood grain detail on top slat ---
-  wr(slatX + 5, y + 3.5, 8, 0.2, "#705020");
-  wr(slatX + 12, y + 3.8, 6, 0.2, "#705020");
+  const { spr } = helpers;
+  // Draw 3 wooden bench sprites side by side (each is 16x16)
+  spr(SPR.woodenBench, b.tx * TS, b.ty * TS);
+  spr(SPR.woodenBench, (b.tx + 1) * TS, b.ty * TS);
+  spr(SPR.woodenBench, (b.tx + 2) * TS, b.ty * TS);
 }
 
 export function drawWindow(helpers: DrawHelpers, tx: number, ty: number, tod: TOD): void {
