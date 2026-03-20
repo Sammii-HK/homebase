@@ -147,7 +147,11 @@ export class IsleRenderer {
     ));
     this.targetZoom = this.zoom;
     this.panX = (this.canvas.width - WORLD_W * this.zoom) / 2;
-    this.panY = (this.canvas.height - WORLD_H * this.zoom) / 2;
+    // Anchor scene at bottom so sky fills above, no black space below
+    const worldPxH = WORLD_H * this.zoom;
+    this.panY = worldPxH < this.canvas.height
+      ? this.canvas.height - worldPxH
+      : (this.canvas.height - worldPxH) / 2;
     this.clampPan();
   }
 
@@ -172,7 +176,8 @@ export class IsleRenderer {
     const cw = this.canvas.width, ch = this.canvas.height;
     const ww = WORLD_W * this.zoom, wh = WORLD_H * this.zoom;
     this.panX = ww < cw ? (cw - ww) / 2 : Math.min(0, Math.max(cw - ww, this.panX));
-    this.panY = wh < ch ? (ch - wh) / 2 : Math.min(0, Math.max(ch - wh, this.panY));
+    // Anchor world at bottom — sky fills above, no black below
+    this.panY = wh < ch ? (ch - wh) : Math.min(0, Math.max(ch - wh, this.panY));
   }
 
   private screenToWorld(sx: number, sy: number): [number, number] {

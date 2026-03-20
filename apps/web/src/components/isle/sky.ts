@@ -96,9 +96,12 @@ export function drawSky(
   moonImgs: Record<string, HTMLImageElement>,
   moonPhaseName: string,
 ): void {
-  const x = Math.round(panX);
-  const w = Math.round(WORLD_W * zoom);
-  const skyH = Math.max(0, Math.round(panY + 2.5 * TS * zoom));
+  // Sky spans full canvas width so there's no gap at the edges
+  const canvasW = ctx.canvas.width;
+  const x = 0;
+  const w = canvasW;
+  // Sky fills from top of canvas down into the top edge of the world
+  const skyH = Math.max(0, Math.round(panY + 1.5 * TS * zoom));
   const time = Date.now() / 1000;
 
   // Smooth sky gradient based on actual time
@@ -169,13 +172,14 @@ export function drawSky(
     }
   }
 
-  // Clouds — visible most of the time
-  if (avgBright > 20) {
+  // Clouds — in the sky band above the world
+  if (avgBright > 20 && skyH > 10) {
     const cloudAlpha = Math.min(0.9, avgBright / 120);
     for (const c of CLOUDS) {
       const cx = ((c.x + time * c.speed) % (WORLD_W * 1.5)) - WORLD_W * 0.25;
       const screenX = panX + cx * zoom;
-      const screenY = panY + c.y * zoom;
+      // Position clouds in the sky band (0 to skyH), not world coords
+      const screenY = (c.y / 35) * skyH;
       const cw = c.w * zoom;
       const ch = c.h * zoom;
 
