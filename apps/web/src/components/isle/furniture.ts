@@ -1551,36 +1551,69 @@ export function drawGrassDetail(
 // River / stream at the bottom of the world
 // ---------------------------------------------------------------------------
 
+// Water lily positions (seeded, in river area)
+const WATER_LILIES: { x: number; y: number; sz: number; hasFlower: boolean }[] = (() => {
+  const rng = seededRng("water-lilies-v2");
+  const lilies: { x: number; y: number; sz: number; hasFlower: boolean }[] = [];
+  for (let i = 0; i < 8; i++) {
+    lilies.push({
+      x: rng() * WORLD_COLS * TS,
+      y: (RIVER_START_ROW + 1 + rng() * 3) * TS, // middle of river
+      sz: 3 + rng() * 3,
+      hasFlower: rng() > 0.4,
+    });
+  }
+  return lilies;
+})();
+
+// Fish shadow paths (seeded)
+const FISH_SHADOWS: { startX: number; y: number; speed: number; length: number; phase: number }[] = (() => {
+  const rng = seededRng("fish-shadows-v1");
+  const fish: { startX: number; y: number; speed: number; length: number; phase: number }[] = [];
+  for (let i = 0; i < 6; i++) {
+    fish.push({
+      startX: rng() * WORLD_COLS * TS,
+      y: (RIVER_START_ROW + 1.5 + rng() * 2.5) * TS,
+      speed: 8 + rng() * 12,
+      length: 3 + rng() * 4,
+      phase: rng() * Math.PI * 2,
+    });
+  }
+  return fish;
+})();
+
 export function drawRiver(
   helpers: DrawHelpers,
   tod: TOD,
   animTick: number,
 ): void {
-  const { wr, we, ctx, zoom, panX, panY } = helpers;
+  const { wr, we } = helpers;
   const riverY = RIVER_START_ROW * TS;
   const riverH = (WORLD_ROWS - RIVER_START_ROW) * TS;
   const worldW = WORLD_COLS * TS;
   const time = Date.now() / 1000;
 
   // Riverbank — earthy strip along the top edge
-  wr(0, riverY - 2, worldW, 4, "#6a5838");
-  wr(0, riverY - 1, worldW, 2, "#7a6848");
+  wr(0, riverY - 2, worldW, 5, "#6a5838");
+  wr(0, riverY, worldW, 3, "#7a6848");
   // Bank grass edge
   for (let tx = 0; tx < WORLD_COLS; tx++) {
     const v = fv(tx, RIVER_START_ROW);
     const gx = tx * TS;
-    // Irregular grass tufts hanging over the bank
-    if (v > 0.3) {
-      wr(gx + ((v * 7) % 12), riverY - 3, 2, 3, "#4a8038");
-      wr(gx + ((v * 11) % 14), riverY - 2, 1.5, 2, "#58a044");
+    if (v > 0.25) {
+      wr(gx + ((v * 7) % 12), riverY - 3, 2, 4, "#4a8038");
+      wr(gx + ((v * 11) % 14), riverY - 2, 1.5, 3, "#58a044");
     }
-    // Small rocks on bank
+    if (v > 0.6) {
+      wr(gx + ((v * 3) % 8), riverY - 1, 1, 2, "#3a7028");
+    }
     if (v > 0.8) {
-      wr(gx + ((v * 5) % 10), riverY - 1, 2, 1.5, "#808078");
+      wr(gx + ((v * 5) % 10), riverY, 2.5, 2, "#808078");
+      wr(gx + ((v * 5) % 10) + 0.3, riverY + 0.2, 1.5, 1, "#909088");
     }
   }
 
-  // Water body — base colour shifts with time of day
+  // Water body
   let waterBase: string, waterLight: string, waterDark: string;
   if (tod === "night") {
     waterBase = "#0a1830"; waterLight = "#101e3a"; waterDark = "#060e20";
@@ -1590,49 +1623,90 @@ export function drawRiver(
     waterBase = "#1870b8"; waterLight = "#2088d0"; waterDark = "#1060a0";
   }
 
-  wr(0, riverY + 2, worldW, riverH - 2, waterBase);
+  wr(0, riverY + 3, worldW, riverH - 3, waterBase);
 
-  // Flowing water ripple lines — horizontal streaks that scroll
-  const flowSpeed = time * 18; // pixels per second horizontal flow
-  for (let row = 0; row < 3; row++) {
-    const ry = riverY + 4 + row * TS;
-    const offset = (flowSpeed + row * 40) % worldW;
+  // Flowing water ripple lines
+  const flowSpeed = time * 15;
+  for (let row = 0; row < 5; row++) {
+    const ry = riverY + 5 + row * (TS * 0.9);
+    const offset = (flowSpeed + row * 35) % worldW;
 
-    // Multiple ripple streaks per row
-    for (let i = 0; i < 6; i++) {
-      const rx = ((offset + i * 90 + row * 30) % (worldW + 40)) - 20;
-      const rw = 12 + (i % 3) * 8;
-      const alpha = 0.12 + Math.sin(time * 0.8 + i + row) * 0.05;
-      wr(rx, ry + Math.sin(time * 0.5 + i * 2) * 1.5, rw, 1, waterLight);
+    for (let i = 0; i < 8; i++) {
+      const rx = ((offset + i * 65 + row * 25) % (worldW + 40)) - 20;
+      const rw = 10 + (i % 4) * 6;
+      wr(rx, ry + Math.sin(time * 0.5 + i * 2 + row) * 1.5, rw, 0.8, waterLight);
     }
 
-    // Darker current lines
-    for (let i = 0; i < 4; i++) {
-      const dx = ((offset * 0.7 + i * 130 + row * 50) % (worldW + 60)) - 30;
-      wr(dx, ry + 5, 8 + (i % 3) * 5, 0.8, waterDark);
+    for (let i = 0; i < 5; i++) {
+      const dx = ((offset * 0.6 + i * 110 + row * 45) % (worldW + 60)) - 30;
+      wr(dx, ry + 4, 6 + (i % 3) * 4, 0.7, waterDark);
     }
   }
 
-  // Shimmer/sparkle highlights on the water (daytime)
+  // Fish shadows — dark elongated shapes drifting with the current
+  for (const fish of FISH_SHADOWS) {
+    const fx = ((fish.startX + time * fish.speed) % (worldW + 40)) - 20;
+    const fy = fish.y + Math.sin(time * 0.6 + fish.phase) * 3;
+    const fAlpha = 0.12 + Math.sin(time * 0.4 + fish.phase) * 0.04;
+
+    // Body shadow
+    we(fx, fy, fish.length, fish.length * 0.3, `rgba(0,0,20,${fAlpha.toFixed(2)})`, fAlpha);
+    // Tail shadow
+    we(fx - fish.length * 0.8, fy, fish.length * 0.4, fish.length * 0.25,
+      `rgba(0,0,20,${(fAlpha * 0.7).toFixed(2)})`, fAlpha * 0.7);
+  }
+
+  // Water lilies — lily pads with optional flowers
+  const bob = Math.sin(time * 0.8) * 0.6;
+  for (const lily of WATER_LILIES) {
+    const lx = lily.x + Math.sin(time * 0.3 + lily.x * 0.1) * 2; // gentle drift
+    const ly = lily.y + bob * (lily.sz / 4);
+    const s = lily.sz;
+
+    // Pad
+    we(lx, ly, s, s * 0.65, "#308028");
+    we(lx, ly, s * 0.85, s * 0.5, "#389030");
+    // Veins
+    wr(lx - s * 0.6, ly, s * 1.2, 0.3, "#206818");
+    wr(lx - s * 0.3, ly - s * 0.2, s * 0.6, 0.25, "#206818");
+    // Notch
+    wr(lx + s * 0.5, ly - 0.4, s * 0.4, s * 0.3, waterBase);
+
+    // Flower
+    if (lily.hasFlower) {
+      const flx = lx + s * 0.2;
+      const fly = ly - s * 0.5;
+      // Outer petals
+      we(flx, fly, s * 0.5, s * 0.4, "#f0a0c0", 0.85);
+      we(flx - s * 0.15, fly + s * 0.05, s * 0.35, s * 0.3, "#f8b0d0", 0.8);
+      we(flx + s * 0.15, fly - s * 0.05, s * 0.35, s * 0.3, "#f0a0c0", 0.8);
+      // Inner petals
+      we(flx, fly, s * 0.25, s * 0.2, "#f8c8e0", 0.9);
+      // Yellow centre
+      we(flx, fly, s * 0.12, s * 0.1, "#f0d040", 0.95);
+    }
+  }
+
+  // Shimmer highlights (daytime)
   if (tod !== "night") {
     const shimmerCol = tod === "dusk" || tod === "dawn" ? "#f0a860" : "#c0e8ff";
-    for (let i = 0; i < 10; i++) {
-      const sx = ((flowSpeed * 0.5 + i * 53) % worldW);
-      const sy = riverY + 6 + ((i * 7 + Math.floor(time * 0.3)) % (riverH - 10));
-      const sa = 0.15 + Math.sin(time * 2 + i * 1.7) * 0.1;
-      if (sa > 0.1) {
-        wr(sx, sy, 2, 0.8, shimmerCol);
+    for (let i = 0; i < 14; i++) {
+      const sx = ((flowSpeed * 0.5 + i * 38) % worldW);
+      const sy = riverY + 8 + ((i * 7 + Math.floor(time * 0.3)) % (riverH - 14));
+      const sa = 0.18 + Math.sin(time * 2.5 + i * 1.7) * 0.1;
+      if (sa > 0.12) {
+        wr(sx, sy, 2.5, 0.8, shimmerCol);
+        wr(sx + 4, sy + 0.5, 1.5, 0.6, shimmerCol);
       }
     }
   }
 
-  // Bottom bank / riverbed hint at the very bottom
-  wr(0, riverY + riverH - 3, worldW, 3, waterDark);
-  // Sand/pebble strip at bottom
-  const rng = seededRng("river-bed");
-  for (let i = 0; i < 15; i++) {
+  // Bottom edge — darker water/riverbed
+  wr(0, riverY + riverH - 4, worldW, 4, waterDark);
+  const rng = seededRng("river-bed-v2");
+  for (let i = 0; i < 20; i++) {
     const px = rng() * worldW;
-    const py = riverY + riverH - 2 + rng();
-    wr(px, py, 1 + rng(), 0.8, "#5a5048");
+    const py = riverY + riverH - 3 + rng() * 2;
+    wr(px, py, 1.5 + rng(), 1, "#4a4038");
   }
 }

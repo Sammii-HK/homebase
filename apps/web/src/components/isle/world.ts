@@ -9,8 +9,8 @@ import type { Dir, Season, TOD, DeskZone, FurniturePiece } from "./types";
 export const TS = 16;
 export const OFFICE_COLS = 12;
 export const WORLD_COLS = 32;
-export const WORLD_ROWS = 17; // 14 land + 3 river
-export const RIVER_START_ROW = 14; // rows 14-16 are river
+export const WORLD_ROWS = 19; // 14 land + 5 river
+export const RIVER_START_ROW = 14; // rows 14-18 are river
 export const WORLD_W = WORLD_COLS * TS; // 512
 export const WORLD_H = WORLD_ROWS * TS; // 272
 
@@ -180,7 +180,7 @@ function gardenOk(tx: number, ty: number): boolean {
     tx >= 13 &&
     tx <= 31 &&
     ty >= 0 &&
-    ty < WORLD_ROWS &&
+    ty < RIVER_START_ROW && // keep out of river
     !(tx >= POND_TX && tx < POND_TX + POND_TW && ty >= POND_TY && ty < POND_TY + POND_TH)
   );
 }
