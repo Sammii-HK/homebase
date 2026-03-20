@@ -14,6 +14,7 @@ export const CHAR_PALETTES: Record<string, Pal> = {
     shirt: "#8058d0",
     pants: "#284880",
     shoe: "#1a1008",
+    accent: "#c090ff",
   },
   spellcast: {
     skin: "#f0b888",
@@ -21,6 +22,7 @@ export const CHAR_PALETTES: Record<string, Pal> = {
     shirt: "#40b0a0",
     pants: "#1a3830",
     shoe: "#101018",
+    accent: "#60e0c0",
   },
   dev: {
     skin: "#f0b888",
@@ -28,6 +30,7 @@ export const CHAR_PALETTES: Record<string, Pal> = {
     shirt: "#30b878",
     pants: "#2a4828",
     shoe: "#101008",
+    accent: "#70ff90",
   },
   meta: {
     skin: "#f5c9a0",
@@ -35,6 +38,7 @@ export const CHAR_PALETTES: Record<string, Pal> = {
     shirt: "#f06898",
     pants: "#380028",
     shoe: "#280808",
+    accent: "#ff90b0",
   },
 };
 

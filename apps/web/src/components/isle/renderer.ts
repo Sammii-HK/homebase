@@ -17,6 +17,7 @@ import {
   drawWindow, drawPond, drawTree, drawFlower,
 } from "./furniture";
 import { Char, drawChar } from "./sprites";
+import { ParticleSystem } from "./particles";
 
 export class IsleRenderer {
   private canvas: HTMLCanvasElement;
@@ -48,6 +49,7 @@ export class IsleRenderer {
   private keysDown = new Set<string>();
   private onClickTarget: ((target: ClickTarget) => void) | null = null;
   private destroyed = false;
+  private particles: ParticleSystem;
   // Pinch-to-zoom
   private pinchDist = 0;
   private pinchMidX = 0;
@@ -58,6 +60,9 @@ export class IsleRenderer {
     this.ctx = canvas.getContext("2d")!;
     this.ctx.imageSmoothingEnabled = false;
     this.onClickTarget = onClick;
+
+    // Particle system
+    this.particles = new ParticleSystem();
 
     // Create 4 permanent characters
     this.chars = [
@@ -364,6 +369,11 @@ export class IsleRenderer {
 
     for (const ch of this.chars) ch.update(dt);
 
+    // Update particles
+    const season = getSeason(), tod = getTOD();
+    const time = ts / 1000;
+    this.particles.update(dt, season, tod, time);
+
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -413,7 +423,7 @@ export class IsleRenderer {
     for (const f of FURNITURE) {
       if (f.type === "rug") drawRug(helpers, f);
     }
-    drawPond(helpers, tod);
+    drawPond(helpers, tod, this.stats, this.animTick);
 
     // Z-sorted drawables
     interface D { y: number; draw: () => void; }
@@ -484,6 +494,9 @@ export class IsleRenderer {
     ds.sort((a, b) => a.y - b.y);
     for (const d of ds) d.draw();
 
+    // Particles (fireflies, leaves, blossoms, snow, dust)
+    this.particles.draw(ctx, this.zoom, this.panX, this.panY, Date.now() / 1000);
+
     // TOD overlay
     const overlay = getWorldOverlay(tod);
     if (overlay) {
@@ -494,8 +507,15 @@ export class IsleRenderer {
         for (const [lx, ly] of [[2, 4], [9, 4], [2, 8], [9, 8]]) {
           we((lx + 0.8) * TS, (ly + 1) * TS, 22, 16, "rgba(255,200,80,0.07)");
         }
+        // Monitor glow bleeds onto desk in zone accent colour
+        const glowCols: Record<string, string> = {
+          lunary: "rgba(160,80,240,0.06)",
+          spellcast: "rgba(40,200,220,0.06)",
+          dev: "rgba(60,200,100,0.06)",
+          meta: "rgba(220,80,160,0.06)",
+        };
         for (const zone of DESK_ZONES) {
-          we(zone.deskX + TS * 1.5, zone.deskY + TS * 0.5, 9, 7, "rgba(80,160,255,0.06)");
+          we(zone.deskX + TS * 1.5, zone.deskY + TS * 0.5, 9, 7, glowCols[zone.id] ?? "rgba(80,160,255,0.06)");
         }
         // Outdoor moonlight
         helpers.wr(OFFICE_COLS * TS, 0, (WORLD_COLS - OFFICE_COLS) * TS, WORLD_ROWS * TS, "rgba(100,120,180,0.06)");

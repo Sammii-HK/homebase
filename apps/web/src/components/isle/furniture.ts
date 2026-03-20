@@ -243,93 +243,109 @@ function drawMonitorData(
   animTick: number,
 ): void {
   if (zone.id === "lunary") {
-    // Dark purple screen with activity bar chart
+    // Dark purple screen — animated mini sparkline
     wr(mx + 1, my + 1, 8, 6, "#0c0618");
     if (stats) {
       const dau = stats.lunary.activeToday;
-      // 4 bars representing activity level (fill based on DAU, max ~50)
       const maxDau = 50;
-      const barH = Math.max(1, Math.min(5, (dau / maxDau) * 5));
-      // Staggered bars to look like a mini chart
-      const bars = [barH * 0.5, barH * 0.8, barH, barH * 0.6];
-      for (let i = 0; i < 4; i++) {
-        const h = Math.max(1, bars[i]);
-        wr(mx + 1.5 + i * 2, my + 7 - h, 1.5, h, "#9060d0");
+      const norm = Math.min(1, dau / maxDau);
+      // 6 sparkline points that shift with animTick — looks like a live graph
+      const phase = animTick * 0.3;
+      for (let i = 0; i < 6; i++) {
+        const v = norm * (0.4 + 0.6 * Math.abs(Math.sin(phase + i * 0.8)));
+        const h = Math.max(0.8, v * 4.5);
+        wr(mx + 1.5 + i * 1.2, my + 6.5 - h, 0.8, h, "#9060d0");
+        // Bright top pixel on each bar
+        wr(mx + 1.5 + i * 1.2, my + 6.5 - h, 0.8, 0.5, "#c090ff");
       }
-      // Tiny green dot = healthy, red = down
-      const badge = stats.badges[zone.id];
-      const isDown = badge?.alert;
+      // Health dot — top right
+      const isDown = stats.badges[zone.id]?.alert;
       wr(mx + 7.5, my + 1.5, 1.5, 1.5, isDown ? "#ff3030" : "#40c060");
+      // Faint scanline
+      wr(mx + 1, my + 1 + (animTick % 6), 8, 0.3, "rgba(200,160,255,0.08)");
     } else {
-      // No data — standby
-      const dotX = mx + 3 + ((animTick * 0.5) % 4);
-      wr(dotX, my + 3.5, 1.5, 1.5, zone.monitorGlow + "40");
+      we(mx + 5, my + 4, 2, 2, zone.monitorGlow, 0.15 + 0.1 * Math.sin(animTick * 0.5));
     }
   } else if (zone.id === "spellcast") {
-    // Dark cyan screen with queue/post indicators
+    // Dark cyan screen — post pipeline visualisation
     wr(mx + 1, my + 1, 8, 6, "#041018");
     if (stats) {
       const posted = stats.spellcast.postsToday;
       const queued = stats.spellcast.scheduled;
-      // Posted dots (green) — bottom row
-      const postDots = Math.min(posted, 4);
-      for (let i = 0; i < postDots; i++) {
-        wr(mx + 1.5 + i * 2, my + 5.5, 1.5, 1, "#20c8a0");
+      // Queue pipeline: dots flow left-to-right representing posts moving through
+      const total = Math.min(posted + queued, 8);
+      for (let i = 0; i < total; i++) {
+        const isPosted = i < posted;
+        // Shift positions with animTick so dots appear to flow
+        const px = mx + 1.5 + ((i + animTick * 0.2) % 8) * 0.95;
+        wr(px, my + 3.5, 0.8, 0.8, isPosted ? "#20c8a0" : "#1890b0");
       }
-      // Queue bars (cyan) — top area
-      const qBars = Math.min(queued, 4);
-      for (let i = 0; i < qBars; i++) {
-        const h = 1 + (i % 2);
-        wr(mx + 1.5 + i * 2, my + 1.5, 1.5, h, "#1890b0");
-      }
-      // Red pixel if failed posts
+      // Top: queue depth bar that fills left-to-right
+      const qW = Math.max(0.5, Math.min(7, (queued / 12) * 7));
+      wr(mx + 1.5, my + 1.5, qW, 1, "#1890b0");
+      wr(mx + 1.5, my + 1.5, Math.min(qW, 1), 1, "#40d0f0"); // bright leading edge
+      // Bottom: posted count as filled segments
+      const pW = Math.max(0.5, Math.min(7, (posted / 6) * 7));
+      wr(mx + 1.5, my + 5.5, pW, 1, "#20c8a0");
+      // Failed — red corner
       const badge = stats.badges[zone.id];
       if (badge?.alert && badge.count && badge.count > 0) {
-        wr(mx + 7.5, my + 1.5, 1.5, 1.5, animTick % 3 !== 0 ? "#ff3030" : "#801818");
+        wr(mx + 7, my + 1, 2, 2, animTick % 3 !== 0 ? "#c02020" : "#601010");
       }
+      // Scanline
+      wr(mx + 1, my + 1 + (animTick % 6), 8, 0.3, "rgba(80,220,255,0.06)");
     } else {
-      const dotX = mx + 3 + ((animTick * 0.5) % 4);
-      wr(dotX, my + 3.5, 1.5, 1.5, zone.monitorGlow + "40");
+      we(mx + 5, my + 4, 2, 2, zone.monitorGlow, 0.15 + 0.1 * Math.sin(animTick * 0.5));
     }
   } else if (zone.id === "dev") {
-    // Dark green screen with 3 service health dots
+    // Dark green screen — live health dashboard
     wr(mx + 1, my + 1, 8, 6, "#041208");
     if (stats) {
       const up = stats.infra.systemsUp;
       const total = stats.infra.totalSystems;
-      // 3 horizontal status bars
+      // 3 service health bars with animated pulse on active ones
       for (let i = 0; i < total; i++) {
         const ok = i < up;
-        wr(mx + 1.5, my + 1.5 + i * 2, 6, 1.2, ok ? "#30b060" : "#b03030");
-        // Brighter left edge
-        wr(mx + 1.5, my + 1.5 + i * 2, 1, 1.2, ok ? "#50e080" : "#e04040");
+        const barW = ok ? 6 : 4;
+        const pulse = ok ? (0.9 + 0.1 * Math.sin(animTick * 0.4 + i)) : 1;
+        wr(mx + 1.5, my + 1.5 + i * 2, barW, 1.2, ok ? "#30b060" : "#b03030");
+        // Activity dot that crawls along healthy bars
+        if (ok) {
+          const dotPos = (animTick * 0.3 + i * 2) % barW;
+          wr(mx + 1.5 + dotPos, my + 1.5 + i * 2, 0.8, 1.2 * pulse, "#70ff90");
+        }
       }
+      // Scanline
+      wr(mx + 1, my + 1 + (animTick % 6), 8, 0.3, "rgba(100,255,150,0.06)");
     } else {
-      const dotX = mx + 3 + ((animTick * 0.5) % 4);
-      wr(dotX, my + 3.5, 1.5, 1.5, zone.monitorGlow + "40");
+      we(mx + 5, my + 4, 2, 2, zone.monitorGlow, 0.15 + 0.1 * Math.sin(animTick * 0.5));
     }
   } else if (zone.id === "meta") {
-    // Dark pink screen with engagement indicators
+    // Dark pink screen — engagement heartbeat
     wr(mx + 1, my + 1, 8, 6, "#180810");
     if (stats) {
-      // Reach indicator — horizontal bar
+      // Heartbeat line across the screen
       const reach = stats.meta.reachThisWeek;
-      const barW = Math.max(1, Math.min(7, (reach / 5000) * 7));
-      wr(mx + 1.5, my + 2, barW, 1.2, "#d060a0");
-      // Follower trend dots
-      const fk = Math.floor(stats.meta.followers / 100);
-      const dots = Math.min(fk, 6);
-      for (let i = 0; i < dots; i++) {
-        wr(mx + 1.5 + i * 1.2, my + 4.5, 1, 1, "#f080c0");
+      const amp = Math.min(2, (reach / 3000) * 2);
+      for (let i = 0; i < 7; i++) {
+        const py = 3.5 + amp * Math.sin((animTick * 0.4) + i * 1.2);
+        wr(mx + 1.5 + i, my + py, 0.8, 0.8, "#d060a0");
       }
-      // Opportunity notification — amber pixel
+      // Follower count as pixel grid (each pixel = 100 followers)
+      const fk = Math.floor(stats.meta.followers / 100);
+      const dots = Math.min(fk, 8);
+      for (let i = 0; i < dots; i++) {
+        const row = Math.floor(i / 4);
+        const col = i % 4;
+        wr(mx + 1.5 + col * 1.8, my + 5 + row * 1, 1, 0.7, "#f080c0");
+      }
+      // Opportunity amber corner
       const badge = stats.badges[zone.id];
       if (badge?.alert && badge.count && badge.count > 0) {
-        wr(mx + 7.5, my + 1.5, 1.5, 1.5, "#e0a020");
+        wr(mx + 7, my + 1, 2, 1.5, "#e0a020");
       }
     } else {
-      const dotX = mx + 3 + ((animTick * 0.5) % 4);
-      wr(dotX, my + 3.5, 1.5, 1.5, zone.monitorGlow + "40");
+      we(mx + 5, my + 4, 2, 2, zone.monitorGlow, 0.15 + 0.1 * Math.sin(animTick * 0.5));
     }
   }
 }
@@ -343,72 +359,106 @@ function drawDeskDecorations(
   mx: number, my: number,
   zone: DeskZone,
   stats: IsleStats | null,
-  _animTick: number,
+  animTick: number,
 ): void {
   if (zone.id === "lunary") {
-    // Crystal ball — glow intensity based on active users
+    // Crystal ball — glow pulses with active users, inner light swirls
     const dau = stats?.lunary.activeToday ?? 0;
-    const glow = Math.min(0.9, 0.3 + (dau / 30) * 0.5);
-    we(x + dw - 4, y + 5, 2.5, 2.5, "#c8a0f0", glow);
-    we(x + dw - 4, y + 4.5, 1.5, 1.5, "#e0c8ff", glow * 0.6);
+    const baseGlow = Math.min(0.85, 0.25 + (dau / 30) * 0.5);
+    const pulse = baseGlow + 0.1 * Math.sin(animTick * 0.3);
+    const cx = x + dw - 4, cy = y + 5;
+    // Outer glow aura (visible on desk surface)
+    we(cx, cy + 1, 4, 2, "#c8a0f0", pulse * 0.15);
+    // Ball
+    we(cx, cy, 2.5, 2.5, "#c8a0f0", pulse);
+    we(cx, cy - 0.5, 1.5, 1.5, "#e0c8ff", pulse * 0.6);
+    // Inner swirl — a bright speck that orbits inside the ball
+    const sx = cx + 1 * Math.cos(animTick * 0.25);
+    const sy = cy + 0.6 * Math.sin(animTick * 0.25);
+    wr(sx - 0.3, sy - 0.3, 0.6, 0.6, `rgba(255,220,255,${(pulse * 0.5).toFixed(2)})`);
+    // Base
     wr(x + dw - 5.5, y + 7, 5, 1.5, "#8060a0");
-    // Moon sticker on monitor
-    we(mx + 1.5, my + 1.5, 1, 1, "#e0d0ff", 0.4);
   } else if (zone.id === "spellcast") {
     // Scroll pile — height scales with queue depth
     const queued = stats?.spellcast.scheduled ?? 0;
-    const layers = Math.max(1, Math.min(3, Math.ceil(queued / 3)));
-    const baseY = y + 3 + (3 - layers) * 1.5;
+    const layers = Math.max(1, Math.min(4, Math.ceil(queued / 3)));
+    const baseY = y + 3 + (4 - layers) * 1.2;
     for (let i = 0; i < layers; i++) {
-      const ly = baseY + i * 1.5;
-      wr(x + 1, ly, 4, 2, "#f0e8d0");
-      wr(x + 1, ly, 4, 0.6, "#e0d8c0");
-      if (i < layers - 1) wr(x + 1.5, ly + 1.2, 3, 0.5, "#c8c0a8");
+      const ly = baseY + i * 1.3;
+      // Each scroll slightly offset for a messy pile look
+      const off = (i % 2) * 0.5;
+      wr(x + 1 + off, ly, 4 - off, 1.8, "#f0e8d0");
+      wr(x + 1 + off, ly, 4 - off, 0.5, "#e0d8c0");
+      // Faint text lines on scroll
+      wr(x + 1.5 + off, ly + 0.8, 2.5, 0.3, "#c0b898");
     }
     // Quill pen
     wr(x + dw - 4, y + 3, 1, 6, "#b08040");
     wr(x + dw - 5, y + 2, 2, 2, "#f0e0c0");
+    // Ink dot on desk — appears when posts are scheduled (quill was used recently)
+    if (queued > 0) {
+      const inkAlpha = 0.3 + 0.15 * Math.sin(animTick * 0.2);
+      wr(x + dw - 3, y + 9, 1.5, 0.8, `rgba(30,30,80,${inkAlpha.toFixed(2)})`);
+    }
   } else if (zone.id === "dev") {
-    // Mini terminal — shows service status as coloured lines
+    // Mini terminal — shows scrolling service output
     wr(x + 1, y + 3, 5, 4, "#1a1a28");
     wr(x + 1.5, y + 3.5, 4, 3, "#0a1810");
     if (stats) {
       const up = stats.infra.systemsUp;
       const total = stats.infra.totalSystems;
-      // Each line = a service
+      // Scrolling log lines — shift down with animTick
       for (let i = 0; i < total; i++) {
         const ok = i < up;
-        wr(x + 2, y + 4 + i * 0.9, ok ? 3 : 2, 0.6, ok ? "#30b878" : "#b04040");
+        const lineY = y + 4 + ((i + animTick * 0.15) % 3) * 0.9;
+        wr(x + 2, lineY, ok ? 3 : 2, 0.5, ok ? "#30b878" : "#b04040");
+      }
+      // Blinking cursor
+      if (animTick % 2 === 0) {
+        wr(x + 2, y + 6.2, 0.8, 0.5, "#30b878");
       }
     } else {
       wr(x + 2, y + 4, 2, 0.8, "#30b878");
       wr(x + 2, y + 5, 3, 0.8, "#30b878");
     }
-    // Coffee mug — steam only when all systems ok
+    // Coffee mug
     wr(x + dw - 4, y + 4, 3, 4, "#404040");
     wr(x + dw - 4, y + 5, 3, 2, "#6a4a30");
+    // Animated steam — two wisps that drift upward and fade
     if (stats && stats.infra.systemsUp === stats.infra.totalSystems) {
-      // Steam wisps
-      wr(x + dw - 3.5, y + 2.5, 0.8, 1.2, "rgba(200,200,200,0.25)");
-      wr(x + dw - 2.5, y + 3, 0.8, 1, "rgba(200,200,200,0.15)");
+      const t1 = (animTick * 0.2) % 3;
+      const t2 = ((animTick * 0.2) + 1.5) % 3;
+      const a1 = Math.max(0, 0.3 - t1 * 0.1);
+      const a2 = Math.max(0, 0.25 - t2 * 0.1);
+      wr(x + dw - 3.5, y + 3.5 - t1, 0.7, 0.8, `rgba(210,210,220,${a1.toFixed(2)})`);
+      wr(x + dw - 2.3, y + 3 - t2, 0.7, 0.8, `rgba(210,210,220,${a2.toFixed(2)})`);
     }
   } else if (zone.id === "meta") {
-    // Phone — notification dots on screen based on opportunities
+    // Phone — screen shows live notification feed
     wr(x + 1, y + 3, 3, 5, "#2a2a30");
-    wr(x + 1.5, y + 3.5, 2, 4, "#3848a0");
-    wr(x + 1.5, y + 3.5, 2, 0.5, "#606080");
+    wr(x + 1.5, y + 3.5, 2, 4, "#2838a0");
+    wr(x + 1.5, y + 3.5, 2, 0.5, "#606080"); // status bar
     const badge = stats?.badges[zone.id];
     if (badge?.count && badge.count > 0) {
-      // Notification dots on phone screen
+      // Notification rows scrolling on phone screen
       const dots = Math.min(badge.count, 3);
       for (let i = 0; i < dots; i++) {
-        wr(x + 1.8, y + 4.5 + i * 1, 1.2, 0.7, "#e08050");
+        const ny = y + 4.3 + ((i + animTick * 0.1) % 3) * 1;
+        wr(x + 1.7, ny, 1.6, 0.5, "#e08050");
       }
+    } else {
+      // Idle phone — dim home screen
+      wr(x + 1.8, y + 5, 1.2, 1.2, "#405080");
     }
-    // Camera miniature
+    // Camera — lens glints when there are opportunities
     wr(x + dw - 5, y + 4, 4, 3, "#404040");
     wr(x + dw - 4, y + 4.5, 2, 2, "#606060");
-    we(x + dw - 3, y + 5.5, 1, 1, "#8080a0", 0.7);
+    const lensGlint = badge?.alert ? 0.9 : 0.5;
+    we(x + dw - 3, y + 5.5, 1, 1, "#8080a0", lensGlint);
+    if (badge?.alert && animTick % 4 === 0) {
+      // Camera flash glint
+      we(x + dw - 3, y + 5.5, 1.5, 1.5, "#ffffff", 0.15);
+    }
   }
 }
 
@@ -422,48 +472,78 @@ export function drawWhiteboardData(
   const { wr } = helpers;
   const x = f.tx * TS,
     y = f.ty * TS;
+  const bw = 3 * TS;
   // Board frame
-  wr(x, y, 3 * TS, TS, "#f8f8f8");
-  wr(x, y, 3 * TS, 2, "#c0c0c0");
-  wr(x, y + TS - 2, 3 * TS, 2, "#c0c0c0");
-  wr(x, y, 2, TS, "#c0c0c0");
-  wr(x + 3 * TS - 2, y, 2, TS, "#c0c0c0");
+  wr(x, y, bw, TS, "#f4f4f0");
+  wr(x, y, bw, 1.5, "#c8c8c0");
+  wr(x, y + TS - 1.5, bw, 1.5, "#c8c8c0");
+  wr(x, y, 1.5, TS, "#c8c8c0");
+  wr(x + bw - 1.5, y, 1.5, TS, "#c8c8c0");
 
   if (stats) {
-    // Left: service health dots (3 coloured squares)
+    // ── Row 1: service health — 3 coloured squares with labels ──
     const up = stats.infra.systemsUp;
     const total = stats.infra.totalSystems;
     for (let i = 0; i < total; i++) {
       const ok = i < up;
-      wr(x + 3 + i * 5, y + 3, 3, 3, ok ? "#40b060" : "#e04848");
+      wr(x + 3 + i * 5, y + 2.5, 3, 3, ok ? "#40b060" : "#e04848");
+      // Shadow
+      wr(x + 3 + i * 5, y + 5.5, 3, 0.5, ok ? "#308848" : "#b03838");
     }
 
-    // Middle: post count today as small tally marks
+    // ── Row 2: 7-day mini calendar ── (7 dots, coloured by post count)
+    const today = new Date();
+    for (let d = 0; d < 7; d++) {
+      const dayOfWeek = (today.getDay() + d) % 7;
+      // Weekend = slightly dimmer
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const isToday = d === 0;
+      // Colour based on queue: green if posts scheduled, grey if gap
+      // We approximate: today + tomorrow have data, rest we show as planned
+      let dotCol = "#c0c0b8"; // grey = unknown
+      if (d === 0 && stats.spellcast.postsToday > 0) dotCol = "#40b060";
+      else if (d === 0 && stats.spellcast.postsToday === 0) dotCol = "#e0a030";
+      else if (d <= 2 && stats.spellcast.scheduled > 0) dotCol = "#60b070";
+
+      wr(x + 19 + d * 3.5, y + 3, 2, 2, dotCol);
+      // Today marker — tiny underline
+      if (isToday) wr(x + 19 + d * 3.5, y + 5.2, 2, 0.5, "#4040d0");
+      // Weekend dimming
+      if (isWeekend) wr(x + 19 + d * 3.5, y + 3, 2, 2, "rgba(244,244,240,0.35)");
+    }
+
+    // ── Row 3: posts today tally + queue bar ──
+    // Tally marks (blue marker)
     const posts = stats.spellcast.postsToday;
     const marks = Math.min(posts, 5);
     for (let i = 0; i < marks; i++) {
-      wr(x + 20 + i * 2.5, y + 3, 1, 4, "#6868d0");
+      wr(x + 3 + i * 2, y + 8, 0.8, 3.5, "#5858c8");
     }
-    // Diagonal through every 5
     if (marks >= 5) {
-      wr(x + 19, y + 3, 14, 0.8, "#6868d0");
+      // Diagonal strike-through
+      wr(x + 2, y + 9, 11, 0.6, "#5858c8");
     }
 
-    // Bottom: queue depth indicator bar
+    // Queue depth bar (orange marker)
     const queued = stats.spellcast.scheduled;
-    const barW = Math.max(1, Math.min(3 * TS - 8, (queued / 15) * (3 * TS - 8)));
-    wr(x + 3, y + 10, barW, 2, "#e08040");
+    const maxW = bw - 22;
+    const barW = Math.max(1, Math.min(maxW, (queued / 12) * maxW));
+    wr(x + 19, y + 9, barW, 1.5, "#e08040");
+    // Bright cap
+    wr(x + 19 + barW - 1, y + 9, 1, 1.5, "#f0a060");
   } else {
-    // Static lines when no data
-    wr(x + 3, y + 4, 10, 1, "#6868d0");
-    wr(x + 3, y + 7, 7, 1, "#6868d0");
-    wr(x + 3, y + 10, 12, 1, "#6868d0");
-    wr(x + 16, y + 4, 8, 1, "#e04848");
-    wr(x + 16, y + 7, 10, 1, "#e04848");
+    // Static whiteboard — faint marker lines
+    wr(x + 3, y + 4, 10, 0.8, "#c0c0d0");
+    wr(x + 3, y + 7, 14, 0.8, "#c0c0d0");
+    wr(x + 3, y + 10, 8, 0.8, "#c0c0d0");
   }
 
-  // Marker tray
-  wr(x + 2, y + TS - 4, 3 * TS - 4, 2, "#a0a0a0");
+  // Marker tray with actual marker colours
+  wr(x + 2, y + TS - 3.5, bw - 4, 1.5, "#b0b0a8");
+  wr(x + 4, y + TS - 4, 1, 2, "#4040d0"); // blue marker
+  wr(x + 7, y + TS - 4, 1, 2, "#e04848"); // red marker
+  wr(x + 10, y + TS - 4, 1, 2, "#40b060"); // green marker
+  wr(x + 13, y + TS - 4, 1, 2, "#e08040"); // orange marker
 }
 
 // ---------------------------------------------------------------------------
@@ -712,7 +792,7 @@ export function drawWindow(helpers: DrawHelpers, tx: number, ty: number, tod: TO
 // Pond
 // ---------------------------------------------------------------------------
 
-export function drawPond(helpers: DrawHelpers, tod: TOD): void {
+export function drawPond(helpers: DrawHelpers, tod: TOD, stats: IsleStats | null, animTick: number): void {
   const { wr, we, lighten } = helpers;
   const x = POND_TX * TS,
     y = POND_TY * TS,
@@ -721,24 +801,45 @@ export function drawPond(helpers: DrawHelpers, tod: TOD): void {
   const cx = x + w / 2,
     cy = y + h / 2;
 
+  // Health affects water colour — clear blue when healthy, murky when not
+  const allOk = !stats || stats.infra.systemsUp === stats.infra.totalSystems;
+  const healthyMix = allOk ? 1 : stats ? stats.infra.systemsUp / stats.infra.totalSystems : 1;
+
   // Bank
   we(cx, cy, w / 2 + 3, h / 2 + 3, "#388030", 0.7);
 
-  // Water
-  const wc = tod === "night" ? "#0a1838" : tod === "dusk" ? "#3848a0" : "#1878c8";
-  const wl = tod === "night" ? "#101840" : tod === "dusk" ? "#5060b0" : "#2090d8";
+  // Water colours shift: healthy = blue, unhealthy = murky amber
+  let wc: string, wl: string;
+  if (tod === "night") {
+    wc = allOk ? "#0a1838" : "#181808";
+    wl = allOk ? "#101840" : "#202010";
+  } else if (tod === "dusk") {
+    wc = allOk ? "#3848a0" : "#604830";
+    wl = allOk ? "#5060b0" : "#705838";
+  } else {
+    wc = allOk ? "#1878c8" : "#887830";
+    wl = allOk ? "#2090d8" : "#988838";
+  }
+
   we(cx, cy, w / 2, h / 2, wc);
   we(cx, cy, w / 2 - 2, h / 2 - 2, wl);
   we(cx, cy, w / 2 - 4, h / 2 - 4, lighten(wl, 20));
 
-  // Ripples
-  wr(cx - 10, cy - 2, 20, 1, lighten(wl, 30));
-  wr(cx - 6, cy + 4, 12, 1, lighten(wl, 30));
+  // Animated ripples — shift position with animTick
+  const rOff = (animTick * 0.3) % 6;
+  wr(cx - 10 + rOff, cy - 2, 18 - rOff, 0.8, lighten(wl, 30));
+  wr(cx - 6 - rOff * 0.5, cy + 4, 10 + rOff, 0.8, lighten(wl, 25));
 
-  // Lily pads
-  we(x + w * 0.28, y + h * 0.65, 4, 3, "#388030");
-  we(x + w * 0.72, y + h * 0.35, 3, 2, "#309020");
-  we(x + w * 0.5, y + h * 0.8, 3, 2, "#3a8828");
+  // Lily pads — slightly bob
+  const bob = Math.sin(animTick * 0.15) * 0.5;
+  we(x + w * 0.28, y + h * 0.65 + bob, 4, 3, "#388030");
+  we(x + w * 0.72, y + h * 0.35 - bob, 3, 2, "#309020");
+  we(x + w * 0.5, y + h * 0.8 + bob * 0.5, 3, 2, "#3a8828");
+
+  // Lily flower on first pad (blooms when healthy)
+  if (healthyMix > 0.6) {
+    we(x + w * 0.28 + 1, y + h * 0.65 + bob - 1, 1.5, 1.2, "#f0a0c0", healthyMix * 0.7);
+  }
 }
 
 // ---------------------------------------------------------------------------

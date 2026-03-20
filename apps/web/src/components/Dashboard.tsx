@@ -11,6 +11,7 @@ import SEOSnapshot from "./SEOSnapshot";
 import FloorPlan from "./FloorPlan";
 import CommandPalette from "./CommandPalette";
 import AlertFeed from "./AlertFeed";
+import RoomDetail from "./RoomDetail";
 
 const POLL_MS = 60_000;
 
@@ -24,7 +25,7 @@ export default function Dashboard() {
   const [loginSecret, setLoginSecret] = useState("");
   const [loginError, setLoginError] = useState("");
   const [view, setView] = useState<ViewMode>("pixel");
-  const [selectedRoom, setSelectedRoom] = useState<"lunary" | "spellcast" | "dev" | "meta" | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<"lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement" | null>(null);
 
   useEffect(() => {
     setToken(localStorage.getItem("homebase_token"));
@@ -100,7 +101,7 @@ export default function Dashboard() {
     if (token) fetchData(token);
   }, [token, fetchData]);
 
-  const handleOpenRoom = useCallback((room: "lunary" | "spellcast" | "dev" | "meta") => {
+  const handleOpenRoom = useCallback((room: "lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement") => {
     setSelectedRoom(room);
   }, []);
 
@@ -140,25 +141,50 @@ export default function Dashboard() {
     <div className="min-h-screen bg-black text-white">
       <StatusBar stats={stats} heartbeat={heartbeat} />
 
-      {/* View toggle button */}
-      <button
-        onClick={toggleView}
-        style={{
-          position: "fixed",
-          top: 42,
-          right: 8,
-          zIndex: 40,
-          fontFamily: "'Press Start 2P', monospace",
-          fontSize: 6,
-          color: "rgba(255,255,255,0.5)",
-          background: "rgba(0,0,0,0.7)",
-          border: "1px solid rgba(255,255,255,0.2)",
-          padding: "4px 8px",
-          cursor: "pointer",
-        }}
-      >
-        {view === "pixel" ? "LIST" : "PIXEL"}
-      </button>
+      {/* Top-right controls */}
+      <div style={{ position: "fixed", top: 42, right: 8, zIndex: 40, display: "flex", gap: 4, alignItems: "center" }}>
+        {/* Room dock — quick access to all rooms */}
+        {view === "pixel" && (
+          <>
+            {([
+              { id: "orbit" as const, label: "ORBIT", color: "#f59e0b" },
+              { id: "engagement" as const, label: "ENGAGE", color: "#10b981" },
+            ]).map((room) => (
+              <button
+                key={room.id}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); handleOpenRoom(room.id); }}
+                style={{
+                  fontFamily: "'Press Start 2P', monospace",
+                  fontSize: 6,
+                  color: room.color,
+                  background: "rgba(0,0,0,0.8)",
+                  border: `1px solid ${room.color}40`,
+                  padding: "4px 8px",
+                  cursor: "pointer",
+                  borderRadius: 3,
+                }}
+              >
+                {room.label}
+              </button>
+            ))}
+          </>
+        )}
+        <button
+          onClick={toggleView}
+          style={{
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: 6,
+            color: "rgba(255,255,255,0.5)",
+            background: "rgba(0,0,0,0.7)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            padding: "4px 8px",
+            cursor: "pointer",
+          }}
+        >
+          {view === "pixel" ? "LIST" : "PIXEL"}
+        </button>
+      </div>
 
       {/* Command Palette — always available */}
       <CommandPalette
@@ -171,6 +197,16 @@ export default function Dashboard() {
       {/* Alert Feed — pixel view only */}
       {view === "pixel" && (
         <AlertFeed stats={stats} heartbeat={heartbeat} onOpenRoom={handleOpenRoom} />
+      )}
+
+      {/* Rooms without pixel art desks — rendered at dashboard level */}
+      {selectedRoom && ["orbit", "engagement"].includes(selectedRoom) && stats && (
+        <RoomDetail
+          roomId={selectedRoom as "orbit" | "engagement"}
+          stats={stats}
+          heartbeat={heartbeat}
+          onClose={() => setSelectedRoom(null)}
+        />
       )}
 
       {view === "pixel" ? (

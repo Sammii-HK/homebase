@@ -20,7 +20,7 @@ interface Command {
 interface Props {
   stats: DashboardStats | null;
   token: string | null;
-  onOpenRoom: (room: "lunary" | "spellcast" | "dev" | "meta") => void;
+  onOpenRoom: (room: "lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement") => void;
   onRefresh: () => void;
 }
 
@@ -66,6 +66,8 @@ export default function CommandPalette({ stats, token, onOpenRoom, onRefresh }: 
     { id: "room-spellcast", label: "Spellcast Command", category: "navigate", icon: "📡", shortcut: "2", action: () => { onOpenRoom("spellcast"); setOpen(false); } },
     { id: "room-dev", label: "Dev Den", category: "navigate", icon: "🖥", shortcut: "3", action: () => { onOpenRoom("dev"); setOpen(false); } },
     { id: "room-meta", label: "Meta Analytics", category: "navigate", icon: "📊", shortcut: "4", action: () => { onOpenRoom("meta"); setOpen(false); } },
+    { id: "room-orbit", label: "Orbit HQ", category: "navigate", icon: "🛰", shortcut: "5", action: () => { onOpenRoom("orbit"); setOpen(false); } },
+    { id: "room-engagement", label: "Engagement", category: "navigate", icon: "💬", shortcut: "6", action: () => { onOpenRoom("engagement"); setOpen(false); } },
 
     // Actions
     {

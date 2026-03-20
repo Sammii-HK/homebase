@@ -247,6 +247,100 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
           ) : !loading ? (
             <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No revenue data available</div>
           ) : null}
+          {deepData?.aiCosts && (
+            <div style={{ marginTop: 8 }}>
+              <SectionLabel>AI COSTS</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <Stat label="GENERATIONS" value={String(deepData.aiCosts.totalGenerations)} />
+                <Stat label="EST. COST" value={`£${deepData.aiCosts.estimatedCost.toFixed(2)}`} />
+                <Stat label="COST/USER" value={`£${deepData.aiCosts.costPerUser.toFixed(3)}`} />
+                <Stat label="REV:COST" value={`${deepData.aiCosts.revenueCostRatio.toFixed(1)}x`} alert={deepData.aiCosts.revenueCostRatio < 2} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "SUBS" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {loading && <LoadingState />}
+          {deepData?.subscriptionLifecycle ? (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <Stat label="ACTIVE" value={String(deepData.subscriptionLifecycle.active)} />
+                <Stat label="TRIAL" value={String(deepData.subscriptionLifecycle.trial)} />
+                <Stat label="CANCELLED" value={String(deepData.subscriptionLifecycle.cancelled)} alert={deepData.subscriptionLifecycle.cancelled > 5} />
+                <Stat label="CHURN RATE" value={`${deepData.subscriptionLifecycle.churnRate.toFixed(1)}%`} alert={deepData.subscriptionLifecycle.churnRate > 10} />
+              </div>
+              <Stat label="AVG DURATION" value={`${deepData.subscriptionLifecycle.avgDurationDays.toFixed(0)} days`} />
+            </>
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No subscription data</div>
+          ) : null}
+          {deepData?.activation && (
+            <div style={{ marginTop: 4 }}>
+              <SectionLabel>ACTIVATION</SectionLabel>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <Stat label="TRIAL SIGNUPS" value={String(deepData.activation.trialSignups)} />
+                <Stat label="TRIAL CVR" value={`${deepData.activation.trialConversionRate.toFixed(1)}%`} />
+                <Stat label="PAID USERS" value={String(deepData.activation.paidUsers)} />
+                <Stat label="DAYS TO TRIAL" value={`${deepData.activation.avgDaysToTrial.toFixed(0)}d`} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "A/B TESTS" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {loading && <LoadingState />}
+          {deepData?.abTests && deepData.abTests.length > 0 ? (
+            deepData.abTests.map((t) => {
+              const sigColor = t.isSignificant ? "#4ade80" : "#facc15";
+              return (
+                <div key={t.testName} style={{
+                  padding: "10px 12px", background: "rgba(255,255,255,0.04)",
+                  border: `1px solid ${t.isSignificant ? "rgba(74,222,128,0.2)" : "rgba(255,255,255,0.1)"}`,
+                  borderRadius: 4,
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.7)" }}>{t.testName}</span>
+                    <span style={{ fontFamily: PS2P, fontSize: 7, color: sigColor }}>
+                      {t.isSignificant ? "SIGNIFICANT" : `${t.confidence.toFixed(0)}% conf`}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <span style={{ fontFamily: PS2P, fontSize: 8, color: "#c084fc" }}>
+                      Winner: {t.bestVariant || "—"}
+                    </span>
+                    {t.improvement > 0 && (
+                      <span style={{ fontFamily: PS2P, fontSize: 8, color: "#4ade80" }}>
+                        +{t.improvement.toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No A/B tests running</div>
+          ) : null}
+        </div>
+      )}
+
+      {tab === "TRAFFIC" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {loading && <LoadingState />}
+          {deepData?.attribution && deepData.attribution.length > 0 ? (
+            <>
+              <SectionLabel>SIGNUP SOURCES</SectionLabel>
+              {deepData.attribution.map((a) => (
+                <ProgressBar key={a.source} label={a.source} value={a.count} max={deepData.attribution[0].count} color="#c084fc" />
+              ))}
+            </>
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No attribution data</div>
+          ) : null}
         </div>
       )}
     </div>
@@ -495,6 +589,319 @@ function MetaDetail({ stats }: { stats: DashboardStats }) {
   );
 }
 
+// ── Orbit detail (tabbed) ──
+
+const ORBIT_TABS = ["AGENTS", "APPROVED", "TRENDING", "SCOUT", "ACTIVITY"];
+
+function OrbitDetail({ deepData, loading }: { deepData: OrbitDeepData | null; loading: boolean }) {
+  const [tab, setTab] = useState("AGENTS");
+
+  const AGENT_STATUS_COLORS: Record<string, string> = {
+    running: "#facc15", completed: "#4ade80", failed: "#f87171", idle: "#71717a",
+  };
+
+  return (
+    <div>
+      <RoomTabs tabs={ORBIT_TABS} active={tab} accent="#f59e0b" onChange={setTab} />
+
+      {!deepData?.online && !loading && (
+        <div style={{ textAlign: "center", padding: 20 }}>
+          <div style={{ fontFamily: PS2P, fontSize: 10, color: "#f87171", marginBottom: 8 }}>ORBIT OFFLINE</div>
+          <div style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.3)" }}>Start Orbit on port 3001</div>
+        </div>
+      )}
+
+      {tab === "AGENTS" && deepData?.online && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {deepData.pipelineRunning && (
+            <div style={{ fontFamily: PS2P, fontSize: 8, color: "#facc15", textAlign: "center", padding: 8, background: "rgba(250,204,21,0.08)", borderRadius: 4, marginBottom: 4 }}>
+              PIPELINE RUNNING
+            </div>
+          )}
+          {deepData.agents.map((a) => (
+            <div key={a.name} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "8px 10px", background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
+            }}>
+              <div style={{
+                width: 8, height: 8, borderRadius: 2,
+                background: AGENT_STATUS_COLORS[a.status] ?? "#71717a",
+                boxShadow: a.status === "running" ? `0 0 6px ${AGENT_STATUS_COLORS[a.status]}` : "none",
+              }} />
+              <span style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.7)", flex: 1 }}>{a.name}</span>
+              <span style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.3)" }}>{a.model}</span>
+              <span style={{ fontFamily: PS2P, fontSize: 7, color: AGENT_STATUS_COLORS[a.status] ?? "#71717a" }}>{a.status}</span>
+            </div>
+          ))}
+          {loading && <LoadingState />}
+        </div>
+      )}
+
+      {tab === "APPROVED" && deepData?.online && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {loading && <LoadingState />}
+          {deepData.approvedContent.length > 0 ? (
+            deepData.approvedContent.map((c, i) => (
+              <div key={i} style={{
+                padding: "10px 12px", background: "rgba(74,222,128,0.06)",
+                border: "1px solid rgba(74,222,128,0.15)", borderRadius: 4,
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "#f59e0b", textTransform: "uppercase" }}>{c.persona}</span>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: c.score >= 80 ? "#4ade80" : c.score >= 70 ? "#facc15" : "#f87171" }}>
+                    {c.score}/100
+                  </span>
+                </div>
+                <div style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>{c.title}</div>
+                <div style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.25)", marginTop: 4 }}>{c.platform}</div>
+              </div>
+            ))
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No approved content in queue</div>
+          ) : null}
+        </div>
+      )}
+
+      {tab === "TRENDING" && deepData?.online && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {loading && <LoadingState />}
+          {deepData.trendingTopics.length > 0 ? (
+            deepData.trendingTopics.map((t, i) => {
+              const heatColor = t.heat === "hot" ? "#ef4444" : t.heat === "warm" ? "#f59e0b" : "#60a5fa";
+              return (
+                <div key={i} style={{
+                  padding: "8px 10px", background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    <span style={{ fontFamily: PS2P, fontSize: 7, color: heatColor, textTransform: "uppercase" }}>{t.heat}</span>
+                    <span style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.7)" }}>{t.topic}</span>
+                  </div>
+                  {t.angle && (
+                    <div style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.35)", lineHeight: 1.3 }}>{t.angle}</div>
+                  )}
+                </div>
+              );
+            })
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No trending topics</div>
+          ) : null}
+        </div>
+      )}
+
+      {tab === "SCOUT" && deepData?.online && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {loading && <LoadingState />}
+          {deepData.scoutTargets.length > 0 ? (
+            deepData.scoutTargets.map((t, i) => (
+              <div key={i} style={{
+                padding: "10px 12px", background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "#f59e0b" }}>{t.platform} · @{t.author}</span>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: t.score >= 0.8 ? "#4ade80" : "#facc15" }}>
+                    {(t.score * 100).toFixed(0)}%
+                  </span>
+                </div>
+                <div style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.5)", lineHeight: 1.3, marginBottom: 6 }}>{t.content}</div>
+                {t.draftReply && (
+                  <div style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.3)", lineHeight: 1.3, borderLeft: "2px solid rgba(245,158,11,0.3)", paddingLeft: 8 }}>
+                    {t.draftReply}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No scout targets</div>
+          ) : null}
+        </div>
+      )}
+
+      {tab === "ACTIVITY" && deepData?.online && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {loading && <LoadingState />}
+          {deepData.activity.length > 0 ? (
+            deepData.activity.map((a, i) => (
+              <div key={i} style={{ display: "flex", gap: 8, padding: "4px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                <span style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.2)", minWidth: 40 }}>
+                  {a.timestamp ? new Date(a.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                </span>
+                <span style={{ fontFamily: PS2P, fontSize: 7, color: "#f59e0b", minWidth: 60 }}>{a.agent}</span>
+                <span style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.5)" }}>{a.detail || a.action}</span>
+              </div>
+            ))
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No recent activity</div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Engagement detail (tabbed) ──
+
+const ENGAGEMENT_TABS = ["INBOX", "DISCOVERY", "A/B TESTS", "COMPETITORS"];
+
+const PLATFORM_COLORS: Record<string, string> = {
+  threads: "#fff", instagram: "#f472b6", twitter: "#60a5fa", x: "#60a5fa",
+  tiktok: "#22d3ee", linkedin: "#93c5fd", reddit: "#fb923c", bluesky: "#60a5fa",
+};
+
+function EngagementDetail({ deepData, loading }: { deepData: EngagementDeepData | null; loading: boolean }) {
+  const [tab, setTab] = useState("INBOX");
+
+  return (
+    <div>
+      <RoomTabs tabs={ENGAGEMENT_TABS} active={tab} accent="#10b981" onChange={setTab} />
+
+      {tab === "INBOX" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {deepData?.stats && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 4 }}>
+              <Stat label="UNREAD" value={String(deepData.stats.unread)} alert={deepData.stats.unread > 5} />
+              <Stat label="REPLIED" value={String(deepData.stats.replied)} />
+              <Stat label="TOTAL" value={String(deepData.stats.total)} />
+            </div>
+          )}
+          {deepData?.stats?.byPlatform && Object.keys(deepData.stats.byPlatform).length > 0 && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+              {Object.entries(deepData.stats.byPlatform).map(([platform, count]) => (
+                <span key={platform} style={{ fontFamily: PS2P, fontSize: 7, color: PLATFORM_COLORS[platform] ?? "#999" }}>
+                  {platform}: {count}
+                </span>
+              ))}
+            </div>
+          )}
+          {loading && <LoadingState />}
+          {deepData?.items && deepData.items.length > 0 ? (
+            deepData.items.map((item) => (
+              <a
+                key={item.id}
+                href={item.platformUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block", textDecoration: "none",
+                  padding: "8px 10px",
+                  background: item.status === "unread" ? "rgba(16,185,129,0.06)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${item.status === "unread" ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 4,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: PLATFORM_COLORS[item.platform] ?? "#999", textTransform: "uppercase" }}>
+                    {item.platform}
+                  </span>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.35)" }}>{item.type}</span>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "#10b981" }}>@{item.authorHandle}</span>
+                </div>
+                <div style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>{item.content}</div>
+                {item.publishedAt && (
+                  <div style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.2)", marginTop: 4 }}>
+                    {new Date(item.publishedAt).toLocaleString()}
+                  </div>
+                )}
+              </a>
+            ))
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>Inbox clear</div>
+          ) : null}
+        </div>
+      )}
+
+      {tab === "DISCOVERY" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {loading && <LoadingState />}
+          {deepData?.discoveryItems && deepData.discoveryItems.length > 0 ? (
+            deepData.discoveryItems.map((d) => (
+              <a key={d.id} href={d.url} target="_blank" rel="noopener noreferrer" style={{
+                display: "block", textDecoration: "none",
+                padding: "8px 10px", background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: PLATFORM_COLORS[d.platform] ?? "#999" }}>{d.platform} · @{d.author}</span>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: d.score >= 0.7 ? "#4ade80" : "#facc15" }}>
+                    {(d.score * 100).toFixed(0)}%
+                  </span>
+                </div>
+                <div style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.5)", lineHeight: 1.3 }}>{d.content}</div>
+              </a>
+            ))
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No new discoveries</div>
+          ) : null}
+        </div>
+      )}
+
+      {tab === "A/B TESTS" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {loading && <LoadingState />}
+          {deepData?.abTests && deepData.abTests.length > 0 ? (
+            deepData.abTests.map((t) => {
+              const statusColor = t.status === "completed" ? "#4ade80" : t.status === "active" ? "#facc15" : "#71717a";
+              return (
+                <div key={t.id} style={{
+                  padding: "10px 12px", background: "rgba(255,255,255,0.04)",
+                  border: `1px solid rgba(255,255,255,0.1)`, borderRadius: 4,
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <span style={{ fontFamily: PS2P, fontSize: 7, color: statusColor, textTransform: "uppercase" }}>{t.status}</span>
+                    <span style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.3)" }}>optimising: {t.metric}</span>
+                  </div>
+                  <div style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.6)", lineHeight: 1.3, marginBottom: 4 }}>
+                    {t.originalContent}
+                  </div>
+                  {t.winnerMetrics && (
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {Object.entries(t.winnerMetrics).slice(0, 4).map(([k, v]) => (
+                        <span key={k} style={{ fontFamily: PS2P, fontSize: 7, color: "#10b981" }}>
+                          {k}: {typeof v === "number" ? (v as number).toFixed(1) : String(v)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {t.evaluatedAt && (
+                    <div style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.2)", marginTop: 4 }}>
+                      Evaluated: {new Date(t.evaluatedAt).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No A/B tests</div>
+          ) : null}
+        </div>
+      )}
+
+      {tab === "COMPETITORS" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {loading && <LoadingState />}
+          {deepData?.competitors && deepData.competitors.length > 0 ? (
+            deepData.competitors.map((c) => (
+              <div key={c.id} style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "8px 10px", background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
+              }}>
+                <span style={{ fontFamily: PS2P, fontSize: 7, color: PLATFORM_COLORS[c.platform] ?? "#999", textTransform: "uppercase" }}>{c.platform}</span>
+                <span style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.7)", flex: 1 }}>{c.name}</span>
+                <span style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.4)" }}>@{c.handle}</span>
+              </div>
+            ))
+          ) : !loading ? (
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>No competitors tracked</div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main room detail panel ──
 
 const ROOM_TITLES: Record<RoomId, { title: string; accent: string }> = {
@@ -502,11 +909,13 @@ const ROOM_TITLES: Record<RoomId, { title: string; accent: string }> = {
   spellcast: { title: "SPELLCAST COMMAND", accent: "#22d3ee" },
   dev: { title: "DEV DEN", accent: "#4ade80" },
   meta: { title: "META ANALYTICS", accent: "#f472b6" },
+  orbit: { title: "ORBIT HQ", accent: "#f59e0b" },
+  engagement: { title: "ENGAGEMENT", accent: "#10b981" },
 };
 
 export default function RoomDetail({ roomId, stats, heartbeat, onClose }: Props) {
   const { title, accent } = ROOM_TITLES[roomId];
-  const deepRoomId = roomId === "dev" ? "infra" : roomId === "meta" ? null : roomId;
+  const deepRoomId = roomId === "dev" ? "infra" : roomId === "meta" ? null : roomId === "orbit" ? "orbit" : roomId === "engagement" ? "engagement" : roomId;
   const { data: deepData, loading } = useRoomData(deepRoomId);
 
   return (
@@ -554,6 +963,8 @@ export default function RoomDetail({ roomId, stats, heartbeat, onClose }: Props)
         {roomId === "spellcast" && <SpellcastDetail stats={stats} deepData={deepData as SpellcastDeepData | null} loading={loading} />}
         {roomId === "dev" && <DevDetail stats={stats} heartbeat={heartbeat} deepData={deepData as InfraDeepData | null} loading={loading} />}
         {roomId === "meta" && <MetaDetail stats={stats} />}
+        {roomId === "orbit" && <OrbitDetail deepData={deepData as OrbitDeepData | null} loading={loading} />}
+        {roomId === "engagement" && <EngagementDetail deepData={deepData as EngagementDeepData | null} loading={loading} />}
 
         {/* Updated timestamp */}
         <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.2)", textAlign: "center", marginTop: 16 }}>

@@ -10,7 +10,7 @@ interface Alert {
   severity: "critical" | "warning" | "info";
   title: string;
   detail?: string;
-  room?: "lunary" | "spellcast" | "dev" | "meta";
+  room?: "lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement";
   action?: { label: string; href?: string };
   ts: number;
 }
@@ -136,12 +136,14 @@ const ROOM_ACCENTS: Record<string, string> = {
   spellcast: "#22d3ee",
   dev: "#4ade80",
   meta: "#f472b6",
+  orbit: "#f59e0b",
+  engagement: "#10b981",
 };
 
 interface AlertFeedProps {
   stats: DashboardStats | null;
   heartbeat: HeartbeatResponse | null;
-  onOpenRoom?: (room: "lunary" | "spellcast" | "dev" | "meta") => void;
+  onOpenRoom?: (room: "lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement") => void;
 }
 
 export default function AlertFeed({ stats, heartbeat, onOpenRoom }: AlertFeedProps) {

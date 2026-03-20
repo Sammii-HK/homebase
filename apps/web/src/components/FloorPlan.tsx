@@ -47,7 +47,7 @@ function getRoomBadge(
 
 // ── FloorPlan — canvas wrapper ──
 
-type RoomId = "lunary" | "spellcast" | "dev" | "meta";
+type RoomId = "lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement";
 
 interface FloorPlanProps {
   stats: DashboardStats | null;

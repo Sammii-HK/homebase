@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
     // Parse agents
     const agentsRaw = state.agents ?? {};
-    const agents = Object.values(agentsRaw).map((a: Record<string, unknown>) => ({
+    const agents = (Object.values(agentsRaw) as Record<string, unknown>[]).map((a) => ({
       name: String(a.name ?? ""),
       status: String(a.status ?? "idle"),
       model: String(a.model ?? ""),
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       const items = Array.isArray(approvedRaw) ? approvedRaw : approvedRaw.approved ?? approvedRaw.posts ?? [];
       approvedContent = items.slice(0, 10).map((p: Record<string, unknown>) => ({
         title: String(p.title ?? p.hook ?? p.content ?? "").slice(0, 80),
-        platform: String(p.platform ?? p.platforms?.[0] ?? ""),
+        platform: String(p.platform ?? (Array.isArray(p.platforms) ? p.platforms[0] : "") ?? ""),
         score: Number(p.score ?? p.quality_score ?? p.editor_score ?? 0),
         persona: String(p.persona ?? p.pillar ?? p.account ?? ""),
       }));
