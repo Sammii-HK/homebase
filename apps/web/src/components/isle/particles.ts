@@ -2,7 +2,7 @@
 // Fireflies, falling leaves, cherry blossoms, snow, dust motes
 
 import type { Particle, Season, TOD } from "./types";
-import { TS, WORLD_COLS, WORLD_ROWS, OFFICE_COLS } from "./world";
+import { TS, WORLD_COLS, WORLD_ROWS, OFFICE_COLS, POND_TX, POND_TY, POND_TW, POND_TH } from "./world";
 
 const POOL_SIZE = 200;
 
@@ -97,6 +97,35 @@ export class ParticleSystem {
           p.y += p.vy;
           p.opacity = Math.sin((p.life / p.maxLife) * Math.PI) * 0.9;
           break;
+
+        case "butterfly": {
+          // Lazy figure-8 float pattern
+          const bf = time * 0.8 + p.phase;
+          p.x += Math.sin(bf) * 14 * dt + p.vx * dt;
+          p.y += Math.cos(bf * 0.7) * 8 * dt + p.vy * dt;
+          p.rotation = Math.sin(bf * 2) * 0.3; // wing flap
+          p.opacity = Math.min(1, p.life / 2) * 0.85;
+          break;
+        }
+
+        case "dragonfly": {
+          // Quick darting movement with pauses
+          const df = time * 1.8 + p.phase;
+          const dart = Math.sin(df * 3) > 0.7 ? 1 : 0.15; // intermittent darting
+          p.x += (Math.sin(df) * 20 * dart + p.vx) * dt;
+          p.y += (Math.cos(df * 1.3) * 12 * dart + p.vy) * dt;
+          p.opacity = 0.6 + Math.sin(df) * 0.2;
+          break;
+        }
+
+        case "bird": {
+          // Steady glide across the sky
+          p.x += p.vx * dt;
+          p.y += p.vy * dt + Math.sin(time * 1.5 + p.phase) * 2 * dt;
+          p.rotation = Math.sin(time * 4 + p.phase) * 0.15; // wing beat
+          p.opacity = Math.min(1, Math.min(p.life / 2, (p.maxLife - p.life + 2) / 2)) * 0.7;
+          break;
+        }
       }
 
       // Bounds check (garden area only for outdoor particles)
@@ -193,6 +222,77 @@ export class ParticleSystem {
           p.size = 1 + Math.random() * 2;
           p.color = Math.random() > 0.5 ? "#fff" : "#e0e8ff";
           p.opacity = 0.8;
+          p.phase = Math.random() * Math.PI * 2;
+          p.rotation = 0;
+        }
+      }
+    }
+
+    // Butterflies — daytime, garden area, spring/summer
+    if ((tod === "morning" || tod === "afternoon") && (season === "spring" || season === "summer")) {
+      if (this.particles.filter(p => p.type === "butterfly").length < 6) {
+        if (Math.random() < 0.4) {
+          const p = this.spawn();
+          if (p) {
+            p.type = "butterfly";
+            p.x = gardenLeft + Math.random() * (gardenRight - gardenLeft);
+            p.y = worldH * 0.3 + Math.random() * worldH * 0.5;
+            p.vx = (Math.random() - 0.5) * 4;
+            p.vy = (Math.random() - 0.5) * 2;
+            p.life = 12 + Math.random() * 10;
+            p.maxLife = p.life;
+            p.size = 2 + Math.random();
+            const buttCols = ["#e090d0", "#80c0f0", "#f0d060", "#ff9060", "#a0e0a0"];
+            p.color = buttCols[Math.floor(Math.random() * buttCols.length)];
+            p.opacity = 0.8;
+            p.phase = Math.random() * Math.PI * 2;
+            p.rotation = 0;
+          }
+        }
+      }
+    }
+
+    // Dragonflies — near the pond, daytime
+    if (tod !== "night") {
+      const pondCX = (POND_TX + POND_TW / 2) * TS;
+      const pondCY = (POND_TY + POND_TH / 2) * TS;
+      if (this.particles.filter(p => p.type === "dragonfly").length < 3) {
+        if (Math.random() < 0.2) {
+          const p = this.spawn();
+          if (p) {
+            p.type = "dragonfly";
+            p.x = pondCX + (Math.random() - 0.5) * POND_TW * TS;
+            p.y = pondCY + (Math.random() - 0.5) * POND_TH * TS;
+            p.vx = (Math.random() - 0.5) * 6;
+            p.vy = (Math.random() - 0.5) * 3;
+            p.life = 8 + Math.random() * 8;
+            p.maxLife = p.life;
+            p.size = 2;
+            p.color = Math.random() > 0.5 ? "#40b0e0" : "#60d080";
+            p.opacity = 0.7;
+            p.phase = Math.random() * Math.PI * 2;
+            p.rotation = 0;
+          }
+        }
+      }
+    }
+
+    // Birds — occasional silhouettes crossing the sky
+    if (this.particles.filter(p => p.type === "bird").length < 2) {
+      if (Math.random() < 0.03) { // rare spawn
+        const p = this.spawn();
+        if (p) {
+          p.type = "bird";
+          const goRight = Math.random() > 0.5;
+          p.x = goRight ? -10 : WORLD_COLS * TS + 10;
+          p.y = 5 + Math.random() * 30; // sky area
+          p.vx = goRight ? 25 + Math.random() * 15 : -(25 + Math.random() * 15);
+          p.vy = (Math.random() - 0.5) * 3;
+          p.life = 15 + Math.random() * 10;
+          p.maxLife = p.life;
+          p.size = 2.5 + Math.random();
+          p.color = tod === "night" ? "#202030" : "#303030";
+          p.opacity = 0.6;
           p.phase = Math.random() * Math.PI * 2;
           p.rotation = 0;
         }
@@ -307,6 +407,74 @@ export class ParticleSystem {
         case "sparkle": {
           ctx.fillStyle = p.color;
           ctx.fillRect(Math.round(sx - sz / 2), Math.round(sy - sz / 2), Math.max(1, Math.round(sz)), Math.max(1, Math.round(sz)));
+          break;
+        }
+
+        case "butterfly": {
+          ctx.save();
+          ctx.translate(sx, sy);
+          // Wing flap animation
+          const wingAngle = Math.sin(time * 8 + p.phase) * 0.6;
+          ctx.fillStyle = p.color;
+          // Left wing
+          ctx.save();
+          ctx.scale(Math.cos(wingAngle), 1);
+          ctx.beginPath();
+          ctx.ellipse(-sz * 0.3, 0, sz * 0.8, sz * 0.5, -0.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          // Right wing
+          ctx.save();
+          ctx.scale(Math.cos(wingAngle + 0.5), 1);
+          ctx.beginPath();
+          ctx.ellipse(sz * 0.3, 0, sz * 0.8, sz * 0.5, 0.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          // Body
+          ctx.fillStyle = "#333";
+          ctx.fillRect(-0.5, -sz * 0.3, 1, sz * 0.6);
+          ctx.restore();
+          break;
+        }
+
+        case "dragonfly": {
+          ctx.save();
+          ctx.translate(sx, sy);
+          // Elongated body
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-sz * 0.8, -0.5, sz * 1.6, 1);
+          // Wings (shimmer)
+          const dWing = Math.sin(time * 12 + p.phase) * 0.4;
+          ctx.globalAlpha = Math.max(0, p.opacity * (0.4 + dWing * 0.3));
+          ctx.fillStyle = "#c0e8ff";
+          ctx.beginPath();
+          ctx.ellipse(0, -sz * 0.3, sz * 0.9, sz * 0.25, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(0, sz * 0.3, sz * 0.9, sz * 0.25, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          break;
+        }
+
+        case "bird": {
+          ctx.save();
+          ctx.translate(sx, sy);
+          ctx.fillStyle = p.color;
+          // Simple V-shape bird silhouette with wing beat
+          const bWing = Math.sin(time * 5 + p.phase) * sz * 0.4;
+          ctx.beginPath();
+          ctx.moveTo(-sz * 1.2, bWing);
+          ctx.lineTo(-sz * 0.3, 0);
+          ctx.lineTo(0, 0);
+          ctx.lineTo(sz * 0.3, 0);
+          ctx.lineTo(sz * 1.2, bWing);
+          ctx.lineTo(sz * 0.3, sz * 0.15);
+          ctx.lineTo(0, sz * 0.2);
+          ctx.lineTo(-sz * 0.3, sz * 0.15);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
           break;
         }
       }

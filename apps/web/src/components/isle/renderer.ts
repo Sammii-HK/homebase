@@ -5,6 +5,7 @@ import {
   TS, OFFICE_COLS, WORLD_COLS, WORLD_ROWS, WORLD_W, WORLD_H,
   DOOR_ROW_START, DOOR_ROW_END,
   DESK_ZONES, FURNITURE, FLOWERS, TREES, BENCHES,
+  ROCKS, BUSHES, SIGNPOST,
   getSeason, getTOD,
 } from "./world";
 import { drawSky, loadMoonImages, getMoonPhaseName, getWorldOverlay } from "./sky";
@@ -15,6 +16,8 @@ import {
   drawWhiteboard, drawWhiteboardData, drawWaterCooler, drawFilingCabinet,
   drawBookshelf, drawLamp, drawPlantFurn, drawBench,
   drawWindow, drawPond, drawTree, drawFlower,
+  drawPath, drawLantern, LANTERN_SPOTS, drawWindowLight, drawGrassDetail,
+  drawRock, drawBush, drawSignpost,
 } from "./furniture";
 import { Char, drawChar } from "./sprites";
 import { ParticleSystem } from "./particles";
@@ -415,6 +418,7 @@ export class IsleRenderer {
           else drawOfficeFloor(helpers, tx, ty);
         } else {
           drawGrass(helpers, tx, ty, season);
+          drawGrassDetail(helpers, tx, ty, season);
         }
       }
     }
@@ -423,6 +427,7 @@ export class IsleRenderer {
     for (const f of FURNITURE) {
       if (f.type === "rug") drawRug(helpers, f);
     }
+    drawPath(helpers);
     drawPond(helpers, tod, this.stats, this.animTick);
 
     // Z-sorted drawables
@@ -434,9 +439,9 @@ export class IsleRenderer {
       ds.push({ y: TS, draw: () => drawBookshelf(helpers, tx, 0) });
     }
 
-    // Windows (top wall)
+    // Windows (top wall) + light rays
     for (const tx of [3, 9]) {
-      ds.push({ y: 0, draw: () => drawWindow(helpers, tx, 0, tod) });
+      ds.push({ y: 0, draw: () => { drawWindow(helpers, tx, 0, tod); drawWindowLight(helpers, tx, 0, tod); } });
     }
 
     // Lamps
@@ -484,6 +489,20 @@ export class IsleRenderer {
 
     // Benches
     for (const b of BENCHES) ds.push({ y: b.ty * TS + TS, draw: () => drawBench(helpers, b) });
+
+    // Garden lanterns
+    for (const [lx, ly] of LANTERN_SPOTS) {
+      ds.push({ y: ly * TS + TS, draw: () => drawLantern(helpers, lx, ly, tod) });
+    }
+
+    // Rocks
+    for (const r of ROCKS) ds.push({ y: r.ty * TS + TS, draw: () => drawRock(helpers, r) });
+
+    // Bushes
+    for (const b of BUSHES) ds.push({ y: b.ty * TS + TS, draw: () => drawBush(helpers, b) });
+
+    // Signpost
+    ds.push({ y: SIGNPOST.ty * TS + TS, draw: () => drawSignpost(helpers, SIGNPOST) });
 
     // Flowers
     for (const f of FLOWERS) ds.push({ y: f.ty * TS + TS, draw: () => drawFlower(helpers, f, season) });

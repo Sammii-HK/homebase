@@ -57,6 +57,19 @@ const SPR = {
   largePainting: loadSprite("/sprites/furniture/LARGE_PAINTING/LARGE_PAINTING.png"),
   woodenChairBack: loadSprite("/sprites/furniture/WOODEN_CHAIR/WOODEN_CHAIR_BACK.png"),
   woodenBench: loadSprite("/sprites/furniture/WOODEN_BENCH/WOODEN_BENCH.png"),
+  // Cozy pack outdoor sprites (CC0, IshtarPixels)
+  treeYellow: loadSprite("/sprites/cozy_pack/tiles/Slice 116.png"),   // 32x32 round yellow tree
+  treeOrange: loadSprite("/sprites/cozy_pack/tiles/Slice 117.png"),   // 32x32 round orange tree
+  treePink: loadSprite("/sprites/cozy_pack/tiles/Slice 118.png"),     // 32x32 pointed orange tree
+  treeGreen: loadSprite("/sprites/cozy_pack/tiles/Slice 119.png"),    // 32x32 green conifer
+  treeDead: loadSprite("/sprites/cozy_pack/tiles/Slice 114.png"),     // 32x32 bare branches
+  rockBrown: loadSprite("/sprites/cozy_pack/tiles/Slice 121.png"),    // 16x16 brown rock
+  rockGrey: loadSprite("/sprites/cozy_pack/tiles/Slice 122.png"),     // 16x16 grey rock
+  rocksCluster: loadSprite("/sprites/cozy_pack/tiles/Slice 123.png"), // 16x16 rocks cluster
+  bush1: loadSprite("/sprites/cozy_pack/tiles/Slice 126.png"),        // 16x16 green bush
+  bush2: loadSprite("/sprites/cozy_pack/tiles/Slice 127.png"),        // 16x16 green bush variant
+  signpost: loadSprite("/sprites/cozy_pack/tiles/Slice 112.png"),     // 16x16 signpost
+  signpost2: loadSprite("/sprites/cozy_pack/tiles/Slice 113.png"),    // 16x16 signpost variant
 };
 
 /** Draw a sprite image at world coordinates with zoom/pan */
@@ -1092,166 +1105,64 @@ export function drawPond(helpers: DrawHelpers, tod: TOD, stats: IsleStats | null
 // Trees
 // ---------------------------------------------------------------------------
 
+// Tree sprite variants per season — picks from cozy pack sprites
+const TREE_SPRITES_BY_SEASON: Record<Season, (() => HTMLImageElement)[]> = {
+  spring: [() => SPR.treeGreen, () => SPR.treeYellow, () => SPR.treePink],
+  summer: [() => SPR.treeGreen, () => SPR.treeYellow, () => SPR.treeGreen],
+  autumn: [() => SPR.treeOrange, () => SPR.treePink, () => SPR.treeYellow],
+  winter: [() => SPR.treeDead, () => SPR.treeGreen, () => SPR.treeDead],
+};
+
 export function drawTree(
   helpers: DrawHelpers,
   t: { wx: number; wy: number; sz: number },
   season: Season,
   tod: TOD,
 ): void {
-  const { wr, we, lighten } = helpers;
+  const { we, wr, spr } = helpers;
   const rv = seededRng(`tree${t.wx},${t.wy}`);
+  const variant = Math.floor(rv() * 3);
+
+  // Pick sprite based on season + deterministic variant
+  const sprites = TREE_SPRITES_BY_SEASON[season];
+  const treeImg = sprites[variant % sprites.length]();
+
+  // Ground shadow
   const cx = t.wx + t.sz / 2;
-  const cy = t.wy + t.sz / 2;
-  const s = t.sz; // shorthand
+  we(cx, t.wy + t.sz * 0.9, t.sz * 0.5, t.sz * 0.12, "#0a1a08", 0.25);
 
-  // --- Ground shadow (at trunk base) ---
-  we(cx, t.wy + s * 0.85, s * 0.5, s * 0.12, "#0a1a08", 0.3);
+  // Draw the sprite — trees are 32x32, anchor at bottom-centre
+  // Scale based on tree size (sz ranges from ~9-23)
+  const scale = t.sz / 20; // normalise to roughly 1x
+  const drawW = 32 * scale;
+  const drawH = 32 * scale;
+  const drawX = t.wx + t.sz / 2 - drawW / 2;
+  const drawY = t.wy + t.sz - drawH;
 
-  // --- Trunk with bark texture ---
-  const trunkW = s * 0.14;
-  const trunkH = s * 0.6;
-  const trunkX = cx - trunkW / 2;
-  const trunkY = cy + s * 0.15;
+  if (treeImg.complete && treeImg.naturalWidth) {
+    const { ctx, zoom, panX, panY } = helpers;
+    const dx = Math.round(panX + drawX * zoom);
+    const dy = Math.round(panY + drawY * zoom);
+    const dw = Math.round(drawW * zoom);
+    const dh = Math.round(drawH * zoom);
 
-  // Main trunk
-  wr(trunkX, trunkY, trunkW, trunkH, "#5a3012");
-  // Lighter bark strip
-  wr(trunkX + 1, trunkY, trunkW * 0.4, trunkH, "#7a4c28");
-  // Dark bark lines
-  wr(trunkX + trunkW * 0.7, trunkY + trunkH * 0.1, 1, trunkH * 0.3, "#3e2008");
-  wr(trunkX + 1, trunkY + trunkH * 0.5, 1, trunkH * 0.25, "#3e2008");
-  // Knot
-  const knotY = trunkY + trunkH * (0.3 + rv() * 0.3);
-  wr(trunkX + 1, knotY, 2, 2, "#3e2008");
-  wr(trunkX + 2, knotY + 1, 1, 1, "#7a4c28");
+    // Winter trees get lower opacity
+    if (season === "winter" && variant !== 1) {
+      ctx.globalAlpha = 0.7;
+    }
+    ctx.drawImage(treeImg, dx, dy, dw, dh);
+    ctx.globalAlpha = 1;
 
-  // --- Branches (visible in winter, partially in autumn) ---
-  if (season === "winter" || season === "autumn") {
-    const branchCol = "#5a3012";
-    // Left branch
-    wr(cx - s * 0.22, cy - s * 0.05, s * 0.15, 2, branchCol);
-    wr(cx - s * 0.28, cy - s * 0.1, s * 0.08, 1.5, branchCol);
-    // Right branch
-    wr(cx + s * 0.08, cy - s * 0.08, s * 0.18, 2, branchCol);
-    wr(cx + s * 0.2, cy - s * 0.14, s * 0.1, 1.5, branchCol);
-    // Top branch
-    wr(cx - 1, cy - s * 0.2, 2, s * 0.12, branchCol);
-  }
-
-  // --- Canopy palette ---
-  const palette: Record<Season, [string, string, string, string]> = {
-    spring: ["#2e8040", "#48b058", "#5cc868", "#78e088"],
-    summer: ["#1e6018", "#287820", "#389030", "#48a838"],
-    autumn: ["#8a3008", "#b85018", "#d87028", "#e89838"],
-    winter: ["#586868", "#688080", "#90a8a8", "#b0c8c8"],
-  };
-  const [c1, c2, c3, c4] = palette[season];
-
-  // --- Organic canopy from 5-6 overlapping blobs ---
-  const canopyAlpha = season === "winter" ? 0.5 : 1;
-
-  // Generate unique blob offsets per tree
-  const blobs: [number, number, number, number][] = [
-    // [offsetX, offsetY, radiusX, radiusY]
-    [0, 0, s * 0.38, s * 0.32],
-    [s * (rv() * 0.12 - 0.06), -s * 0.14, s * 0.32, s * 0.26],
-    [-s * (0.12 + rv() * 0.1), -s * 0.04, s * 0.26, s * 0.22],
-    [s * (0.1 + rv() * 0.1), -s * 0.06, s * 0.24, s * 0.2],
-    [-s * (0.04 + rv() * 0.08), -s * 0.22, s * 0.2, s * 0.18],
-    [s * (rv() * 0.14), -s * 0.18, s * 0.18, s * 0.16],
-  ];
-
-  // Base canopy layer (darkest)
-  we(cx + blobs[0][0], cy + blobs[0][1], blobs[0][2], blobs[0][3], c1, canopyAlpha);
-  // Mid layers
-  we(cx + blobs[1][0], cy + blobs[1][1], blobs[1][2], blobs[1][3], c2, canopyAlpha);
-  we(cx + blobs[2][0], cy + blobs[2][1], blobs[2][2], blobs[2][3], c2, canopyAlpha);
-  we(cx + blobs[3][0], cy + blobs[3][1], blobs[3][2], blobs[3][3], c3, canopyAlpha);
-  // Top highlight layers
-  we(cx + blobs[4][0], cy + blobs[4][1], blobs[4][2], blobs[4][3], c3, canopyAlpha);
-  we(cx + blobs[5][0], cy + blobs[5][1], blobs[5][2], blobs[5][3], c4, canopyAlpha * 0.9);
-
-  // --- Leaf detail dots scattered on canopy ---
-  if (season !== "winter") {
-    const dotCount = 8 + Math.floor(rv() * 6);
-    for (let i = 0; i < dotCount; i++) {
-      const dx = (rv() - 0.5) * s * 0.6;
-      const dy = (rv() - 0.5) * s * 0.5 - s * 0.08;
-      // Only draw if roughly within canopy bounds
-      if (dx * dx / (s * 0.35) ** 2 + dy * dy / (s * 0.3) ** 2 < 1) {
-        const dotCol = rv() > 0.5 ? lighten(c3, 12) : lighten(c1, -8);
-        wr(cx + dx, cy + dy, 1.5, 1, dotCol);
-      }
+    // Snow caps in winter
+    if (season === "winter") {
+      we(cx, t.wy + t.sz * 0.3, t.sz * 0.3, t.sz * 0.08, "#e8f0f8", 0.8);
+      we(cx - t.sz * 0.1, t.wy + t.sz * 0.4, t.sz * 0.2, t.sz * 0.06, "#dce8f0", 0.65);
     }
   }
 
-  // --- Seasonal accents ---
-  if (season === "spring") {
-    // Cherry blossom clusters on canopy
-    const blossomCount = 5 + Math.floor(rv() * 4);
-    const blossomCols = ["#ffb0c8", "#ffc0d8", "#ff90b0", "#ffd0e0"];
-    for (let i = 0; i < blossomCount; i++) {
-      const bx = (rv() - 0.5) * s * 0.55;
-      const by = (rv() - 0.5) * s * 0.4 - s * 0.1;
-      if (bx * bx / (s * 0.32) ** 2 + by * by / (s * 0.28) ** 2 < 1) {
-        const bc = blossomCols[Math.floor(rv() * blossomCols.length)];
-        we(cx + bx, cy + by, s * 0.04, s * 0.035, bc, 0.85);
-        // Tiny white centre
-        wr(cx + bx - 0.5, cy + by - 0.5, 1, 1, "#fff8f0");
-      }
-    }
-    // Falling petals below tree
-    for (let i = 0; i < 3; i++) {
-      const px = cx + (rv() - 0.5) * s * 0.7;
-      const py = t.wy + s * 0.8 + rv() * s * 0.15;
-      wr(px, py, 1.5, 1, "#ffb8d0");
-    }
-  }
-
-  if (season === "summer") {
-    // A couple of small fruits
-    const fruitCount = Math.floor(rv() * 3);
-    for (let i = 0; i < fruitCount; i++) {
-      const fx = cx + (rv() - 0.5) * s * 0.35;
-      const fy = cy + (rv() - 0.3) * s * 0.2;
-      we(fx, fy, s * 0.03, s * 0.03, "#e03030", 0.9);
-      wr(fx - 0.3, fy - s * 0.03, 0.8, s * 0.02, "#408020");
-    }
-  }
-
-  if (season === "autumn") {
-    // Scattered orange/red/yellow leaf clusters on canopy
-    const leafCount = 6 + Math.floor(rv() * 5);
-    const leafCols = ["#d86020", "#e8a030", "#c83818", "#e8c838"];
-    for (let i = 0; i < leafCount; i++) {
-      const lx = (rv() - 0.5) * s * 0.6;
-      const ly = (rv() - 0.5) * s * 0.45 - s * 0.05;
-      if (lx * lx / (s * 0.33) ** 2 + ly * ly / (s * 0.27) ** 2 < 1) {
-        const lc = leafCols[Math.floor(rv() * leafCols.length)];
-        wr(cx + lx, cy + ly, 2, 1.5, lc);
-      }
-    }
-    // A few fallen leaves on ground
-    for (let i = 0; i < 2; i++) {
-      const gx = cx + (rv() - 0.5) * s * 0.8;
-      const gy = t.wy + s * 0.88 + rv() * s * 0.08;
-      wr(gx, gy, 2, 1, leafCols[Math.floor(rv() * leafCols.length)]);
-    }
-  }
-
-  if (season === "winter") {
-    // Snow caps on the thin canopy blobs
-    we(cx, cy - s * 0.22, s * 0.22, s * 0.08, "#e8f0f8", 0.85);
-    we(cx - s * 0.1, cy - s * 0.1, s * 0.16, s * 0.06, "#dce8f0", 0.75);
-    we(cx + s * 0.08, cy - s * 0.05, s * 0.14, s * 0.05, "#e0ecf4", 0.7);
-    // Snow on branches
-    wr(cx - s * 0.24, cy - s * 0.07, s * 0.1, 1.5, "#e8f0f8");
-    wr(cx + s * 0.12, cy - s * 0.1, s * 0.12, 1.5, "#e8f0f8");
-  }
-
-  // --- Night overlay ---
+  // Night overlay
   if (tod === "night") {
-    we(cx, cy - s * 0.06, s * 0.42, s * 0.38, "rgba(0,0,20,0.3)");
+    we(cx, t.wy + t.sz * 0.4, t.sz * 0.4, t.sz * 0.35, "rgba(0,0,20,0.25)");
   }
 }
 
@@ -1398,5 +1309,230 @@ export function drawFlower(
     }
     // Small leaf at base
     wr(mid - 1.5, y + TS * 0.6, 2, 1.5, stemCol);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Garden rocks (cozy pack sprites)
+// ---------------------------------------------------------------------------
+
+const ROCK_SPRITES = [
+  () => SPR.rockBrown,
+  () => SPR.rockGrey,
+  () => SPR.rocksCluster,
+  () => SPR.rockBrown,
+];
+
+export function drawRock(helpers: DrawHelpers, r: { tx: number; ty: number; variant: number }): void {
+  const { spr } = helpers;
+  const img = ROCK_SPRITES[r.variant % ROCK_SPRITES.length]();
+  spr(img, r.tx * TS, r.ty * TS);
+}
+
+// ---------------------------------------------------------------------------
+// Garden bushes (cozy pack sprites)
+// ---------------------------------------------------------------------------
+
+export function drawBush(helpers: DrawHelpers, b: { tx: number; ty: number; variant: number }): void {
+  const { spr } = helpers;
+  const img = b.variant === 0 ? SPR.bush1 : SPR.bush2;
+  spr(img, b.tx * TS, b.ty * TS);
+}
+
+// ---------------------------------------------------------------------------
+// Signpost (cozy pack sprite)
+// ---------------------------------------------------------------------------
+
+export function drawSignpost(helpers: DrawHelpers, s: { tx: number; ty: number }): void {
+  const { spr } = helpers;
+  spr(SPR.signpost, s.tx * TS, s.ty * TS);
+}
+
+// ---------------------------------------------------------------------------
+// Stepping stone path — from office door through the garden
+// ---------------------------------------------------------------------------
+
+const PATH_STONES: { x: number; y: number; w: number; h: number }[] = (() => {
+  const rng = seededRng("path-stones-v2");
+  const stones: { x: number; y: number; w: number; h: number }[] = [];
+  // Path starts at the door (col 12, rows 5-7) and winds to the garden
+  const waypoints: [number, number][] = [
+    [12.5, 6], [13.5, 6], [14.5, 6.3], [15.5, 6.5],
+    [16.5, 7], [17.5, 7.2], [18.5, 7], [19.5, 6.5],
+    [20.5, 6], [21.5, 5.5], [22.5, 5.5], [23.5, 6],
+    [24.5, 6.5], [25.5, 7],
+  ];
+  for (const [wx, wy] of waypoints) {
+    const ox = (rng() - 0.5) * 2;
+    const oy = (rng() - 0.5) * 1.5;
+    stones.push({
+      x: wx * TS + ox,
+      y: wy * TS + oy,
+      w: 4 + rng() * 3,
+      h: 3 + rng() * 2,
+    });
+  }
+  return stones;
+})();
+
+export function drawPath(helpers: DrawHelpers): void {
+  const { wr, we, lighten } = helpers;
+  for (const s of PATH_STONES) {
+    // Stone shadow
+    we(s.x + 0.5, s.y + s.h * 0.4, s.w * 0.5, s.h * 0.35, "#2a3a1a", 0.2);
+    // Main stone
+    we(s.x, s.y, s.w * 0.5, s.h * 0.4, "#989088");
+    // Highlight top
+    we(s.x - 0.3, s.y - s.h * 0.1, s.w * 0.4, s.h * 0.2, "#a8a098");
+    // Dark crack detail
+    wr(s.x - s.w * 0.15, s.y - 0.2, s.w * 0.2, 0.4, "#706860");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Garden lanterns — warm glow at night, subtle posts during day
+// ---------------------------------------------------------------------------
+
+const LANTERN_SPOTS: [number, number][] = [
+  [13, 3], [13, 9], [20, 2], [20, 10], [26, 5], [26, 9],
+];
+
+export function drawLantern(helpers: DrawHelpers, lx: number, ly: number, tod: TOD): void {
+  const { wr, we } = helpers;
+  const x = lx * TS + TS / 2;
+  const y = ly * TS;
+
+  // Post
+  wr(x - 0.5, y + 4, 1.5, TS - 4, "#5a4030");
+  wr(x, y + 4, 0.8, TS - 4, "#7a5840"); // highlight strip
+
+  // Lantern housing
+  wr(x - 2, y + 1, 5, 4, "#5a4030");
+  wr(x - 1.5, y + 1.5, 4, 3, "#4a3020");
+
+  // Light glow based on time of day
+  if (tod === "night" || tod === "dusk") {
+    // Warm inner light
+    wr(x - 1, y + 2, 3, 2, "#f0c060");
+    wr(x - 0.5, y + 2.2, 2, 1.5, "#f8d878");
+    // Glow radius
+    we(x + 0.5, y + 6, 12, 10, "rgba(255,200,80,0.06)");
+    we(x + 0.5, y + 4, 6, 5, "rgba(255,220,100,0.08)");
+    // Ground light pool
+    we(x + 0.5, y + TS, 10, 4, "rgba(255,200,80,0.04)");
+  } else {
+    // Daytime — just the glass panels
+    wr(x - 1, y + 2, 3, 2, "#c8b898");
+  }
+
+  // Cap
+  wr(x - 2.5, y, 6, 1.5, "#5a4030");
+  wr(x - 1, y - 0.5, 3, 1, "#6a5040");
+}
+
+// Exports for the lantern spots
+export { LANTERN_SPOTS };
+
+// ---------------------------------------------------------------------------
+// Window light rays — beams of light cast onto office floor
+// ---------------------------------------------------------------------------
+
+export function drawWindowLight(
+  helpers: DrawHelpers,
+  tx: number,
+  ty: number,
+  tod: TOD,
+): void {
+  const { ctx, zoom, panX, panY } = helpers;
+  // Only in morning/afternoon when sun is out
+  if (tod === "night" || tod === "dusk") return;
+
+  const x = tx * TS;
+  const y = ty * TS;
+
+  // Light beam trapezoid from window down onto floor
+  const beamTop = y + TS + 2;
+  const beamBot = y + TS * 5;
+  const beamW = TS * 2;
+
+  // Morning light angles right, afternoon angles left
+  const offset = tod === "morning" ? TS * 1.5 : tod === "dawn" ? TS * 2 : -TS * 0.5;
+
+  ctx.save();
+  ctx.globalAlpha = tod === "dawn" ? 0.04 : 0.03;
+  ctx.fillStyle = "#ffe8a0";
+  ctx.beginPath();
+  ctx.moveTo(panX + (x + 1) * zoom, panY + beamTop * zoom);
+  ctx.lineTo(panX + (x + beamW - 1) * zoom, panY + beamTop * zoom);
+  ctx.lineTo(panX + (x + beamW + offset + 4) * zoom, panY + beamBot * zoom);
+  ctx.lineTo(panX + (x + offset - 4) * zoom, panY + beamBot * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // Dust motes in the light beam (static, decorative)
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = "#fff8d0";
+  const rng = seededRng(`wlight${tx}`);
+  for (let i = 0; i < 6; i++) {
+    const mx = x + rng() * beamW + offset * rng();
+    const my = beamTop + rng() * (beamBot - beamTop) * 0.8;
+    ctx.fillRect(
+      Math.round(panX + mx * zoom),
+      Math.round(panY + my * zoom),
+      Math.max(1, Math.round(zoom)),
+      Math.max(1, Math.round(zoom)),
+    );
+  }
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------------------
+// Enhanced grass details — tufts, wild herbs, small mushrooms
+// ---------------------------------------------------------------------------
+
+export function drawGrassDetail(
+  helpers: DrawHelpers,
+  tx: number,
+  ty: number,
+  season: Season,
+): void {
+  const { wr, we } = helpers;
+  const x = tx * TS;
+  const y = ty * TS;
+  const v = fv(tx, ty);
+  const v2 = ((v * 1000) | 0) % 100;
+
+  if (season === "winter") return; // snow covers detail
+
+  // Grass tufts (2-3 blades) — ~30% of outdoor tiles
+  if (v2 < 30 && tx >= OFFICE_COLS + 1) {
+    const gc = season === "autumn" ? "#8a7828" : season === "summer" ? "#2a7818" : "#389830";
+    const gx = x + ((v * 11) % 12);
+    const gy = y + TS - 1;
+    // Three blades at slightly different angles
+    wr(gx, gy - 4, 0.6, 4, gc);
+    wr(gx + 1.5, gy - 3.5, 0.6, 3.5, gc);
+    wr(gx - 1, gy - 3, 0.6, 3, gc);
+  }
+
+  // Tiny mushrooms — rare, ~5% of outdoor tiles
+  if (v2 >= 85 && v2 < 90 && tx >= OFFICE_COLS + 1) {
+    const mx = x + ((v * 8) % 11);
+    const my = y + TS - 2;
+    // Stem
+    wr(mx, my, 1, 2, "#e0d8c0");
+    // Cap
+    we(mx + 0.5, my - 0.5, 2, 1.2, season === "autumn" ? "#c04020" : "#d8a060");
+    // White spots on cap
+    wr(mx - 0.5, my - 1, 0.6, 0.6, "#f0e8d0");
+    wr(mx + 1, my - 0.8, 0.5, 0.5, "#f0e8d0");
+  }
+
+  // Small pebbles — ~10% of tiles
+  if (v2 >= 60 && v2 < 70 && tx >= OFFICE_COLS + 1) {
+    const px = x + ((v * 13) % 13);
+    const py = y + ((v * 9) % 12);
+    wr(px, py, 1.5, 1, "#888078");
+    wr(px + 3, py + 2, 1, 0.8, "#908880");
   }
 }

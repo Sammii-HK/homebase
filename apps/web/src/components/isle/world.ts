@@ -219,6 +219,33 @@ while (BENCHES.length < 3) {
 }
 
 // ---------------------------------------------------------------------------
+// Garden decorations (rocks, bushes, signpost)
+// ---------------------------------------------------------------------------
+
+const decRng = seededRng("garden-deco-v2");
+export const ROCKS: { tx: number; ty: number; variant: number }[] = [];
+while (ROCKS.length < 8) {
+  const tx = 13 + Math.floor(decRng() * 19);
+  const ty = 1 + Math.floor(decRng() * (WORLD_ROWS - 2));
+  if (gardenOk(tx, ty)) {
+    ROCKS.push({ tx, ty, variant: Math.floor(decRng() * 4) });
+  }
+}
+
+const bushRng = seededRng("bushes-v1");
+export const BUSHES: { tx: number; ty: number; variant: number }[] = [];
+while (BUSHES.length < 6) {
+  const tx = 13 + Math.floor(bushRng() * 19);
+  const ty = 1 + Math.floor(bushRng() * (WORLD_ROWS - 2));
+  if (gardenOk(tx, ty)) {
+    BUSHES.push({ tx, ty, variant: Math.floor(bushRng() * 2) });
+  }
+}
+
+// Signpost near the office door
+export const SIGNPOST = { tx: 13, ty: 5 };
+
+// ---------------------------------------------------------------------------
 // Activity spots
 // ---------------------------------------------------------------------------
 
@@ -339,6 +366,35 @@ for (const t of TREES) {
   const tty = Math.floor(t.wy / TS);
   if (tty >= 0 && tty < WORLD_ROWS && ttx >= 0 && ttx < WORLD_COLS) {
     WALKABLE[tty][ttx] = false;
+  }
+}
+
+// Rock tiles
+for (const r of ROCKS) {
+  if (r.ty >= 0 && r.ty < WORLD_ROWS && r.tx >= 0 && r.tx < WORLD_COLS) {
+    WALKABLE[r.ty][r.tx] = false;
+  }
+}
+
+// Bush tiles
+for (const b of BUSHES) {
+  if (b.ty >= 0 && b.ty < WORLD_ROWS && b.tx >= 0 && b.tx < WORLD_COLS) {
+    WALKABLE[b.ty][b.tx] = false;
+  }
+}
+
+// Signpost
+if (SIGNPOST.ty >= 0 && SIGNPOST.ty < WORLD_ROWS && SIGNPOST.tx >= 0 && SIGNPOST.tx < WORLD_COLS) {
+  WALKABLE[SIGNPOST.ty][SIGNPOST.tx] = false;
+}
+
+// Lantern tiles
+const LANTERN_TILES: [number, number][] = [
+  [13, 3], [13, 9], [20, 2], [20, 10], [26, 5], [26, 9],
+];
+for (const [lx, ly] of LANTERN_TILES) {
+  if (ly >= 0 && ly < WORLD_ROWS && lx >= 0 && lx < WORLD_COLS) {
+    WALKABLE[ly][lx] = false;
   }
 }
 
