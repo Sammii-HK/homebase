@@ -13,6 +13,14 @@ export interface SEOTrend {
   clicks: { delta: number; pct: number };
 }
 
+export interface FailedPost {
+  id: string;
+  content: string;
+  platform: string;
+  error: string;
+  scheduledFor: string;
+}
+
 export interface DashboardStats {
   github: { repos: number; followers: number; commitsToday: number };
   lunary: {
@@ -28,6 +36,7 @@ export interface DashboardStats {
     igFollowers: number;
     reachThisWeek: number;
     postsThisWeek: number;
+    queueDepth: number;
   };
   meta: { followers: number; reachThisWeek: number; postsThisWeek: number };
   health: {
@@ -37,9 +46,11 @@ export interface DashboardStats {
   };
   content: {
     failedPosts: number;
+    failedPostDetails: FailedPost[];
     scheduledToday: number;
     scheduledTomorrow: number;
   };
+  engagement: { unread: number };
   seo: {
     impressions: number;
     clicks: number;
@@ -51,6 +62,67 @@ export interface DashboardStats {
   trends: Record<string, Trend> | null;
   updatedAt: string;
 }
+
+// ── Deep room data types (lazy-loaded via /api/stats/[room]) ──
+
+export interface SpellcastDeepData {
+  failedPosts: FailedPost[];
+  calendar: { date: string; count: number; status: "good" | "gap" | "overloaded" }[];
+  velocity: { hour: string; count: number }[];
+  queueByDay: { date: string; count: number }[];
+  autopilot: { enabled: boolean; lastRun: string | null };
+  engagement: { unread: number; total: number };
+}
+
+export interface LunaryDeepData {
+  dauSeries: { date: string; value: number }[];
+  mauSeries: { date: string; value: number }[];
+  featureAdoption: { feature: string; users: number; pct: number }[];
+  conversions: { step: string; count: number; pct: number }[];
+  revenue: { plan: string; count: number; mrr: number }[];
+  subscriptionLifecycle: { active: number; trial: number; cancelled: number; churnRate: number; avgDurationDays: number } | null;
+  abTests: { testName: string; bestVariant: string; improvement: number; isSignificant: boolean; confidence: number }[];
+  attribution: { source: string; count: number; pct: number }[];
+  aiCosts: { totalGenerations: number; estimatedCost: number; costPerUser: number; revenueCostRatio: number } | null;
+  activation: { trialSignups: number; trialConversionRate: number; paidUsers: number; avgDaysToTrial: number } | null;
+}
+
+export interface InfraDeepData {
+  recentWorkflows: { id: string; name: string; status: string; startedAt: string; finishedAt: string | null }[];
+  healthHistory: { ts: string; services: Record<string, "ok" | "down"> }[];
+}
+
+export interface OrbitDeepData {
+  online: boolean;
+  agents: { name: string; status: string; model: string; lastRun: string | null; detail: string | null; cost: number | null }[];
+  approvedContent: { title: string; platform: string; score: number; persona: string }[];
+  trendingTopics: { topic: string; heat: string; angle: string }[];
+  scoutTargets: { platform: string; author: string; content: string; score: number; draftReply: string }[];
+  kpis: Record<string, unknown> | null;
+  activity: { timestamp: string; agent: string; action: string; detail: string }[];
+  pipelineRunning: boolean;
+}
+
+export interface EngagementDeepData {
+  items: {
+    id: string;
+    platform: string;
+    type: string;
+    authorName: string;
+    authorHandle: string;
+    content: string;
+    postContent: string;
+    platformUrl: string;
+    status: string;
+    publishedAt: string;
+  }[];
+  stats: { total: number; unread: number; replied: number; byPlatform: Record<string, number> };
+  discoveryItems: { id: string; platform: string; author: string; content: string; score: number; url: string }[];
+  competitors: { id: string; name: string; platform: string; handle: string }[];
+  abTests: { id: string; status: string; metric: string; originalContent: string; winnerMetrics: Record<string, unknown> | null; evaluatedAt: string | null }[];
+}
+
+export type RoomDeepData = SpellcastDeepData | LunaryDeepData | InfraDeepData | OrbitDeepData | EngagementDeepData;
 
 export interface Opportunity {
   id: string;

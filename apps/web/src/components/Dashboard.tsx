@@ -9,6 +9,8 @@ import ContentPipeline from "./ContentPipeline";
 import Opportunities from "./Opportunities";
 import SEOSnapshot from "./SEOSnapshot";
 import FloorPlan from "./FloorPlan";
+import CommandPalette from "./CommandPalette";
+import AlertFeed from "./AlertFeed";
 
 const POLL_MS = 60_000;
 
@@ -22,6 +24,7 @@ export default function Dashboard() {
   const [loginSecret, setLoginSecret] = useState("");
   const [loginError, setLoginError] = useState("");
   const [view, setView] = useState<ViewMode>("pixel");
+  const [selectedRoom, setSelectedRoom] = useState<"lunary" | "spellcast" | "dev" | "meta" | null>(null);
 
   useEffect(() => {
     setToken(localStorage.getItem("homebase_token"));
@@ -93,6 +96,14 @@ export default function Dashboard() {
     }
   };
 
+  const handleRefresh = useCallback(() => {
+    if (token) fetchData(token);
+  }, [token, fetchData]);
+
+  const handleOpenRoom = useCallback((room: "lunary" | "spellcast" | "dev" | "meta") => {
+    setSelectedRoom(room);
+  }, []);
+
   if (loading) return <div className="min-h-screen bg-black" />;
 
   if (!token) {
@@ -149,10 +160,23 @@ export default function Dashboard() {
         {view === "pixel" ? "LIST" : "PIXEL"}
       </button>
 
+      {/* Command Palette — always available */}
+      <CommandPalette
+        stats={stats}
+        token={token}
+        onOpenRoom={handleOpenRoom}
+        onRefresh={handleRefresh}
+      />
+
+      {/* Alert Feed — pixel view only */}
+      {view === "pixel" && (
+        <AlertFeed stats={stats} heartbeat={heartbeat} onOpenRoom={handleOpenRoom} />
+      )}
+
       {view === "pixel" ? (
         /* Pixel art view — full screen grid */
         <div style={{ position: "fixed", inset: 0, top: 32 }}>
-          <FloorPlan stats={stats} heartbeat={heartbeat} />
+          <FloorPlan stats={stats} heartbeat={heartbeat} selectedRoom={selectedRoom} onRoomChange={setSelectedRoom} />
         </div>
       ) : (
         /* Data list view — scrollable cards */

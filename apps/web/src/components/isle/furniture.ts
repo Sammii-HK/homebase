@@ -1,6 +1,6 @@
 // Isle canvas engine — furniture & tile drawing
 
-import type { Dir, Season, TOD, DeskZone, FurniturePiece } from "./types";
+import type { Dir, Season, TOD, DeskZone, FurniturePiece, IsleStats } from "./types";
 import {
   TS,
   WORLD_COLS,
@@ -166,6 +166,7 @@ export function drawDesk(
   animTick: number,
   isActive: boolean,
   hasBadge: boolean,
+  stats: IsleStats | null,
 ): void {
   const { wr, we } = helpers;
   const x = zone.deskX,
@@ -193,17 +194,7 @@ export function drawDesk(
   const my = monitorAtBottom ? y + dh - 9 : y + 1;
   wr(mx, my, 10, 8, "#1a1a28");
 
-  if (hasBadge) {
-    // Alert state — red monitor screen + blinking LED
-    wr(mx + 1, my + 1, 8, 6, "#1a0808");
-    // Red pulsing glow
-    we(mx + 5, my + 4, 7, 5, animTick % 2 === 0 ? "rgba(255,40,40,0.25)" : "rgba(255,40,40,0.10)");
-    // Red LED dot on monitor corner
-    wr(mx + 8, my + 1, 1.5, 1.5, animTick % 2 === 0 ? "#ff2020" : "#660808");
-    // Warning icon on screen
-    wr(mx + 4, my + 2, 2, 3, "#ff4040");
-    wr(mx + 4, my + 5.5, 2, 1, "#ff4040");
-  } else if (isActive) {
+  if (isActive) {
     // Working — code lines in zone accent colour
     wr(mx + 1, my + 1, 8, 6, "#081a10");
     const g = zone.monitorGlow;
@@ -224,13 +215,8 @@ export function drawDesk(
     if (animTick % 2 === 0)
       wr(mx + 1 + ((animTick * 2) % 6), my + 1 + (animTick % 4) * 1.4, 1, 1, "#ffffff");
   } else {
-    // Idle — subtle screensaver / standby
-    wr(mx + 1, my + 1, 8, 6, "#101820");
-    // Zone-coloured standby dot
-    const dotX = mx + 3 + ((animTick * 0.5) % 4);
-    wr(dotX, my + 3.5, 1.5, 1.5, zone.monitorGlow + "60");
-    // Faint border glow
-    wr(mx + 1, my + 1, 8, 0.5, zone.monitorGlow + "20");
+    // Data display — show zone-specific info on the monitor screen
+    drawMonitorData(wr, we, mx, my, zone, stats, animTick);
   }
 
   // Monitor stand
@@ -242,42 +228,242 @@ export function drawDesk(
   wr(x + 3, ky, 8, 3, "#202020");
   wr(x + 4, ky + 1, 6, 1.5, "#303030");
 
-  // Zone-specific desk decorations
+  // Zone-specific desk decorations (data-reactive)
+  drawDeskDecorations(wr, we, x, y, dw, mx, my, zone, stats, animTick);
+}
+
+// ── Monitor data displays (8×6 pixel screen area) ──
+
+function drawMonitorData(
+  wr: DrawHelpers["wr"],
+  we: DrawHelpers["we"],
+  mx: number, my: number,
+  zone: DeskZone,
+  stats: IsleStats | null,
+  animTick: number,
+): void {
   if (zone.id === "lunary") {
-    // Crystal ball
-    we(x + dw - 4, y + 5, 2.5, 2.5, "#c8a0f0", 0.7);
-    we(x + dw - 4, y + 4.5, 1.5, 1.5, "#e0c8ff", 0.5);
+    // Dark purple screen with activity bar chart
+    wr(mx + 1, my + 1, 8, 6, "#0c0618");
+    if (stats) {
+      const dau = stats.lunary.activeToday;
+      // 4 bars representing activity level (fill based on DAU, max ~50)
+      const maxDau = 50;
+      const barH = Math.max(1, Math.min(5, (dau / maxDau) * 5));
+      // Staggered bars to look like a mini chart
+      const bars = [barH * 0.5, barH * 0.8, barH, barH * 0.6];
+      for (let i = 0; i < 4; i++) {
+        const h = Math.max(1, bars[i]);
+        wr(mx + 1.5 + i * 2, my + 7 - h, 1.5, h, "#9060d0");
+      }
+      // Tiny green dot = healthy, red = down
+      const badge = stats.badges[zone.id];
+      const isDown = badge?.alert;
+      wr(mx + 7.5, my + 1.5, 1.5, 1.5, isDown ? "#ff3030" : "#40c060");
+    } else {
+      // No data — standby
+      const dotX = mx + 3 + ((animTick * 0.5) % 4);
+      wr(dotX, my + 3.5, 1.5, 1.5, zone.monitorGlow + "40");
+    }
+  } else if (zone.id === "spellcast") {
+    // Dark cyan screen with queue/post indicators
+    wr(mx + 1, my + 1, 8, 6, "#041018");
+    if (stats) {
+      const posted = stats.spellcast.postsToday;
+      const queued = stats.spellcast.scheduled;
+      // Posted dots (green) — bottom row
+      const postDots = Math.min(posted, 4);
+      for (let i = 0; i < postDots; i++) {
+        wr(mx + 1.5 + i * 2, my + 5.5, 1.5, 1, "#20c8a0");
+      }
+      // Queue bars (cyan) — top area
+      const qBars = Math.min(queued, 4);
+      for (let i = 0; i < qBars; i++) {
+        const h = 1 + (i % 2);
+        wr(mx + 1.5 + i * 2, my + 1.5, 1.5, h, "#1890b0");
+      }
+      // Red pixel if failed posts
+      const badge = stats.badges[zone.id];
+      if (badge?.alert && badge.count && badge.count > 0) {
+        wr(mx + 7.5, my + 1.5, 1.5, 1.5, animTick % 3 !== 0 ? "#ff3030" : "#801818");
+      }
+    } else {
+      const dotX = mx + 3 + ((animTick * 0.5) % 4);
+      wr(dotX, my + 3.5, 1.5, 1.5, zone.monitorGlow + "40");
+    }
+  } else if (zone.id === "dev") {
+    // Dark green screen with 3 service health dots
+    wr(mx + 1, my + 1, 8, 6, "#041208");
+    if (stats) {
+      const up = stats.infra.systemsUp;
+      const total = stats.infra.totalSystems;
+      // 3 horizontal status bars
+      for (let i = 0; i < total; i++) {
+        const ok = i < up;
+        wr(mx + 1.5, my + 1.5 + i * 2, 6, 1.2, ok ? "#30b060" : "#b03030");
+        // Brighter left edge
+        wr(mx + 1.5, my + 1.5 + i * 2, 1, 1.2, ok ? "#50e080" : "#e04040");
+      }
+    } else {
+      const dotX = mx + 3 + ((animTick * 0.5) % 4);
+      wr(dotX, my + 3.5, 1.5, 1.5, zone.monitorGlow + "40");
+    }
+  } else if (zone.id === "meta") {
+    // Dark pink screen with engagement indicators
+    wr(mx + 1, my + 1, 8, 6, "#180810");
+    if (stats) {
+      // Reach indicator — horizontal bar
+      const reach = stats.meta.reachThisWeek;
+      const barW = Math.max(1, Math.min(7, (reach / 5000) * 7));
+      wr(mx + 1.5, my + 2, barW, 1.2, "#d060a0");
+      // Follower trend dots
+      const fk = Math.floor(stats.meta.followers / 100);
+      const dots = Math.min(fk, 6);
+      for (let i = 0; i < dots; i++) {
+        wr(mx + 1.5 + i * 1.2, my + 4.5, 1, 1, "#f080c0");
+      }
+      // Opportunity notification — amber pixel
+      const badge = stats.badges[zone.id];
+      if (badge?.alert && badge.count && badge.count > 0) {
+        wr(mx + 7.5, my + 1.5, 1.5, 1.5, "#e0a020");
+      }
+    } else {
+      const dotX = mx + 3 + ((animTick * 0.5) % 4);
+      wr(dotX, my + 3.5, 1.5, 1.5, zone.monitorGlow + "40");
+    }
+  }
+}
+
+// ── Data-reactive desk decorations ──
+
+function drawDeskDecorations(
+  wr: DrawHelpers["wr"],
+  we: DrawHelpers["we"],
+  x: number, y: number, dw: number,
+  mx: number, my: number,
+  zone: DeskZone,
+  stats: IsleStats | null,
+  _animTick: number,
+): void {
+  if (zone.id === "lunary") {
+    // Crystal ball — glow intensity based on active users
+    const dau = stats?.lunary.activeToday ?? 0;
+    const glow = Math.min(0.9, 0.3 + (dau / 30) * 0.5);
+    we(x + dw - 4, y + 5, 2.5, 2.5, "#c8a0f0", glow);
+    we(x + dw - 4, y + 4.5, 1.5, 1.5, "#e0c8ff", glow * 0.6);
     wr(x + dw - 5.5, y + 7, 5, 1.5, "#8060a0");
     // Moon sticker on monitor
     we(mx + 1.5, my + 1.5, 1, 1, "#e0d0ff", 0.4);
   } else if (zone.id === "spellcast") {
-    // Stack of papers/scrolls
-    wr(x + 1, y + 3, 4, 5, "#f0e8d0");
-    wr(x + 1, y + 3, 4, 1, "#e0d8c0");
-    wr(x + 1.5, y + 5, 3, 0.8, "#a0a0a0");
-    wr(x + 1.5, y + 6.5, 2, 0.8, "#a0a0a0");
+    // Scroll pile — height scales with queue depth
+    const queued = stats?.spellcast.scheduled ?? 0;
+    const layers = Math.max(1, Math.min(3, Math.ceil(queued / 3)));
+    const baseY = y + 3 + (3 - layers) * 1.5;
+    for (let i = 0; i < layers; i++) {
+      const ly = baseY + i * 1.5;
+      wr(x + 1, ly, 4, 2, "#f0e8d0");
+      wr(x + 1, ly, 4, 0.6, "#e0d8c0");
+      if (i < layers - 1) wr(x + 1.5, ly + 1.2, 3, 0.5, "#c8c0a8");
+    }
     // Quill pen
     wr(x + dw - 4, y + 3, 1, 6, "#b08040");
     wr(x + dw - 5, y + 2, 2, 2, "#f0e0c0");
   } else if (zone.id === "dev") {
-    // Second mini terminal
+    // Mini terminal — shows service status as coloured lines
     wr(x + 1, y + 3, 5, 4, "#1a1a28");
     wr(x + 1.5, y + 3.5, 4, 3, "#0a1810");
-    wr(x + 2, y + 4, 2, 0.8, "#30b878");
-    wr(x + 2, y + 5, 3, 0.8, "#30b878");
-    // Coffee mug
+    if (stats) {
+      const up = stats.infra.systemsUp;
+      const total = stats.infra.totalSystems;
+      // Each line = a service
+      for (let i = 0; i < total; i++) {
+        const ok = i < up;
+        wr(x + 2, y + 4 + i * 0.9, ok ? 3 : 2, 0.6, ok ? "#30b878" : "#b04040");
+      }
+    } else {
+      wr(x + 2, y + 4, 2, 0.8, "#30b878");
+      wr(x + 2, y + 5, 3, 0.8, "#30b878");
+    }
+    // Coffee mug — steam only when all systems ok
     wr(x + dw - 4, y + 4, 3, 4, "#404040");
     wr(x + dw - 4, y + 5, 3, 2, "#6a4a30");
+    if (stats && stats.infra.systemsUp === stats.infra.totalSystems) {
+      // Steam wisps
+      wr(x + dw - 3.5, y + 2.5, 0.8, 1.2, "rgba(200,200,200,0.25)");
+      wr(x + dw - 2.5, y + 3, 0.8, 1, "rgba(200,200,200,0.15)");
+    }
   } else if (zone.id === "meta") {
-    // Phone on stand
+    // Phone — notification dots on screen based on opportunities
     wr(x + 1, y + 3, 3, 5, "#2a2a30");
     wr(x + 1.5, y + 3.5, 2, 4, "#3848a0");
     wr(x + 1.5, y + 3.5, 2, 0.5, "#606080");
+    const badge = stats?.badges[zone.id];
+    if (badge?.count && badge.count > 0) {
+      // Notification dots on phone screen
+      const dots = Math.min(badge.count, 3);
+      for (let i = 0; i < dots; i++) {
+        wr(x + 1.8, y + 4.5 + i * 1, 1.2, 0.7, "#e08050");
+      }
+    }
     // Camera miniature
     wr(x + dw - 5, y + 4, 4, 3, "#404040");
     wr(x + dw - 4, y + 4.5, 2, 2, "#606060");
     we(x + dw - 3, y + 5.5, 1, 1, "#8080a0", 0.7);
   }
+}
+
+// ── Whiteboard (data-driven) ──
+
+export function drawWhiteboardData(
+  helpers: DrawHelpers,
+  f: FurniturePiece,
+  stats: IsleStats | null,
+): void {
+  const { wr } = helpers;
+  const x = f.tx * TS,
+    y = f.ty * TS;
+  // Board frame
+  wr(x, y, 3 * TS, TS, "#f8f8f8");
+  wr(x, y, 3 * TS, 2, "#c0c0c0");
+  wr(x, y + TS - 2, 3 * TS, 2, "#c0c0c0");
+  wr(x, y, 2, TS, "#c0c0c0");
+  wr(x + 3 * TS - 2, y, 2, TS, "#c0c0c0");
+
+  if (stats) {
+    // Left: service health dots (3 coloured squares)
+    const up = stats.infra.systemsUp;
+    const total = stats.infra.totalSystems;
+    for (let i = 0; i < total; i++) {
+      const ok = i < up;
+      wr(x + 3 + i * 5, y + 3, 3, 3, ok ? "#40b060" : "#e04848");
+    }
+
+    // Middle: post count today as small tally marks
+    const posts = stats.spellcast.postsToday;
+    const marks = Math.min(posts, 5);
+    for (let i = 0; i < marks; i++) {
+      wr(x + 20 + i * 2.5, y + 3, 1, 4, "#6868d0");
+    }
+    // Diagonal through every 5
+    if (marks >= 5) {
+      wr(x + 19, y + 3, 14, 0.8, "#6868d0");
+    }
+
+    // Bottom: queue depth indicator bar
+    const queued = stats.spellcast.scheduled;
+    const barW = Math.max(1, Math.min(3 * TS - 8, (queued / 15) * (3 * TS - 8)));
+    wr(x + 3, y + 10, barW, 2, "#e08040");
+  } else {
+    // Static lines when no data
+    wr(x + 3, y + 4, 10, 1, "#6868d0");
+    wr(x + 3, y + 7, 7, 1, "#6868d0");
+    wr(x + 3, y + 10, 12, 1, "#6868d0");
+    wr(x + 16, y + 4, 8, 1, "#e04848");
+    wr(x + 16, y + 7, 10, 1, "#e04848");
+  }
+
+  // Marker tray
+  wr(x + 2, y + TS - 4, 3 * TS - 4, 2, "#a0a0a0");
 }
 
 // ---------------------------------------------------------------------------

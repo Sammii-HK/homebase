@@ -3,59 +3,78 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useActivityStream } from "@/hooks/useActivityStream";
 import type { DashboardStats, HeartbeatResponse } from "@/types/dashboard";
-import type { ClickTarget, IsleStats } from "./isle/types";
+import type { ClickTarget, IsleStats, BadgeInfo } from "./isle/types";
 import { IsleRenderer } from "./isle/renderer";
 import RoomDetail from "./RoomDetail";
 
-// ── Badge logic (unchanged from original) ──
+// ── Badge logic (numeric counts) ──
 
 function getRoomBadge(
   roomKey: string,
   stats: DashboardStats | null,
   heartbeat: HeartbeatResponse | null,
-): boolean {
-  if (!stats) return false;
+): BadgeInfo {
+  if (!stats) return { alert: false };
   switch (roomKey) {
     case "lunary":
-      return stats.health.lunary.status === "down";
-    case "spellcast":
-      return stats.content.failedPosts > 0 || stats.health.spellcast.status === "down";
-    case "dev":
-      return (
-        heartbeat?.status === "offline" ||
-        stats.health.lunary.status === "down" ||
-        stats.health.spellcast.status === "down" ||
-        stats.health.contentCreator.status === "down"
-      );
-    case "meta":
-      return (
-        stats.opportunities.length > 0 ||
-        (stats.seo.trend !== null && stats.seo.trend.clicks.pct < -10)
-      );
+      return { alert: stats.health.lunary.status === "down" };
+    case "spellcast": {
+      const failed = stats.content.failedPosts;
+      return { alert: failed > 0 || stats.health.spellcast.status === "down", count: failed || undefined };
+    }
+    case "dev": {
+      const down = [
+        stats.health.lunary.status === "down",
+        stats.health.spellcast.status === "down",
+        stats.health.contentCreator.status === "down",
+      ].filter(Boolean).length;
+      return {
+        alert: heartbeat?.status === "offline" || down > 0,
+        count: down || undefined,
+      };
+    }
+    case "meta": {
+      const opps = stats.opportunities.length;
+      return {
+        alert: opps > 0 || (stats.seo.trend !== null && stats.seo.trend.clicks.pct < -10),
+        count: opps || undefined,
+      };
+    }
     default:
-      return false;
+      return { alert: false };
   }
 }
 
 // ── FloorPlan — canvas wrapper ──
 
+type RoomId = "lunary" | "spellcast" | "dev" | "meta";
+
 interface FloorPlanProps {
   stats: DashboardStats | null;
   heartbeat: HeartbeatResponse | null;
+  selectedRoom?: RoomId | null;
+  onRoomChange?: (room: RoomId | null) => void;
 }
 
-export default function FloorPlan({ stats, heartbeat }: FloorPlanProps) {
+export default function FloorPlan({ stats, heartbeat, selectedRoom: externalRoom, onRoomChange }: FloorPlanProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<IsleRenderer | null>(null);
   const activity = useActivityStream();
-  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [internalRoom, setInternalRoom] = useState<string | null>(null);
   const statsRef = useRef(stats);
   statsRef.current = stats;
 
+  // Use external state if provided, otherwise fall back to internal
+  const selectedRoom = externalRoom !== undefined ? externalRoom : internalRoom;
+  const setSelectedRoom = onRoomChange ?? setInternalRoom;
+
   // Stable click handler — uses ref so renderer never gets recreated
   const handleClick = useCallback((target: ClickTarget) => {
-    if (statsRef.current) setSelectedRoom(target.roomKey);
-  }, []);
+    if (statsRef.current) {
+      if (onRoomChange) onRoomChange(target.roomKey);
+      else setInternalRoom(target.roomKey);
+    }
+  }, [onRoomChange]);
 
   // Mount renderer (once)
   useEffect(() => {
@@ -110,7 +129,7 @@ export default function FloorPlan({ stats, heartbeat }: FloorPlanProps) {
         spellcast: getRoomBadge("spellcast", stats, heartbeat),
         dev: getRoomBadge("dev", stats, heartbeat),
         meta: getRoomBadge("meta", stats, heartbeat),
-      },
+      } as Record<string, import("./isle/types").BadgeInfo>,
       hotRooms: activity.hotRooms,
     };
 
@@ -131,7 +150,7 @@ export default function FloorPlan({ stats, heartbeat }: FloorPlanProps) {
       />
       {selectedRoom && stats && (
         <RoomDetail
-          roomId={selectedRoom as "lunary" | "spellcast" | "dev" | "meta"}
+          roomId={selectedRoom as RoomId}
           stats={stats}
           heartbeat={heartbeat}
           onClose={() => setSelectedRoom(null)}

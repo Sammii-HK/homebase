@@ -1,6 +1,6 @@
 // Isle canvas engine — main renderer
 
-import type { ClickTarget, IsleStats, DeskZone } from "./types";
+import type { ClickTarget, IsleStats, DeskZone, BadgeInfo } from "./types";
 import {
   TS, OFFICE_COLS, WORLD_COLS, WORLD_ROWS, WORLD_W, WORLD_H,
   DOOR_ROW_START, DOOR_ROW_END,
@@ -12,7 +12,7 @@ import {
   createDrawHelpers,
   drawOfficeFloor, drawOfficeWall, drawRightWall, drawDoor, drawGrass,
   drawDesk, drawChair, drawRug, drawSofa, drawCoffeeTable,
-  drawWhiteboard, drawWaterCooler, drawFilingCabinet,
+  drawWhiteboard, drawWhiteboardData, drawWaterCooler, drawFilingCabinet,
   drawBookshelf, drawLamp, drawPlantFurn, drawBench,
   drawWindow, drawPond, drawTree, drawFlower,
 } from "./furniture";
@@ -111,7 +111,8 @@ export class IsleRenderer {
     this.stats = stats;
     // Update character working state with debounce to prevent flapping
     for (const ch of this.chars) {
-      const shouldWork = stats.hotRooms.includes(ch.zoneId) || stats.badges[ch.zoneId];
+      const badge = stats.badges[ch.zoneId];
+      const shouldWork = stats.hotRooms.includes(ch.zoneId) || (badge?.alert ?? false);
       if (shouldWork) {
         ch.isWorking = true;
         ch.idleSince = 0;
@@ -373,7 +374,6 @@ export class IsleRenderer {
 
     this.renderScene();
     this.drawHUD();
-    this.drawStatChips();
 
     this.rafId = requestAnimationFrame(t => this.loop(t));
   }
@@ -449,7 +449,7 @@ export class IsleRenderer {
           if (f.type === "sofa") drawSofa(helpers, f);
           else if (f.type === "coffeetable") drawCoffeeTable(helpers, f);
           else if (f.type === "plant") drawPlantFurn(helpers, f);
-          else if (f.type === "whiteboard") drawWhiteboard(helpers, f);
+          else if (f.type === "whiteboard") drawWhiteboardData(helpers, f, this.stats);
           else if (f.type === "watercooler") drawWaterCooler(helpers, f);
           else if (f.type === "filing") drawFilingCabinet(helpers, f);
         },
@@ -459,11 +459,11 @@ export class IsleRenderer {
     // Desks + chairs
     for (const zone of DESK_ZONES) {
       const isActive = this.stats?.hotRooms.includes(zone.id) ?? false;
-      const hasBadge = this.stats?.badges[zone.id] ?? false;
+      const badge = this.stats?.badges[zone.id] ?? { alert: false };
       ds.push({
         y: zone.deskY + TS + 1,
         draw: () => {
-          drawDesk(helpers, zone, this.animTick, isActive, hasBadge);
+          drawDesk(helpers, zone, this.animTick, isActive, badge.alert, this.stats);
           drawChair(helpers, zone);
         },
       });
@@ -502,63 +502,6 @@ export class IsleRenderer {
       }
     }
 
-  }
-
-  // ── Stat chips ──
-
-  private drawStatChips() {
-    if (!this.stats) return;
-    const ctx = this.ctx;
-    const s = this.stats;
-
-    const chipData: Record<string, [string, string][]> = {
-      lunary: [
-        ["MAU", String(s.lunary.mau)],
-        ["MRR", `\u00A3${s.lunary.mrr.toFixed(2)}`],
-        ["ONLINE", String(s.lunary.activeToday)],
-      ],
-      spellcast: [
-        ["TODAY", `${s.spellcast.postsToday} posts`],
-        ["QUEUED", String(s.spellcast.scheduled)],
-        ["ACCTS", String(s.spellcast.accounts)],
-      ],
-      dev: [
-        ["SYSTEMS", `${s.infra.systemsUp}/${s.infra.totalSystems} up`],
-        ["STATUS", s.infra.systemsUp === s.infra.totalSystems ? "ALL OK" : "ALERT"],
-      ],
-      meta: [
-        ["IG FLWRS", s.meta.followers.toLocaleString()],
-        ["REACH/WK", `${(s.meta.reachThisWeek / 1000).toFixed(1)}k`],
-      ],
-    };
-
-    for (const zone of DESK_ZONES) {
-      const chips = chipData[zone.id];
-      if (!chips) continue;
-
-      // Position chips near each desk zone
-      const chipX = zone.deskX;
-      const chipBaseY = zone.facing === "up" ? zone.deskY + 2 * TS + 2 : zone.deskY - chips.length * 8 - 4;
-
-      for (let i = 0; i < chips.length; i++) {
-        const [label, value] = chips[i];
-        const text = `${label}: ${value}`;
-        const sx = this.panX + chipX * this.zoom;
-        const sy = this.panY + (chipBaseY + i * 8) * this.zoom;
-        const fontSize = Math.max(7, Math.round(7 * this.zoom / 2));
-
-        ctx.font = `${fontSize}px 'Press Start 2P','Courier New',monospace`;
-        const tw = ctx.measureText(text).width;
-
-        ctx.fillStyle = "rgba(0,0,0,0.6)";
-        ctx.beginPath();
-        ctx.roundRect(sx - 2, sy - fontSize + 1, tw + 4, fontSize + 2, 2);
-        ctx.fill();
-
-        ctx.fillStyle = zone.monitorGlow;
-        ctx.fillText(text, sx, sy);
-      }
-    }
   }
 
   // ── HUD ──

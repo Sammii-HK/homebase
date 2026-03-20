@@ -3,6 +3,7 @@
 export type Dir = "down" | "up" | "left" | "right";
 export type Season = "spring" | "summer" | "autumn" | "winter";
 export type TOD = "dawn" | "morning" | "afternoon" | "dusk" | "night";
+export type Expression = "normal" | "happy" | "sleepy" | "focused";
 
 export interface DeskZone {
   id: "lunary" | "spellcast" | "dev" | "meta";
@@ -25,6 +26,7 @@ export interface Pal {
   shirt: string;
   pants: string;
   shoe: string;
+  accent: string; // shirt detail / accessory colour
 }
 
 export interface FurniturePiece {
@@ -44,11 +46,31 @@ export interface ClickTarget {
   roomKey: "lunary" | "spellcast" | "dev" | "meta";
 }
 
+export interface BadgeInfo {
+  alert: boolean;
+  count?: number;
+}
+
 export interface IsleStats {
   lunary: { mau: number; mrr: number; activeToday: number };
   spellcast: { postsToday: number; scheduled: number; accounts: number };
   infra: { systemsUp: number; totalSystems: number };
   meta: { followers: number; reachThisWeek: number };
-  badges: Record<string, boolean>;
+  badges: Record<string, BadgeInfo>;
   hotRooms: string[];
+}
+
+export interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  size: number;
+  color: string;
+  opacity: number;
+  phase: number;
+  type: "firefly" | "leaf" | "blossom" | "snow" | "dust" | "sparkle";
+  rotation: number;
 }

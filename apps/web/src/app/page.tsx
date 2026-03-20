@@ -1,5 +1,5 @@
-import FloorPlan from "@/components/FloorPlan";
+import Dashboard from "@/components/Dashboard";
 
 export default function Home() {
-  return <FloorPlan />;
+  return <Dashboard />;
 }

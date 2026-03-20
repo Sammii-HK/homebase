@@ -124,7 +124,7 @@ async function getHealth() {
 async function getContentPipeline() {
   const apiKey = process.env.SPELLCAST_API_KEY;
   const url = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
-  if (!apiKey) return { failedPosts: 0, scheduledToday: 0, scheduledTomorrow: 0 };
+  if (!apiKey) return { failedPosts: 0, failedPostDetails: [], scheduledToday: 0, scheduledTomorrow: 0, queueDepth: 0 };
 
   const headers = { Authorization: `Bearer ${apiKey}` };
 
@@ -143,8 +143,27 @@ async function getContentPipeline() {
     const today = new Date().toISOString().slice(0, 10);
     const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
 
+    // Extract up to 5 failed post details for drill-down
+    const failedPostDetails = failedPosts.slice(0, 5).map((p: Record<string, unknown>) => ({
+      id: String(p.id ?? p._id ?? ""),
+      content: String(p.content ?? p.text ?? "").slice(0, 100),
+      platform: String((p.socialAccount as Record<string, unknown>)?.platform ?? p.platform ?? "unknown"),
+      error: String(p.error ?? p.failedReason ?? p.errorMessage ?? "Unknown error"),
+      scheduledFor: String(p.scheduledFor ?? p.scheduledAt ?? p.scheduledDate ?? ""),
+    }));
+
+    // Queue depth: posts scheduled within next 48h
+    const in48h = new Date(Date.now() + 2 * 86_400_000).toISOString();
+    const queueDepth = scheduledPosts.filter(
+      (p: { scheduledFor?: string; scheduledAt?: string }) => {
+        const d = p.scheduledFor ?? p.scheduledAt ?? "";
+        return d && d <= in48h;
+      }
+    ).length;
+
     return {
       failedPosts: failedPosts.length,
+      failedPostDetails,
       scheduledToday: scheduledPosts.filter(
         (p: { scheduledFor?: string; scheduledAt?: string }) =>
           (p.scheduledFor ?? p.scheduledAt ?? "").startsWith(today)
@@ -153,9 +172,10 @@ async function getContentPipeline() {
         (p: { scheduledFor?: string; scheduledAt?: string }) =>
           (p.scheduledFor ?? p.scheduledAt ?? "").startsWith(tomorrow)
       ).length,
+      queueDepth,
     };
   } catch {
-    return { failedPosts: 0, scheduledToday: 0, scheduledTomorrow: 0 };
+    return { failedPosts: 0, failedPostDetails: [], scheduledToday: 0, scheduledTomorrow: 0, queueDepth: 0 };
   }
 }
 
@@ -370,7 +390,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     github,
     lunary,
-    spellcast,
+    spellcast: {
+      ...spellcast,
+      queueDepth: content.queueDepth ?? 0,
+    },
     meta: {
       followers: spellcast.igFollowers ?? 0,
       reachThisWeek: spellcast.reachThisWeek ?? 0,
@@ -378,6 +401,7 @@ export async function GET(req: NextRequest) {
     },
     health,
     content,
+    engagement: { unread: 0 }, // TODO: wire up when Spellcast engagement endpoint is ready
     seo,
     opportunities,
     trends,
