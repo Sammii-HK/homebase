@@ -49,6 +49,7 @@ export interface DashboardStats {
     failedPostDetails: FailedPost[];
     scheduledToday: number;
     scheduledTomorrow: number;
+    pendingReview: number;
   };
   engagement: { unread: number; total: number; byPlatform: Record<string, number> };
   orbit: { online: boolean; agentCount: number; runningAgents: number; errorAgents: number; pipelineRunning: boolean; authStatus: string | null };

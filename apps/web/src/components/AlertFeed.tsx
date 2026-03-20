@@ -103,6 +103,18 @@ function deriveAlerts(stats: DashboardStats | null, heartbeat: HeartbeatResponse
     });
   }
 
+  // Posts waiting for review (Orbit submitted drafts)
+  if (stats.content.pendingReview > 0) {
+    alerts.push({
+      id: "pending-review",
+      severity: "warning",
+      title: `${stats.content.pendingReview} post${stats.content.pendingReview !== 1 ? "s" : ""} awaiting review`,
+      detail: "Orbit submitted drafts for approval",
+      room: "spellcast",
+      ts: now,
+    });
+  }
+
   // Nothing scheduled tomorrow
   if (stats.content.scheduledTomorrow === 0) {
     alerts.push({

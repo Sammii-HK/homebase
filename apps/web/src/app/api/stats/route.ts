@@ -124,18 +124,21 @@ async function getHealth() {
 async function getContentPipeline() {
   const apiKey = process.env.SPELLCAST_API_KEY;
   const url = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
-  if (!apiKey) return { failedPosts: 0, failedPostDetails: [], scheduledToday: 0, scheduledTomorrow: 0, queueDepth: 0 };
+  if (!apiKey) return { failedPosts: 0, failedPostDetails: [], scheduledToday: 0, scheduledTomorrow: 0, queueDepth: 0, pendingReview: 0 };
 
   const headers = { Authorization: `Bearer ${apiKey}` };
 
   try {
-    const [failedRes, scheduledRes] = await Promise.all([
+    const [failedRes, scheduledRes, pendingRes] = await Promise.all([
       fetch(`${url}/api/posts?status=failed&limit=100`, { headers, next: { revalidate: 300 } }),
       fetch(`${url}/api/posts?status=scheduled&limit=100`, { headers, next: { revalidate: 300 } }),
+      fetch(`${url}/api/posts?status=pending_review&limit=100`, { headers, next: { revalidate: 300 } }),
     ]);
 
     const failedData = failedRes.ok ? await failedRes.json() : {};
     const scheduledData = scheduledRes.ok ? await scheduledRes.json() : {};
+    const pendingData = pendingRes.ok ? await pendingRes.json() : {};
+    const pendingPosts = Array.isArray(pendingData) ? pendingData : pendingData.posts ?? pendingData.data ?? [];
 
     const failedPosts = Array.isArray(failedData) ? failedData : failedData.posts ?? failedData.data ?? [];
     const scheduledPosts = Array.isArray(scheduledData) ? scheduledData : scheduledData.posts ?? scheduledData.data ?? [];
@@ -173,9 +176,10 @@ async function getContentPipeline() {
           (p.scheduledFor ?? p.scheduledAt ?? "").startsWith(tomorrow)
       ).length,
       queueDepth,
+      pendingReview: pendingPosts.length,
     };
   } catch {
-    return { failedPosts: 0, failedPostDetails: [], scheduledToday: 0, scheduledTomorrow: 0, queueDepth: 0 };
+    return { failedPosts: 0, failedPostDetails: [], scheduledToday: 0, scheduledTomorrow: 0, queueDepth: 0, pendingReview: 0 };
   }
 }
 
