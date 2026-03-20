@@ -16,6 +16,7 @@ import ApprovalQueue from "./ApprovalQueue";
 import EngagementQueue from "./EngagementQueue";
 import BriefingCard from "./BriefingCard";
 import NotificationSetup from "./NotificationSetup";
+import DeployStatus from "./DeployStatus";
 
 const POLL_MS = 60_000;
 
@@ -110,6 +111,32 @@ export default function Dashboard() {
   const handleOpenRoom = useCallback((room: "lunary" | "spellcast" | "dev" | "meta" | "orbit" | "engagement") => {
     setSelectedRoom(room);
   }, []);
+
+  // Global keyboard shortcuts (when no input is focused)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      switch (e.key.toLowerCase()) {
+        case "a":
+          e.preventDefault();
+          setShowApprovalQueue((v) => !v);
+          break;
+        case "e":
+          e.preventDefault();
+          setShowEngagementQueue((v) => !v);
+          break;
+        case "r":
+          e.preventDefault();
+          if (token) fetchData(token);
+          break;
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [token, fetchData]);
 
   if (loading) return <div className="min-h-screen bg-black" />;
 
@@ -368,6 +395,7 @@ export default function Dashboard() {
           <ContentPipeline stats={stats} />
           <Opportunities stats={stats} />
           <SEOSnapshot stats={stats} />
+          <DeployStatus token={token} />
           {stats && (
             <p className="text-[7px] text-white/25 text-center pt-2">
               Updated {new Date(stats.updatedAt).toLocaleTimeString()}
