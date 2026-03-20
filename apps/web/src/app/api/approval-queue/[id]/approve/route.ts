@@ -66,6 +66,8 @@ export async function POST(
   const apiKey = process.env.SPELLCAST_API_KEY;
   const spellcastUrl = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
 
+  const orbitUrl = process.env.ORBIT_URL ?? "http://localhost:3001";
+
   if (!apiKey) {
     return NextResponse.json({ error: "No API key configured" }, { status: 500 });
   }
@@ -108,6 +110,17 @@ export async function POST(
         { status: res.status }
       );
     }
+
+    // Fire-and-forget feedback to Orbit
+    fetch(`${orbitUrl}/api/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        postId: id,
+        action: "approved" as const,
+        timestamp: new Date().toISOString(),
+      }),
+    }).catch(() => {});
 
     return NextResponse.json({
       ok: true,

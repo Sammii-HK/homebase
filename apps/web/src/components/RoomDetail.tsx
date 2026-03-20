@@ -14,6 +14,7 @@ import type {
 import { useRoomData } from "@/hooks/useRoomData";
 import Opportunities from "./Opportunities";
 import ApprovalQueue from "./ApprovalQueue";
+import EngagementQueue from "./EngagementQueue";
 import RoomTabs from "./RoomTabs";
 import Sparkline from "./viz/Sparkline";
 import ProgressBar from "./viz/ProgressBar";
@@ -749,19 +750,23 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
 
 // ── Engagement detail (tabbed) ──
 
-const ENGAGEMENT_TABS = ["INBOX", "DISCOVERY", "A/B TESTS", "COMPETITORS"];
+const ENGAGEMENT_TABS = ["REPLY QUEUE", "INBOX", "DISCOVERY", "A/B TESTS", "COMPETITORS"];
 
 const PLATFORM_COLORS: Record<string, string> = {
   threads: "#fff", instagram: "#f472b6", twitter: "#60a5fa", x: "#60a5fa",
   tiktok: "#22d3ee", linkedin: "#93c5fd", reddit: "#fb923c", bluesky: "#60a5fa",
 };
 
-function EngagementDetail({ deepData, loading }: { deepData: EngagementDeepData | null; loading: boolean }) {
-  const [tab, setTab] = useState("INBOX");
+function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDeepData | null; loading: boolean; token: string }) {
+  const [tab, setTab] = useState("REPLY QUEUE");
 
   return (
     <div>
       <RoomTabs tabs={ENGAGEMENT_TABS} active={tab} accent="#10b981" onChange={setTab} />
+
+      {tab === "REPLY QUEUE" && (
+        <EngagementQueue token={token} />
+      )}
 
       {tab === "INBOX" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -970,7 +975,7 @@ export default function RoomDetail({ roomId, stats, heartbeat, token, onClose }:
         {roomId === "dev" && <DevDetail stats={stats} heartbeat={heartbeat} deepData={deepData as InfraDeepData | null} loading={loading} />}
         {roomId === "meta" && <MetaDetail stats={stats} />}
         {roomId === "orbit" && <OrbitDetail deepData={deepData as OrbitDeepData | null} loading={loading} token={token} />}
-        {roomId === "engagement" && <EngagementDetail deepData={deepData as EngagementDeepData | null} loading={loading} />}
+        {roomId === "engagement" && <EngagementDetail deepData={deepData as EngagementDeepData | null} loading={loading} token={token} />}
 
         {/* Updated timestamp */}
         <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.2)", textAlign: "center", marginTop: 16 }}>

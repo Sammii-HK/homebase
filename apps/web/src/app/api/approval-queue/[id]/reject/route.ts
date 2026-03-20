@@ -18,9 +18,22 @@ export async function POST(
     return NextResponse.json({ error: "No API key configured" }, { status: 500 });
   }
 
+  const orbitUrl = process.env.ORBIT_URL ?? "http://localhost:3001";
+
   if (id.startsWith("orbit-")) {
     // Orbit rejections are logged only for now
     console.log(`[homebase] Orbit content rejected: ${id}`);
+    // Fire-and-forget feedback to Orbit
+    fetch(`${orbitUrl}/api/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        postId: id,
+        action: "rejected" as const,
+        reason: undefined,
+        timestamp: new Date().toISOString(),
+      }),
+    }).catch(() => {});
     return NextResponse.json({ ok: true, message: "Orbit content rejected (logged)" });
   }
 
@@ -51,6 +64,18 @@ export async function POST(
         { status: res.status }
       );
     }
+
+    // Fire-and-forget feedback to Orbit
+    fetch(`${orbitUrl}/api/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        postId: id,
+        action: "rejected" as const,
+        reason: body.reason,
+        timestamp: new Date().toISOString(),
+      }),
+    }).catch(() => {});
 
     return NextResponse.json({
       ok: true,

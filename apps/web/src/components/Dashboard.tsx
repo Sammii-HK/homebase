@@ -13,7 +13,9 @@ import CommandPalette from "./CommandPalette";
 import AlertFeed from "./AlertFeed";
 import RoomDetail from "./RoomDetail";
 import ApprovalQueue from "./ApprovalQueue";
+import EngagementQueue from "./EngagementQueue";
 import BriefingCard from "./BriefingCard";
+import NotificationSetup from "./NotificationSetup";
 
 const POLL_MS = 60_000;
 
@@ -270,7 +272,10 @@ export default function Dashboard() {
 
       {/* Alert Feed — pixel view only */}
       {view === "pixel" && (
-        <AlertFeed stats={stats} heartbeat={heartbeat} token={token} onOpenRoom={handleOpenRoom} onOpenApprovalQueue={() => setShowApprovalQueue(true)} onRefresh={handleRefresh} />
+        <>
+          <AlertFeed stats={stats} heartbeat={heartbeat} token={token} onOpenRoom={handleOpenRoom} onOpenApprovalQueue={() => setShowApprovalQueue(true)} onRefresh={handleRefresh} />
+          <NotificationSetup stats={stats} heartbeat={heartbeat} />
+        </>
       )}
 
       {/* Rooms without pixel art desks — rendered at dashboard level */}
@@ -296,6 +301,7 @@ export default function Dashboard() {
           <KeyNumbers stats={stats} />
           <ServiceHealth stats={stats} heartbeat={heartbeat} />
           <ApprovalQueue token={token} compact />
+          <EngagementQueue token={token!} compact />
           <ContentPipeline stats={stats} />
           <Opportunities stats={stats} />
           <SEOSnapshot stats={stats} />
