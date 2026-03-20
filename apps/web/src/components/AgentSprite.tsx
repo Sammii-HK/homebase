@@ -14,6 +14,7 @@ interface Props {
   activityState?: ActivityState;
   accentColor?: string;
   interactions?: Partial<Record<ActivityState, { x: number; y: number }>>;
+  alert?: boolean;
 }
 
 function rand(min: number, max: number) {
@@ -62,8 +63,9 @@ const ACTION_LABEL: Partial<Record<ActivityState, string>> = {
   hot:       "HOT",
 };
 
-// Bounce class by state
-function bounceClass(state: ActivityState): string {
+// Bounce class by state — typing uses sitting bob when near chair waypoint
+function bounceClass(state: ActivityState, isSitting: boolean): string {
+  if (isSitting) return "agent-sitting";
   switch (state) {
     case "running":   return "agent-run";
     case "thinking":  return "agent-think";
@@ -80,6 +82,7 @@ export default function AgentSprite({
   activityState = "idle",
   accentColor,
   interactions,
+  alert: hasAlert,
 }: Props) {
   const [pos, setPos] = useState({ x: rand(15, 70), y: rand(40, 65) });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -120,6 +123,11 @@ export default function AgentSprite({
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
+  // Detect if agent is "sitting" — typing state and near the typing waypoint
+  const typingWp = interactions?.typing;
+  const isSitting = activityState === "typing" && typingWp !== undefined &&
+    Math.abs(pos.x - typingWp.x) < 8 && Math.abs(pos.y - typingWp.y) < 8;
+
   const glowIntensity = activityState === "hot" || activityState === "typing" || activityState === "running"
     ? `drop-shadow(0 0 10px ${glowColor}) drop-shadow(0 2px 0 rgba(0,0,0,0.8))`
     : `drop-shadow(0 0 6px ${glowColor}) drop-shadow(0 2px 0 rgba(0,0,0,0.8))`;
@@ -136,6 +144,41 @@ export default function AgentSprite({
         transition: TRANSITION[activityState],
       }}
     >
+      {/* Alert thought bubble */}
+      {hasAlert && (
+        <div
+          className="agent-alert-bubble"
+          style={{
+            position: "absolute",
+            top: -20,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#ef4444",
+            border: "2px solid #000",
+            padding: "1px 4px",
+            zIndex: 25,
+          }}
+        >
+          <span style={{
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: 6,
+            color: "#fff",
+            lineHeight: 1,
+          }}>!</span>
+          {/* Speech bubble tail */}
+          <div style={{
+            position: "absolute",
+            bottom: -4,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 0,
+            height: 0,
+            borderLeft: "3px solid transparent",
+            borderRight: "3px solid transparent",
+            borderTop: "4px solid #ef4444",
+          }} />
+        </div>
+      )}
       {label && (
         <div
           style={{
@@ -155,7 +198,7 @@ export default function AgentSprite({
         </div>
       )}
       <div
-        className={bounceClass(activityState)}
+        className={bounceClass(activityState, isSitting)}
         style={{ filter: glowIntensity }}
       >
         <PixelSprite pixels={pixels} palette={palette} scale={3} />

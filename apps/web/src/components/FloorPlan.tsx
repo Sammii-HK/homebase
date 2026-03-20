@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import AgentSprite, { ActivityState } from "./AgentSprite";
-import { useLiveStats, LiveEvent } from "@/hooks/useLiveStats";
 import { useActivityStream } from "@/hooks/useActivityStream";
+import type { DashboardStats, HeartbeatResponse } from "@/types/dashboard";
+import NotificationBadge from "./NotificationBadge";
+import RoomDetail from "./RoomDetail";
 
 // ── Pixel art renderer ────────────────────────────────────────────────────
 
@@ -170,102 +172,6 @@ const LAPTOP = {
   ],
 };
 
-// Telescope — 10w × 18h
-const TELESCOPE = {
-  colors: { K: "#111", M: "#a78bfa", m: "#7c3aed", D: "#6d28d9", B: "#c4b5fd", s: "#8b5cf6", L: "#5b21b6" },
-  data: [
-    ".....K....",
-    "....KBK...",
-    "....KMK...",
-    "...KMmMK..",
-    "..KMMMmMK.",
-    ".KmMMMMMmK",
-    "KmMMMMMMMk",
-    "KMMMMMMMMk",
-    ".KMMMMMKk.",
-    "..KMMMKk..",
-    "...KMsK...",
-    "...KMsK...",
-    "...KMsK...",
-    "..KLLLLK..",
-    "..KLLLLK..",
-    ".KLLLLLLK.",
-    ".KKKKKKKK.",
-    "..........",
-  ],
-};
-
-// Crystal ball — 12w × 12h
-const CRYSTAL_BALL = {
-  colors: { K: "#111", W: "#ede9fe", w: "#ddd6fe", M: "#a78bfa", m: "#7c3aed", D: "#6d28d9", g: "#c4b5fd", S: "#f5f3ff", P: "#4c1d95" },
-  data: [
-    "....KKKKKK....",
-    "..KWWWSSWWWk..",
-    ".KWSSSSSSSwwk.",
-    "KWSSgMMgSSwwwk",
-    "KWSgMMMMgSwwwk",
-    "KWSmMMMmSSMwwk",
-    "KWWmDmmDMwwwwk",
-    "KWwwMmMwwwwwwk",
-    ".Kwwwwwwwwwwk.",
-    "..KKwwwwwwKk..",
-    "....KKKKKK....",
-    ".KPPPPPPPPPk..",
-  ],
-};
-
-// Window (wall-mounted) — 14w × 18h
-const WINDOW = {
-  colors: { K: "#1a0a00", F: "#8B6914", f: "#6B4C1E", G: "#fde68a", g: "#fbbf24", B: "#bfdbfe", b: "#93c5fd", W: "#fff7ed", d: "#7c5200" },
-  data: [
-    "KKKKKKKKKKKKKK",
-    "KFFFFFFFFFFFFk",
-    "KFGGGGGGGGGFfk",
-    "KFGBBbBBbBBGFk",
-    "KFGBBbBBbBBGFk",
-    "KFGbBBBBBBbGFk",
-    "KFGBBbBBbBBGFk",
-    "KFdddddddddFfk",
-    "KFGBBbBBbBBGFk",
-    "KFGBBbBBbBBGFk",
-    "KFGbBBBBBBbGFk",
-    "KFGBBbBBbBBGFk",
-    "KFGGGGGGGGGFfk",
-    "KFFFFFFFFFFFFk",
-    "KFfffffffFFFfk",
-    "KGGGGGGGGGGGGk",
-    "KgggggggggggGk",
-    "KKKKKKKKKKKKKK",
-  ],
-};
-
-// Ring light — 20w × 20h
-const RING_LIGHT = {
-  colors: { K: "#111", W: "#fdf4ff", w: "#e879f9", p: "#f0abfc", P: "#d946ef", g: "#fdf4ff", D: "#1a0a00", S: "#4a0070" },
-  data: [
-    "......KKKKKKK.......",
-    "....KKwwwwwwwKK.....",
-    "...KwwwwwwwwwwwK....",
-    "..KwwwKKKKKKKwwwK...",
-    ".KwwwKK.....KKwwwK..",
-    "KwwwKK.......KKwwwK.",
-    "KwwKK.........KKwwK.",
-    "KwwK...........KwwK.",
-    "KwwK...........KwwK.",
-    "KwwK...........KwwK.",
-    "KwwK...........KwwK.",
-    "KwwK...........KwwK.",
-    "KwwKK.........KKwwK.",
-    "KwwwKK.......KKwwwK.",
-    ".KwwwKK.....KKwwwK..",
-    "..KwwwKKKKKKKwwwK...",
-    "...KwwwwwwwwwwwK....",
-    "....KKwwwwwwwKK.....",
-    "......KKKKKKK.......",
-    ".........KK.........",
-  ],
-};
-
 // Camera on tripod — 10w × 22h
 const CAMERA = {
   colors: { K: "#111", C: "#f472b6", c: "#db2777", B: "#fda4af", D: "#be185d", L: "#831843", s: "#fce7f3" },
@@ -323,7 +229,7 @@ const SERVER = {
 };
 
 // Small candle — 4w × 8h
-function CandleSprite({ color = "#fde68a", hot = false }: { color?: string; hot?: boolean }) {
+function CandleSprite({ color = "#fde68a" }: { color?: string }) {
   return (
     <Px scale={3} colors={{ F: color, f: "#fbbf24", W: "#f5f5dc", w: "#e8e8c8", K: "#111" }} data={[
       ".FF.",
@@ -359,7 +265,6 @@ function PlantSprite({ accent = "#16a34a" }: { accent?: string }) {
 
 // ── Wall art ───────────────────────────────────────────────────────────────
 
-// Framed moon painting — 20w × 18h
 const MOON_PAINTING = {
   colors: { K: "#1a0a00", F: "#5b21b6", f: "#4c1d95", B: "#0f0820", s: "#1e1035", M: "#c4b5fd", m: "#a78bfa", W: "#ddd6fe", G: "#fde68a", g: "#fbbf24", D: "#7c3aed" },
   data: [
@@ -384,7 +289,92 @@ const MOON_PAINTING = {
   ],
 };
 
-// Analytics chart wall art — 22w × 16h
+const STAR_CHART = {
+  colors: { K: "#111", B: "#0f0820", S: "#fde68a", s: "#fbbf24", P: "#c4b5fd", p: "#a78bfa", D: "#1e1035", W: "#2d1b69", F: "#4c1d95", f: "#5b21b6" },
+  data: [
+    "KKKKKKKKKKKKKKKK",
+    "KFFFFFFFFFFFFFFk",
+    "KfBBSBBBBBBBBBfk",
+    "KfBBBBBBSBBBBBfk",
+    "KfBBBBBBBBBBSBfk",
+    "KfBSBBBBBBBBBBfk",
+    "KfBBBBBSBBBBBBfk",
+    "KfBBBBBBBBSBBBfk",
+    "KfBBSBBBBBBBBBfk",
+    "KfBBBBBBBBBBBSfk",
+    "KfBBBBSBBBBBBBfk",
+    "KfBBBBBBBSBBBBfk",
+    "KFFFFFFFFFFFFFFk",
+    "KKKKKKKKKKKKKKKK",
+  ],
+};
+
+const CAULDRON = {
+  colors: { K: "#111", P: "#4c1d95", p: "#7c3aed", B: "#8b5cf6", b: "#a78bfa", F: "#fbbf24", f: "#fde68a", S: "#6d28d9" },
+  data: [
+    ".f..F.f.....",
+    "..f.....F...",
+    "..KKKKKKKK..",
+    ".KppppppppK.",
+    "KpBBBBBBBBpK",
+    "KpBbBbBbBBpK",
+    "KpBBBBBBBBpK",
+    ".KppppppppK.",
+    "..KSSSSSKK..",
+    "..KKKKKKKK..",
+  ],
+};
+
+const WINDOW = {
+  colors: { K: "#1a0a00", F: "#8B6914", f: "#6B4C1E", G: "#fde68a", g: "#fbbf24", B: "#bfdbfe", b: "#93c5fd", W: "#fff7ed", d: "#7c5200" },
+  data: [
+    "KKKKKKKKKKKKKK",
+    "KFFFFFFFFFFFFk",
+    "KFGGGGGGGGGFfk",
+    "KFGBBbBBbBBGFk",
+    "KFGBBbBBbBBGFk",
+    "KFGbBBBBBBbGFk",
+    "KFGBBbBBbBBGFk",
+    "KFdddddddddFfk",
+    "KFGBBbBBbBBGFk",
+    "KFGBBbBBbBBGFk",
+    "KFGbBBBBBBbGFk",
+    "KFGBBbBBbBBGFk",
+    "KFGGGGGGGGGFfk",
+    "KFFFFFFFFFFFFk",
+    "KFfffffffFFFfk",
+    "KGGGGGGGGGGGGk",
+    "KgggggggggggGk",
+    "KKKKKKKKKKKKKK",
+  ],
+};
+
+const RING_LIGHT = {
+  colors: { K: "#111", W: "#fdf4ff", w: "#e879f9", p: "#f0abfc", P: "#d946ef", g: "#fdf4ff", D: "#1a0a00", S: "#4a0070" },
+  data: [
+    "......KKKKKKK.......",
+    "....KKwwwwwwwKK.....",
+    "...KwwwwwwwwwwwK....",
+    "..KwwwKKKKKKKwwwK...",
+    ".KwwwKK.....KKwwwK..",
+    "KwwwKK.......KKwwwK.",
+    "KwwKK.........KKwwK.",
+    "KwwK...........KwwK.",
+    "KwwK...........KwwK.",
+    "KwwK...........KwwK.",
+    "KwwK...........KwwK.",
+    "KwwK...........KwwK.",
+    "KwwKK.........KKwwK.",
+    "KwwwKK.......KKwwwK.",
+    ".KwwwKK.....KKwwwK..",
+    "..KwwwKKKKKKKwwwK...",
+    "...KwwwwwwwwwwwK....",
+    "....KKwwwwwwwKK.....",
+    "......KKKKKKK.......",
+    ".........KK.........",
+  ],
+};
+
 const CHART_ART = {
   colors: { K: "#111", B: "#1a0a14", P: "#831843", p: "#9d174d", C: "#f472b6", c: "#fda4af", W: "#fdf2f8", G: "#fce7f3", D: "#500724", l: "#ec4899" },
   data: [
@@ -407,7 +397,6 @@ const CHART_ART = {
   ],
 };
 
-// Terminal wall art — 20w × 14h
 const TERMINAL_ART = {
   colors: { K: "#111", B: "#0d1117", S: "#161b22", G: "#4ade80", g: "#22c55e", d: "#166534", W: "#30363d", R: "#f87171", Y: "#facc15" },
   data: [
@@ -428,28 +417,28 @@ const TERMINAL_ART = {
   ],
 };
 
-// Star chart — 16w × 14h
-const STAR_CHART = {
-  colors: { K: "#111", B: "#0f0820", S: "#fde68a", s: "#fbbf24", P: "#c4b5fd", p: "#a78bfa", D: "#1e1035", W: "#2d1b69", F: "#4c1d95", f: "#5b21b6" },
+const WHITEBOARD = {
+  colors: { K: "#111", W: "#f8fafc", w: "#e2e8f0", F: "#1e293b", R: "#fca5a5", Y: "#fde68a", G: "#86efac", B: "#93c5fd", p: "#f0abfc" },
   data: [
-    "KKKKKKKKKKKKKKKK",
-    "KFFFFFFFFFFFFFFk",
-    "KfBBSBBBBBBBBBfk",
-    "KfBBBBBBSBBBBBfk",
-    "KfBBBBBBBBBBSBfk",
-    "KfBSBBBBBBBBBBfk",
-    "KfBBBBBSBBBBBBfk",
-    "KfBBBBBBBBSBBBfk",
-    "KfBBSBBBBBBBBBfk",
-    "KfBBBBBBBBBBBSfk",
-    "KfBBBBSBBBBBBBfk",
-    "KfBBBBBBBSBBBBfk",
-    "KFFFFFFFFFFFFFFk",
-    "KKKKKKKKKKKKKKKK",
+    "KKKKKKKKKKKKKKKKKKKK",
+    "KWWWWWWKWWWWWWKWWWWk",
+    "KwRRRwKwYYYwKwGGGwk.",
+    "KwRRRwKwYYYwKwGGGwk.",
+    "KwRRRwKwYYYwKwGGGwk.",
+    "KwwwwwKwwwwwKwwwwwk.",
+    "KwBBBwKwBBBwKw...wk.",
+    "KwBBBwKwBBBwKw...wk.",
+    "KwBBBwKwBBBwKw...wk.",
+    "KwwwwwKwwwwwKwwwwwk.",
+    "KwpppwKw...wKw...wk.",
+    "KwpppwKw...wKw...wk.",
+    "KwpppwKw...wKw...wk.",
+    "KwwwwwKwwwwwKwwwwwk.",
+    "KWWWWWWKWWWWWWKWWWWk",
+    "KKKKKKKKKKKKKKKKKKKK",
   ],
 };
 
-// Pinboard — 22w × 16h
 const PINBOARD = {
   colors: { K: "#111", B: "#b5875a", b: "#8B6914", W: "#fef3c7", w: "#ecfdf5", p: "#fce7f3", G: "#eff6ff", R: "#ef4444", Y: "#facc15", C: "#22d3ee", M: "#e879f9" },
   data: [
@@ -472,7 +461,6 @@ const PINBOARD = {
   ],
 };
 
-// Photo wall strip — 8w × 30h (polaroid stack)
 const PHOTOS = {
   colors: { K: "#111", W: "#fff", w: "#f0f0f0", R: "#fda4af", r: "#f9a8d4", B: "#93c5fd", b: "#bfdbfe", G: "#86efac", P: "#d8b4fe", Y: "#fde68a" },
   data: [
@@ -509,96 +497,6 @@ const PHOTOS = {
   ],
 };
 
-// Coffee mug — 8w × 8h
-const COFFEE = {
-  colors: { K: "#111", W: "#d4a76a", w: "#b8895a", D: "#3d1f0a", B: "#1a0a00", S: "#6b3a1a", G: "#4ade80" },
-  data: [
-    ".KKKKKK.",
-    "KWWWWWWk",
-    "KWDDDDWKk",
-    "KWDDDDWKk",
-    "KWWWWWWk",
-    "KWWWWWWk",
-    ".KKKKKK.",
-    "..KKKK..",
-  ],
-};
-
-// Cauldron — 12w × 10h (bubbling purple cauldron)
-const CAULDRON = {
-  colors: { K: "#111", P: "#4c1d95", p: "#7c3aed", B: "#8b5cf6", b: "#a78bfa", F: "#fbbf24", f: "#fde68a", S: "#6d28d9" },
-  data: [
-    ".f..F.f.....",
-    "..f.....F...",
-    "..KKKKKKKK..",
-    ".KppppppppK.",
-    "KpBBBBBBBBpK",
-    "KpBbBbBbBBpK",
-    "KpBBBBBBBBpK",
-    ".KppppppppK.",
-    "..KSSSSSKK..",
-    "..KKKKKKKK..",
-  ],
-};
-
-// Moon phase strip — 28w × 8h (wall art, 5 phases)
-const MOON_PHASE = {
-  colors: { K: "#111", F: "#5b21b6", B: "#0f0820", W: "#fde68a", w: "#fbbf24", D: "#1e1035" },
-  data: [
-    "KKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-    "KFFFFFFFFFFFFFFFFFFFFFFFFFFk",
-    "KFDDDDFwDDFWwwWFwwwWFwwwwWFk",
-    "KFDDDDFwDDFWwwWFwwwWFwwwwWFk",
-    "KFDDDDFwDDFWwwWFwwwWFwwwwWFk",
-    "KFDDDDFwDDFWwwWFwwwWFwwwwWFk",
-    "KFFFFFFFFFFFFFFFFFFFFFFFFFFk",
-    "KKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-  ],
-};
-
-// Potion rack — 10w × 12h (3 bottles on a shelf)
-const POTION_RACK = {
-  colors: { K: "#111", L: "#8b6035", W: "#c49a60", P: "#7c3aed", p: "#a78bfa", G: "#059669", g: "#34d399", B: "#0e7490", b: "#22d3ee", C: "#fde68a" },
-  data: [
-    ".KKKKKKKK.",
-    ".KWWWWWWKk",
-    ".K.C.C.Ck.",
-    ".K.P.G.Bk.",
-    ".K.P.G.Bk.",
-    ".K.p.g.bk.",
-    ".K.p.g.bk.",
-    ".K.P.G.Bk.",
-    ".KKKKKKKK.",
-    ".LLLLLLLL.",
-    "..........",
-    "..........",
-  ],
-};
-
-// Whiteboard — 20w × 16h (kanban columns)
-const WHITEBOARD = {
-  colors: { K: "#111", W: "#f8fafc", w: "#e2e8f0", F: "#1e293b", R: "#fca5a5", Y: "#fde68a", G: "#86efac", B: "#93c5fd", p: "#f0abfc" },
-  data: [
-    "KKKKKKKKKKKKKKKKKKKK",
-    "KWWWWWWKWWWWWWKWWWWk",
-    "KwRRRwKwYYYwKwGGGwk.",
-    "KwRRRwKwYYYwKwGGGwk.",
-    "KwRRRwKwYYYwKwGGGwk.",
-    "KwwwwwKwwwwwKwwwwwk.",
-    "KwBBBwKwBBBwKw...wk.",
-    "KwBBBwKwBBBwKw...wk.",
-    "KwBBBwKwBBBwKw...wk.",
-    "KwwwwwKwwwwwKwwwwwk.",
-    "KwpppwKw...wKw...wk.",
-    "KwpppwKw...wKw...wk.",
-    "KwpppwKw...wKw...wk.",
-    "KwwwwwKwwwwwKwwwwwk.",
-    "KWWWWWWKWWWWWWKWWWWk",
-    "KKKKKKKKKKKKKKKKKKKK",
-  ],
-};
-
-// Coffee machine — 10w × 14h
 const COFFEE_MACHINE = {
   colors: { K: "#111", M: "#27272a", m: "#3f3f46", W: "#71717a", S: "#a1a1aa", B: "#d4a76a", b: "#fbbf24", R: "#ef4444", G: "#4ade80", C: "#f8fafc" },
   data: [
@@ -619,18 +517,6 @@ const COFFEE_MACHINE = {
   ],
 };
 
-// Rubber duck — 4w × 4h
-const RUBBER_DUCK = {
-  colors: { K: "#111", Y: "#fbbf24", y: "#fde68a", B: "#1d4ed8", E: "#1a0a00" },
-  data: [
-    ".yY.",
-    "YyYY",
-    "YYYY",
-    ".KK.",
-  ],
-};
-
-// Book pile — 10w × 10h
 const BOOK_PILE = {
   colors: { K: "#111", R: "#c0392b", r: "#e74c3c", B: "#1d6fa4", b: "#2980b9", G: "#1a7a3c", g: "#27ae60", Y: "#c07c00", y: "#e69c00", L: "#c49a60" },
   data: [
@@ -647,7 +533,6 @@ const BOOK_PILE = {
   ],
 };
 
-// Sticky notes cluster — 16w × 14h (wall)
 const STICKY_NOTES = {
   colors: { K: "#111", Y: "#fef9c3", y: "#fde68a", P: "#fce7f3", p: "#fbcfe8", G: "#dcfce7", g: "#bbf7d0", B: "#dbeafe", b: "#bfdbfe", T: "#78716c" },
   data: [
@@ -668,7 +553,6 @@ const STICKY_NOTES = {
   ],
 };
 
-// Colour-blocked photo backdrop — 16w × 20h
 const BACKDROP = {
   colors: { K: "#111", A: "#fce7f3", a: "#fbcfe8", C: "#fdf4ff", c: "#f5d0fe", B: "#ffe4e6", b: "#fecdd3", D: "#fff7ed", d: "#fed7aa", P: "#831843" },
   data: [
@@ -695,7 +579,6 @@ const BACKDROP = {
   ],
 };
 
-// Simple stool — 8w × 8h
 const STOOL = {
   colors: { K: "#111", W: "#c49a60", w: "#8b6035", D: "#5c3a1e", S: "#a07040" },
   data: [
@@ -712,77 +595,45 @@ const STOOL = {
 
 // ── Room decoration components ─────────────────────────────────────────────
 
-function LunaryRoom({ isHot, activeToday, events }: { isHot: boolean; activeToday: number; events: LiveEvent[] }) {
+function LunaryRoom({ isHot, activeToday }: { isHot: boolean; activeToday: number }) {
   return <>
     {/* Wallpaper: starry pattern */}
     <div className="absolute" style={{ inset: 0, top: 0, height: "38%", backgroundImage: `radial-gradient(circle, rgba(196,181,253,0.35) 1px, transparent 1px)`, backgroundSize: "20px 20px", zIndex: 0 }} />
 
     {/* ── WALL ART ── */}
-    {/* Left wall: moon phase strip — full-width strip */}
-    <div className="absolute" style={{ left: 4, top: 8, zIndex: 4 }}>
-      <Px {...MOON_PHASE} scale={5} />
-    </div>
-    {/* Center wall: star chart */}
+    {/* Center: moon painting */}
     <div className="absolute" style={{ left: "50%", top: 6, transform: "translateX(-50%)", zIndex: 4 }}>
-      <Px {...STAR_CHART} scale={4} />
+      <Px {...MOON_PAINTING} scale={3} />
     </div>
-    {/* Right wall: moon painting */}
-    <div className="absolute" style={{ right: 6, top: 5, zIndex: 4 }}>
-      <Px {...MOON_PAINTING} scale={4} />
+    {/* Right: star chart */}
+    <div className="absolute" style={{ right: "6%", top: 5, zIndex: 4 }}>
+      <Px {...STAR_CHART} scale={3} />
     </div>
 
-    {/* ── FLOOR — bottom row ── */}
-    {/* Large rug first so items sit on it */}
-    <div className="absolute" style={{ left: 30, bottom: 48, right: 8, height: 40, background: "rgba(91,33,182,0.5)", border: "2px solid rgba(124,58,237,0.5)", zIndex: 3 }} />
-    {/* Bookshelf far left — anchors left wall to floor */}
-    <div className="absolute" style={{ left: 6, bottom: 48, zIndex: 5 }}>
-      <Px {...BOOKSHELF} scale={4} />
+    {/* ── FLOOR ── all % positioning ── */}
+    {/* Bookshelf (10%, 55%) */}
+    <div className="absolute" style={{ left: "10%", top: "55%", zIndex: 5 }}>
+      <Px {...BOOKSHELF} scale={3} />
     </div>
-    {/* Plant next to shelf */}
-    <div className="absolute" style={{ left: 88, bottom: 48, zIndex: 5 }}>
-      <PlantSprite accent="#7c3aed" />
+    {/* Cauldron (35%, 58%) — thinking waypoint */}
+    <div className={`absolute ${isHot ? "crystal-hot" : ""}`} style={{ left: "35%", top: "58%", zIndex: 5 }}>
+      <Px {...CAULDRON} scale={3} />
     </div>
-    {/* Cauldron center-left — thinking waypoint */}
-    <div className={`absolute ${isHot ? "crystal-hot" : ""}`} style={{ left: "34%", bottom: 48, zIndex: 5 }}>
-      <Px {...CAULDRON} scale={5} />
-    </div>
-    {/* Desk right */}
-    <div className="absolute" style={{ right: 10, bottom: 48, zIndex: 4 }}>
+    {/* Desk+Monitor (62%, 55%) */}
+    <div className="absolute" style={{ left: "62%", top: "55%", zIndex: 4 }}>
       <Px {...DESK} scale={3} />
     </div>
-    {/* Telescope on desk */}
-    <div className={`absolute ${isHot ? "telescope-hot" : ""}`} style={{ right: 38, bottom: 48 + 24, zIndex: 6 }}>
-      <Px {...TELESCOPE} scale={3} />
-    </div>
-    {/* Crystal ball center-right */}
-    <div className={`absolute ${isHot ? "crystal-hot" : ""}`} style={{ right: 120, bottom: 48 + 24, zIndex: 6 }}>
-      <Px {...CRYSTAL_BALL} scale={3} />
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: "64%", top: "42%", zIndex: 6 }}>
+      <Px {...MONITOR} scale={3} />
     </div>
 
-    {/* ── FLOOR — mid-level items ── */}
-    {/* Potion rack with built-in legs — sits on floor, appears mid-room */}
-    <div className="absolute" style={{ left: "54%", bottom: 48, zIndex: 4 }}>
-      <Px {...POTION_RACK} scale={3} />
-    </div>
-    {/* Second rug center */}
-    <div className="absolute" style={{ left: "24%", bottom: 52, width: 110, height: 28, background: "rgba(109,40,217,0.35)", border: "1px solid rgba(167,139,250,0.3)", zIndex: 3 }} />
+    {/* ── ATMOSPHERE ── */}
+    {/* Cauldron glow */}
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: "30%", top: "55%", width: "20%", height: "20%", background: "radial-gradient(ellipse, rgba(124,58,237,0.25) 0%, transparent 70%)", zIndex: 2, pointerEvents: "none" }} />
 
-    {/* ── CSS ATMOSPHERE ── */}
-    {/* Arcane floor circle around cauldron */}
-    <div className="absolute" style={{ left: "26%", bottom: 44, width: 130, height: 52, border: "1px solid rgba(167,139,250,0.35)", borderRadius: "50%", zIndex: 2, pointerEvents: "none" }} />
-    <div className="absolute" style={{ left: "29%", bottom: 48, width: 96, height: 38, border: "1px dashed rgba(196,181,253,0.2)", borderRadius: "50%", zIndex: 2, pointerEvents: "none" }} />
-    {/* Cauldron glow on floor */}
-    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: "30%", bottom: 44, width: 120, height: 48, background: "radial-gradient(ellipse, rgba(124,58,237,0.25) 0%, transparent 70%)", zIndex: 2, pointerEvents: "none" }} />
-
-    {/* ── CANDLES ── */}
-    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: 100, bottom: 48, zIndex: 6, transform: activeToday > 0 ? "scale(1.2)" : "scale(1)", transition: "transform 0.5s" }}>
-      <CandleSprite color="#fde68a" />
-    </div>
-    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: "46%", bottom: 48, zIndex: 6, animationDelay: "0.4s" }}>
+    {/* Candle */}
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: "52%", top: "62%", zIndex: 6 }}>
       <CandleSprite color="#c4b5fd" />
-    </div>
-    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ right: 130, bottom: 48, zIndex: 6, animationDelay: "0.7s" }}>
-      <CandleSprite color="#f0abfc" />
     </div>
 
     {/* Online indicator */}
@@ -799,24 +650,6 @@ function LunaryRoom({ isHot, activeToday, events }: { isHot: boolean; activeToda
         </div>
       </div>
     )}
-
-    {/* Live event bubbles */}
-    {events.map((ev) => (
-      <div key={ev.id} className="event-bubble absolute" style={{ left: "50%", bottom: "55%", transform: "translateX(-50%)", zIndex: 15 }}>
-        <div style={{
-          fontFamily: "'Press Start 2P'", fontSize: 7,
-          background: ev.type === "new-sub" ? "rgba(250,204,21,0.9)" : ev.type === "new-user" ? "rgba(167,139,250,0.9)" : "rgba(34,211,238,0.9)",
-          color: "#000", padding: "3px 8px",
-          border: "2px solid rgba(255,255,255,0.5)",
-          whiteSpace: "nowrap",
-        }}>
-          {ev.type === "new-user" && "NEW USER!"}
-          {ev.type === "new-sub" && "NEW SUB!"}
-          {ev.type === "online" && `${ev.label} ONLINE`}
-          {ev.type === "offline" && "OFFLINE"}
-        </div>
-      </div>
-    ))}
   </>;
 }
 
@@ -828,65 +661,45 @@ function SpellcastRoom({ isHot }: { isHot: boolean }) {
       backgroundSize: "16px 16px", zIndex: 0 }} />
 
     {/* ── WALL ART ── */}
-    {/* Left wall: kanban whiteboard */}
-    <div className="absolute" style={{ left: 4, top: 4, zIndex: 4 }}>
-      <Px {...WHITEBOARD} scale={5} />
+    <div className="absolute" style={{ left: "4%", top: 4, zIndex: 4 }}>
+      <Px {...WHITEBOARD} scale={3} />
     </div>
-    {/* Center wall: window */}
     <div className="absolute" style={{ left: "44%", top: 4, zIndex: 4 }}>
-      <Px {...WINDOW} scale={4} />
+      <Px {...WINDOW} scale={3} />
     </div>
-    {/* Right wall: pinboard */}
-    <div className="absolute" style={{ right: 6, top: 5, zIndex: 4 }}>
-      <Px {...PINBOARD} scale={4} />
+    <div className="absolute" style={{ right: "4%", top: 5, zIndex: 4 }}>
+      <Px {...PINBOARD} scale={3} />
     </div>
 
-    {/* ── FLOOR — bottom row ── */}
-    {/* Teal rug under desk area */}
-    <div className="absolute" style={{ left: "36%", bottom: 48, right: 8, height: 40, background: "rgba(14,79,95,0.55)", border: "2px solid rgba(34,211,238,0.3)", zIndex: 3 }} />
-
-    {/* Server rack 1 — far left */}
-    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 8, bottom: 48, zIndex: 5 }}>
-      <Px {...SERVER} scale={3} />
-    </div>
-    {/* Server rack 2 — staggered, slightly behind */}
-    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: 42, bottom: 80, zIndex: 4 }}>
+    {/* ── FLOOR ── all % positioning ── */}
+    {/* Server rack (8%, 55%) */}
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: "8%", top: "55%", zIndex: 5 }}>
       <Px {...SERVER} scale={3} />
     </div>
     {/* Server glow */}
-    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: 6, bottom: 44, width: 80, height: 40, background: "radial-gradient(ellipse, rgba(74,222,128,0.2) 0%, transparent 70%)", zIndex: 2, pointerEvents: "none" }} />
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: "5%", top: "58%", width: "16%", height: "18%", background: "radial-gradient(ellipse, rgba(74,222,128,0.2) 0%, transparent 70%)", zIndex: 2, pointerEvents: "none" }} />
 
-    {/* Coffee machine center-left */}
-    <div className="absolute" style={{ left: "24%", bottom: 48, zIndex: 5 }}>
+    {/* Coffee machine (28%, 58%) */}
+    <div className="absolute" style={{ left: "28%", top: "58%", zIndex: 5 }}>
       <Px {...COFFEE_MACHINE} scale={3} />
     </div>
 
-    {/* Long desk right half */}
-    <div className="absolute" style={{ left: "40%", right: 8, bottom: 48, zIndex: 4 }}>
+    {/* Desk+Monitor (58%, 55%) */}
+    <div className="absolute" style={{ left: "58%", top: "55%", zIndex: 4 }}>
       <Px {...DESK} scale={3} />
     </div>
-    {/* Monitor 1 */}
-    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: "44%", bottom: 48 + 24, zIndex: 6 }}>
-      <Px {...MONITOR} scale={3} />
-    </div>
-    {/* Monitor 2 */}
-    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ right: 36, bottom: 48 + 24, zIndex: 6 }}>
+    <div className={`absolute ${isHot ? "monitor-hot" : ""}`} style={{ left: "60%", top: "42%", zIndex: 6 }}>
       <Px {...MONITOR} scale={3} />
     </div>
 
     {/* Status LEDs */}
-    <div className="absolute" style={{ right: 12, bottom: 96, display: "flex", flexDirection: "column", gap: 6, zIndex: 7 }}>
+    <div className="absolute" style={{ right: "6%", top: "56%", display: "flex", flexDirection: "column", gap: 6, zIndex: 7 }}>
       {[["#4ade80", "ON"], ["#facc15", "Q"], ["#f472b6", "IG"]].map(([c, l]) => (
         <div key={l} style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <div className={isHot ? "led-hot" : "pulse"} style={{ width: 8, height: 8, background: c, border: "1px solid rgba(0,0,0,0.5)", boxShadow: `0 0 8px ${c}` }} />
           <span style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: "rgba(255,255,255,0.5)" }}>{l}</span>
         </div>
       ))}
-    </div>
-
-    {/* Plant far right */}
-    <div className="absolute" style={{ right: 10, bottom: 48, zIndex: 6 }}>
-      <PlantSprite accent="#0891b2" />
     </div>
   </>;
 }
@@ -899,63 +712,44 @@ function DevRoom({ isHot }: { isHot: boolean }) {
       zIndex: 0 }} />
 
     {/* ── WALL ART ── */}
-    {/* Left wall: sticky notes cluster */}
-    <div className="absolute" style={{ left: 4, top: 6, zIndex: 5 }}>
-      <Px {...STICKY_NOTES} scale={4} />
+    <div className="absolute" style={{ left: "4%", top: 6, zIndex: 5 }}>
+      <Px {...STICKY_NOTES} scale={3} />
     </div>
-    {/* Center wall: window */}
     <div className="absolute" style={{ left: "42%", top: 4, zIndex: 4 }}>
-      <Px {...WINDOW} scale={4} />
+      <Px {...WINDOW} scale={3} />
     </div>
-    {/* Right wall: terminal art */}
-    <div className={`absolute ${isHot ? "terminal-hot" : ""}`} style={{ right: 6, top: 5, zIndex: 4 }}>
-      <Px {...TERMINAL_ART} scale={4} />
+    <div className={`absolute ${isHot ? "terminal-hot" : ""}`} style={{ right: "4%", top: 5, zIndex: 4 }}>
+      <Px {...TERMINAL_ART} scale={3} />
     </div>
 
-    {/* ── FLOOR — bottom row ── */}
-    {/* Green rug under center-right */}
-    <div className="absolute" style={{ left: 80, bottom: 48, right: 42, height: 40, background: "rgba(21,83,61,0.5)", border: "2px solid rgba(74,222,128,0.25)", zIndex: 3 }} />
-
-    {/* Desk left — typing waypoint */}
-    <div className="absolute" style={{ left: 6, bottom: 48, zIndex: 4 }}>
+    {/* ── FLOOR ── all % positioning ── */}
+    {/* Desk+Laptop (15%, 55%) */}
+    <div className="absolute" style={{ left: "15%", top: "55%", zIndex: 4 }}>
       <Px {...DESK} scale={3} />
     </div>
-    {/* Laptop on desk */}
-    <div className={`absolute ${isHot ? "laptop-hot" : ""}`} style={{ left: 18, bottom: 48 + 24, zIndex: 6 }}>
+    <div className={`absolute ${isHot ? "laptop-hot" : ""}`} style={{ left: "17%", top: "42%", zIndex: 6 }}>
       <Px {...LAPTOP} scale={3} />
     </div>
-    {/* Rubber duck on desk */}
-    <div className="absolute" style={{ left: 68, bottom: 48 + 24, zIndex: 6 }}>
-      <Px {...RUBBER_DUCK} scale={4} />
-    </div>
-    {/* Coffee mug on desk */}
-    <div className="absolute" style={{ left: 82, bottom: 48 + 20, zIndex: 6 }}>
-      <Px {...COFFEE} scale={3} />
-    </div>
     {/* Desk glow */}
-    <div className={`absolute ${isHot ? "pulse-fast" : ""}`} style={{ left: 4, bottom: 44, width: 120, height: 36, background: "radial-gradient(ellipse, rgba(74,222,128,0.15) 0%, transparent 70%)", zIndex: 2, pointerEvents: "none" }} />
+    <div className={`absolute ${isHot ? "pulse-fast" : ""}`} style={{ left: "12%", top: "58%", width: "24%", height: "16%", background: "radial-gradient(ellipse, rgba(74,222,128,0.15) 0%, transparent 70%)", zIndex: 2, pointerEvents: "none" }} />
 
-    {/* Book pile center floor — thinking waypoint area */}
-    <div className="absolute" style={{ left: "38%", bottom: 48, zIndex: 5 }}>
+    {/* Book pile (45%, 60%) */}
+    <div className="absolute" style={{ left: "45%", top: "60%", zIndex: 5 }}>
       <Px {...BOOK_PILE} scale={3} />
     </div>
 
-    {/* Bookshelf right wall — searching waypoint */}
-    <div className="absolute" style={{ right: 6, bottom: 48, zIndex: 5 }}>
-      <Px {...BOOKSHELF} scale={4} />
+    {/* Bookshelf (78%, 55%) */}
+    <div className="absolute" style={{ left: "78%", top: "55%", zIndex: 5 }}>
+      <Px {...BOOKSHELF} scale={3} />
     </div>
 
-    {/* Plant left of books */}
-    <div className="absolute" style={{ left: "30%", bottom: 48, zIndex: 5 }}>
+    {/* Plants */}
+    <div className="absolute" style={{ left: "40%", top: "60%", zIndex: 5 }}>
       <PlantSprite accent="#16a34a" />
-    </div>
-    {/* Plant right of books */}
-    <div className="absolute" style={{ left: "56%", bottom: 48, zIndex: 5 }}>
-      <PlantSprite accent="#15803d" />
     </div>
 
     {/* Green candle */}
-    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ right: 82, bottom: 48, zIndex: 6 }}>
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: "60%", top: "62%", zIndex: 6 }}>
       <CandleSprite color="#4ade80" />
     </div>
   </>;
@@ -969,61 +763,48 @@ function MetaRoom({ isHot }: { isHot: boolean }) {
       zIndex: 0 }} />
 
     {/* ── WALL ART ── */}
-    {/* Left wall: photo strip */}
-    <div className="absolute" style={{ left: 8, top: 4, zIndex: 4 }}>
-      <Px {...PHOTOS} scale={4} />
+    <div className="absolute" style={{ left: "4%", top: 4, zIndex: 4 }}>
+      <Px {...PHOTOS} scale={3} />
     </div>
-    {/* Center wall: colour-blocked backdrop — tall panel spanning wall into floor */}
     <div className="absolute" style={{ left: "35%", top: 0, zIndex: 3 }}>
-      <Px {...BACKDROP} scale={6} />
+      <Px {...BACKDROP} scale={4} />
     </div>
-    {/* Right wall: analytics chart */}
-    <div className="absolute" style={{ right: 6, top: 5, zIndex: 4 }}>
-      <Px {...CHART_ART} scale={4} />
+    <div className="absolute" style={{ right: "4%", top: 5, zIndex: 4 }}>
+      <Px {...CHART_ART} scale={3} />
     </div>
 
-    {/* ── FLOOR ── */}
-    {/* Pink rug */}
-    <div className="absolute" style={{ left: 8, bottom: 48, right: 8, height: 40, background: "rgba(131,24,67,0.45)", border: "2px solid rgba(244,114,182,0.35)", zIndex: 3 }} />
-
-    {/* Camera — far left */}
-    <div className="absolute" style={{ left: 10, bottom: 48, zIndex: 5 }}>
+    {/* ── FLOOR ── all % positioning ── */}
+    {/* Camera (10%, 55%) */}
+    <div className="absolute" style={{ left: "10%", top: "55%", zIndex: 5 }}>
       <Px {...CAMERA} scale={3} />
     </div>
 
-    {/* Ring light — center stage */}
-    <div className={`absolute ${isHot ? "ring-hot" : "pulse"}`} style={{ left: "38%", bottom: 48, zIndex: 5 }}>
+    {/* Ring light + Stool (38%, 55%) */}
+    <div className={`absolute ${isHot ? "ring-hot" : "pulse"}`} style={{ left: "38%", top: "52%", zIndex: 5 }}>
       <Px {...RING_LIGHT} scale={3} />
     </div>
-    {/* Spotlight cone in front of ring light */}
+    <div className="absolute" style={{ left: "42%", top: "64%", zIndex: 6 }}>
+      <Px {...STOOL} scale={3} />
+    </div>
+    {/* Spotlight cone */}
     <div className="absolute" style={{
-      left: "34%", bottom: 48, width: 160, height: 220,
+      left: "34%", top: "50%", width: "22%", height: "40%",
       background: "radial-gradient(ellipse at 50% 0%, rgba(253,244,255,0.18) 0%, transparent 65%)",
       zIndex: 2, pointerEvents: "none",
     }} />
 
-    {/* Stool in front of ring light */}
-    <div className="absolute" style={{ left: "43%", bottom: 48, zIndex: 6 }}>
-      <Px {...STOOL} scale={3} />
-    </div>
-
-    {/* Bookshelf right wall */}
-    <div className="absolute" style={{ right: 6, bottom: 48, zIndex: 5 }}>
-      <Px {...BOOKSHELF} scale={4} />
-    </div>
-
-    {/* Desk in front of bookshelf */}
-    <div className="absolute" style={{ right: 80, bottom: 48, zIndex: 4 }}>
+    {/* Desk (65%, 55%) */}
+    <div className="absolute" style={{ left: "65%", top: "55%", zIndex: 4 }}>
       <Px {...DESK} scale={3} />
     </div>
 
     {/* Plant */}
-    <div className="absolute" style={{ right: 86, bottom: 48, zIndex: 6 }}>
+    <div className="absolute" style={{ left: "85%", top: "60%", zIndex: 6 }}>
       <PlantSprite accent="#be185d" />
     </div>
 
     {/* Candle */}
-    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: 50, bottom: 48, zIndex: 6, animationDelay: "0.4s" }}>
+    <div className={`absolute ${isHot ? "pulse-fast" : "pulse"}`} style={{ left: "24%", top: "62%", zIndex: 6, animationDelay: "0.4s" }}>
       <CandleSprite color="#f472b6" />
     </div>
   </>;
@@ -1039,18 +820,17 @@ interface RoomConfig {
   sprite: "luna" | "caster" | "dev" | "meta";
   glowColor: string;
   name: string;
-  roomKey?: string;
+  roomKey: string;
   stats: { label: string; value: string }[];
   interactions?: Partial<Record<ActivityState, { x: number; y: number }>>;
 }
 
 function getRoomActivityState(
-  roomKey: string | undefined,
+  roomKey: string,
   hotRooms: string[],
   activeRooms: string[],
   toolState: string
 ): ActivityState {
-  if (!roomKey) return "idle";
   const isHot = hotRooms.includes(roomKey);
   const isActive = activeRooms.includes(roomKey);
   if (isHot) {
@@ -1068,17 +848,27 @@ interface RoomProps {
   activityState: ActivityState;
   isHot: boolean;
   decoration: React.ReactNode;
+  hasBadge: boolean;
+  hasAgentAlert: boolean;
+  onTap: () => void;
 }
 
-function Room({ config, activityState, isHot, decoration }: RoomProps) {
+function Room({ config, activityState, isHot, decoration, hasBadge, hasAgentAlert, onTap }: RoomProps) {
   const { shellProps, title, subtitle, accent, sprite, glowColor, name, stats, interactions } = config;
   return (
     <RoomShell {...shellProps}>
+      {/* Tap target */}
+      <div
+        onClick={onTap}
+        className="absolute inset-0 cursor-pointer"
+        style={{ zIndex: 20 }}
+      />
       {decoration}
+      {/* Notification badge */}
+      {hasBadge && <NotificationBadge />}
       <div className="absolute top-2 left-3" style={{ zIndex: 10 }}>
         <div className="room-title" style={{ color: accent }}>{title}</div>
         <div style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{subtitle}</div>
-        {/* Hot indicator */}
         {isHot && (
           <div className="pulse-fast" style={{ fontFamily: "'Press Start 2P'", fontSize: 5, color: accent, textShadow: `0 0 6px ${accent}`, marginTop: 2 }}>
             ● ACTIVE
@@ -1099,16 +889,44 @@ function Room({ config, activityState, isHot, decoration }: RoomProps) {
         activityState={activityState}
         accentColor={accent}
         interactions={interactions}
+        alert={hasAgentAlert}
       />
     </RoomShell>
   );
 }
 
+// ── Badge logic ────────────────────────────────────────────────────────────
+
+function getRoomBadge(roomKey: string, stats: DashboardStats | null, heartbeat: HeartbeatResponse | null): boolean {
+  if (!stats) return false;
+  switch (roomKey) {
+    case "lunary":
+      return stats.health.lunary.status === "down";
+    case "spellcast":
+      return stats.content.failedPosts > 0 || stats.health.spellcast.status === "down";
+    case "dev":
+      return heartbeat?.status === "offline" ||
+        stats.health.lunary.status === "down" ||
+        stats.health.spellcast.status === "down" ||
+        stats.health.contentCreator.status === "down";
+    case "meta":
+      return stats.opportunities.length > 0 ||
+        (stats.seo.trend !== null && stats.seo.trend.clicks.pct < -10);
+    default:
+      return false;
+  }
+}
+
 // ── Floor plan ─────────────────────────────────────────────────────────────
 
-export default function FloorPlan() {
-  const { stats, events } = useLiveStats();
+interface FloorPlanProps {
+  stats: DashboardStats | null;
+  heartbeat: HeartbeatResponse | null;
+}
+
+export default function FloorPlan({ stats, heartbeat }: FloorPlanProps) {
   const activity = useActivityStream();
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const fmt = (v: number | undefined) => (v !== undefined ? String(v) : "...");
 
   const lunaryHot = activity.hotRooms.includes("lunary");
@@ -1127,13 +945,13 @@ export default function FloorPlan() {
       roomKey: "lunary",
       stats: [
         { label: "MAU", value: fmt(stats?.lunary.mau) },
-        { label: "MRR", value: stats ? `£${stats.lunary.mrr.toFixed(2)}` : "..." },
+        { label: "MRR", value: stats ? `\u00A3${stats.lunary.mrr.toFixed(2)}` : "..." },
         { label: "ONLINE", value: fmt(stats?.lunary.activeToday) },
       ],
       interactions: {
-        typing:    { x: 68, y: 82 }, // desk right
-        searching: { x: 6,  y: 82 }, // bookshelf left
-        thinking:  { x: 30, y: 78 }, // cauldron center
+        typing:    { x: 55, y: 62 }, // chair next to desk
+        searching: { x: 10, y: 55 }, // bookshelf
+        thinking:  { x: 35, y: 56 }, // cauldron
       },
     },
     {
@@ -1151,9 +969,9 @@ export default function FloorPlan() {
         { label: "ACCTS", value: fmt(stats?.spellcast.accounts) },
       ],
       interactions: {
-        typing:   { x: 58, y: 82 }, // monitors right
-        running:  { x: 8,  y: 82 }, // server rack left
-        thinking: { x: 18, y: 52 }, // whiteboard left wall
+        typing:   { x: 51, y: 62 }, // chair next to desk
+        running:  { x: 8,  y: 55 }, // server rack
+        thinking: { x: 18, y: 52 }, // whiteboard
       },
     },
     {
@@ -1171,8 +989,8 @@ export default function FloorPlan() {
         { label: "FOLLOWERS", value: fmt(stats?.github.followers) },
       ],
       interactions: {
-        typing:    { x: 15, y: 82 }, // laptop/desk left
-        searching: { x: 82, y: 82 }, // bookshelf right
+        typing:    { x: 22, y: 62 }, // chair next to desk
+        searching: { x: 78, y: 55 }, // bookshelf right
         thinking:  { x: 45, y: 60 }, // centre floor
       },
     },
@@ -1184,53 +1002,68 @@ export default function FloorPlan() {
       },
       title: "META", subtitle: "ANALYTICS", accent: "#f472b6",
       sprite: "meta", glowColor: "#9d174d", name: "META",
+      roomKey: "meta",
       stats: [
         { label: "IG FLWRS", value: stats ? stats.meta.followers.toLocaleString() : "..." },
         { label: "REACH/WK", value: stats ? `${(stats.meta.reachThisWeek / 1000).toFixed(1)}k` : "..." },
         { label: "POSTS/WK", value: fmt(stats?.meta.postsThisWeek) },
       ],
+      interactions: {
+        typing:  { x: 58, y: 62 }, // desk chair
+        thinking: { x: 38, y: 60 }, // stool
+      },
     },
   ];
 
   const decorations = [
-    <LunaryRoom
-      key="lunary"
-      isHot={lunaryHot}
-      activeToday={stats?.lunary.activeToday ?? 0}
-      events={events}
-    />,
+    <LunaryRoom key="lunary" isHot={lunaryHot} activeToday={stats?.lunary.activeToday ?? 0} />,
     <SpellcastRoom key="spellcast" isHot={spellcastHot} />,
     <DevRoom key="dev" isHot={devHot} />,
     <MetaRoom key="meta" isHot={false} />,
   ];
 
   return (
-    <div className="w-screen h-screen" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr" }}>
-      {roomConfigs.map((config, i) => {
-        const activityState = getRoomActivityState(
-          config.roomKey,
-          activity.hotRooms,
-          activity.activeRooms,
-          activity.toolState
-        );
-        const isHot = config.roomKey ? activity.hotRooms.includes(config.roomKey) : false;
-        return (
-          <Room
-            key={config.title}
-            config={config}
-            activityState={activityState}
-            isHot={isHot}
-            decoration={decorations[i]}
-          />
-        );
-      })}
-      {/* Crosshair */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 16, height: 2, background: "rgba(255,255,255,0.12)" }} />
-        <div style={{ position: "absolute", width: 2, height: 16, background: "rgba(255,255,255,0.12)" }} />
+    <>
+      <div className="w-full h-full" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr" }}>
+        {roomConfigs.map((config, i) => {
+          const activityState = getRoomActivityState(
+            config.roomKey,
+            activity.hotRooms,
+            activity.activeRooms,
+            activity.toolState
+          );
+          const isHot = activity.hotRooms.includes(config.roomKey);
+          const hasBadge = getRoomBadge(config.roomKey, stats, heartbeat);
+          return (
+            <Room
+              key={config.title}
+              config={config}
+              activityState={activityState}
+              isHot={isHot}
+              decoration={decorations[i]}
+              hasBadge={hasBadge}
+              hasAgentAlert={hasBadge}
+              onTap={() => stats && setSelectedRoom(config.roomKey)}
+            />
+          );
+        })}
+        {/* Crosshair */}
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 35, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 16, height: 2, background: "rgba(255,255,255,0.12)" }} />
+          <div style={{ position: "absolute", width: 2, height: 16, background: "rgba(255,255,255,0.12)" }} />
+        </div>
+        <Clock />
       </div>
-      <Clock />
-    </div>
+      {/* Room detail overlay */}
+      {selectedRoom && stats && (
+        <RoomDetail
+          roomId={selectedRoom as "lunary" | "spellcast" | "dev" | "meta"}
+          stats={stats}
+          heartbeat={heartbeat}
+          onClose={() => setSelectedRoom(null)}
+        />
+      )}
+    </>
   );
 }
 
@@ -1243,7 +1076,7 @@ function Clock() {
     return () => clearInterval(id);
   }, []);
   return (
-    <div className="fixed bottom-2 right-3" style={{ zIndex: 50, fontFamily: "'Press Start 2P'", fontSize: 7, color: "rgba(255,255,255,0.2)", letterSpacing: "0.05em" }}>
+    <div className="fixed bottom-2 right-3" style={{ zIndex: 35, fontFamily: "'Press Start 2P'", fontSize: 7, color: "rgba(255,255,255,0.2)", letterSpacing: "0.05em" }}>
       {time}
     </div>
   );
