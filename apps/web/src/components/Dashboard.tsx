@@ -270,7 +270,7 @@ export default function Dashboard() {
 
       {/* Alert Feed — pixel view only */}
       {view === "pixel" && (
-        <AlertFeed stats={stats} heartbeat={heartbeat} token={token} onOpenRoom={handleOpenRoom} onRefresh={handleRefresh} />
+        <AlertFeed stats={stats} heartbeat={heartbeat} token={token} onOpenRoom={handleOpenRoom} onOpenApprovalQueue={() => setShowApprovalQueue(true)} onRefresh={handleRefresh} />
       )}
 
       {/* Rooms without pixel art desks — rendered at dashboard level */}

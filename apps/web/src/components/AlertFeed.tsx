@@ -111,6 +111,7 @@ function deriveAlerts(stats: DashboardStats | null, heartbeat: HeartbeatResponse
       title: `${stats.content.pendingReview} post${stats.content.pendingReview !== 1 ? "s" : ""} awaiting review`,
       detail: "Orbit submitted drafts for approval",
       room: "spellcast",
+      quickAction: { label: "REVIEW", actionId: "open-approval-queue" },
       ts: now,
     });
   }
@@ -344,10 +345,11 @@ interface AlertFeedProps {
   heartbeat: HeartbeatResponse | null;
   token?: string | null;
   onOpenRoom?: (room: RoomId) => void;
+  onOpenApprovalQueue?: () => void;
   onRefresh?: () => void;
 }
 
-export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onRefresh }: AlertFeedProps) {
+export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenApprovalQueue, onRefresh }: AlertFeedProps) {
   const [dismissed, setDismissed] = useState<Map<string, number>>(() => new Map());
   const [expanded, setExpanded] = useState(true);
   const [runningAction, setRunningAction] = useState<string | null>(null);
@@ -482,7 +484,13 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onRefre
                     </span>
                     {alert.quickAction && token && (
                       <button
-                        onClick={() => executeAction(alert.quickAction!.actionId, alert.quickAction!.payload)}
+                        onClick={() => {
+                          if (alert.quickAction!.actionId === "open-approval-queue") {
+                            onOpenApprovalQueue?.();
+                          } else {
+                            executeAction(alert.quickAction!.actionId, alert.quickAction!.payload);
+                          }
+                        }}
                         disabled={runningAction === alert.quickAction.actionId}
                         style={{
                           fontFamily: PS2P, fontSize: 6,
