@@ -6,7 +6,6 @@ import {
 } from "./world";
 
 /* ── Palette ─────────────────────────────────────────────────── */
-// Brighter, more saturated colours that read clearly at small zoom
 
 export const CHAR_PALETTES: Record<string, Pal> = {
   lunary: {
@@ -27,302 +26,384 @@ export const CHAR_PALETTES: Record<string, Pal> = {
   },
 };
 
+/* ── Hair styles ────────────────────────────────────────────── */
+type HairStyle = "long" | "bob" | "ponytail" | "twintails";
+const HAIR_STYLES: Record<string, HairStyle> = {
+  lunary: "long", spellcast: "bob", dev: "ponytail", meta: "twintails",
+};
+
 /* ── Pixel grid sprite system ────────────────────────────────── */
-// Each sprite: 13 wide x 20 tall grid. Anchor: col 6 (centre), row 19 (bottom).
-// Palette keys:
-//   H=hair h=highlight S=skin s=shadow
-//   E=eye W=white L=lash T=shirt t=shirtDark P=skirt B=shoe
-//   A=accent (ribbon/accessory)
+// 16 wide x 24 tall. Anchor: col 8 (centre), row 23 (bottom).
+// Larger grid = more detail, better proportions.
+// H=hair h=highlight S=skin s=shadow E=eye W=white L=lash
+// T=shirt t=shirtDark P=skirt B=shoe A=accent M=mouth
+
+const SW = 16, SH = 24, AX = 8, AY = 23;
 
 function createGrid(): string[][] {
-  return Array.from({ length: 20 }, () => Array(13).fill("."));
+  return Array.from({ length: SH }, () => Array(SW).fill("."));
 }
 function paint(g: string[][], x: number, y: number, w: number, h: number, ch: string) {
-  for (let r = y; r < y + h && r < 20; r++)
-    for (let c = x; c < x + w && c < 13; c++)
+  for (let r = y; r < y + h && r < SH; r++)
+    for (let c = x; c < x + w && c < SW; c++)
       if (r >= 0 && c >= 0) g[r][c] = ch;
 }
 function toFrame(g: string[][]): string[] { return g.map(r => r.join("")); }
+type P = (x: number, y: number, w: number, h: number, c: string) => void;
 
-// ── Shared feminine head helper ──
-// Front-facing: rows 0-7 (hair + face). Hair flows down sides to row 8.
-function drawFemFrontHead(g: string[][], r: (x: number, y: number, w: number, h: number, c: string) => void) {
-  // Hair top — full rounded crown
-  r(4, 0, 5, 1, "H");
-  r(3, 1, 7, 1, "H"); g[1][5] = "h"; g[1][7] = "h"; // highlights
-  r(3, 2, 7, 1, "H"); g[2][4] = "h";
-  // Face — rows 3-7, set behind hair sides
-  r(3, 3, 7, 5, "S");
-  // Hair flowing down sides — thick, long, past shoulders
-  r(2, 2, 1, 7, "H"); r(10, 2, 1, 7, "H");  // inner
-  r(1, 3, 1, 6, "H"); r(11, 3, 1, 6, "H");  // outer
-  // Eyelashes — 2px wide for visibility
-  g[4][4] = "L"; g[4][5] = "L"; g[4][7] = "L"; g[4][8] = "L";
-  // Eyes — larger, 2px wide each (row 5)
-  g[5][4] = "W"; g[5][5] = "E"; g[5][7] = "E"; g[5][8] = "W";
-  // Blush marks
-  g[6][3] = "A"; g[6][9] = "A";
-  // Mouth — small line
-  g[7][5] = "s"; g[7][6] = "s"; g[7][7] = "s";
-}
-
-// Side-facing feminine head
-function drawFemSideHead(g: string[][], r: (x: number, y: number, w: number, h: number, c: string) => void) {
-  // Hair crown
-  r(5, 0, 4, 1, "H");
-  r(4, 1, 6, 1, "H"); g[1][6] = "h";
-  r(4, 2, 6, 1, "H");
-  // Hair back — flowing long behind
-  r(9, 2, 2, 7, "H");
-  r(10, 3, 2, 6, "H");
-  // Face — rows 3-7
-  r(4, 3, 5, 5, "S");
-  r(3, 4, 1, 3, "S"); // chin/jaw
-  g[5][3] = "S"; // nose tip
-  // Eyelash
-  g[4][4] = "L"; g[4][5] = "L";
-  // Eye
-  g[5][4] = "W"; g[5][5] = "E";
+// ── Face features ──
+function drawFace(g: string[][]) {
+  // Eyes (row 6) — large cute chibi eyes
+  g[6][5] = "W"; g[6][6] = "E";
+  g[6][9] = "E"; g[6][10] = "W";
+  // Eye shine
+  g[5][5] = "L"; g[5][9] = "L";
   // Blush
-  g[6][3] = "A";
+  g[7][4] = "A"; g[7][11] = "A";
   // Mouth
-  g[7][4] = "s"; g[7][5] = "s";
+  g[8][7] = "M"; g[8][8] = "M";
 }
 
-// Back-facing feminine head (hair covers everything)
-function drawFemBackHead(g: string[][], r: (x: number, y: number, w: number, h: number, c: string) => void) {
-  // Full hair coverage — long flowing
-  r(4, 0, 5, 1, "H");
-  r(3, 1, 7, 1, "H"); g[1][5] = "h"; g[1][7] = "h";
-  r(3, 2, 7, 6, "H"); g[2][5] = "h"; g[3][6] = "h"; g[4][5] = "h";
-  // Hair flowing past shoulders — wide and long
-  r(2, 2, 1, 7, "H"); r(10, 2, 1, 7, "H");
-  r(1, 3, 1, 6, "H"); r(11, 3, 1, 6, "H");
-  // Ribbon/clip at back
-  g[3][6] = "A";
+function drawSideFace(g: string[][]) {
+  g[6][5] = "W"; g[6][6] = "E";
+  g[5][5] = "L";
+  g[7][4] = "A";
+  g[8][6] = "M";
 }
 
-// ── Body builders ──
-function drawFemBodyFront(g: string[][], r: (x: number, y: number, w: number, h: number, c: string) => void) {
-  // Neck (row 8)
-  r(5, 8, 3, 1, "S");
-  // Shirt collar (row 9)
-  r(5, 9, 3, 1, "t");
-  // Shirt torso (rows 10-12) — fitted, 5px wide
-  r(4, 10, 5, 3, "T"); r(5, 10, 3, 1, "t");
-  // Arms (skin coloured, rows 10-12)
-  r(3, 10, 1, 3, "S"); r(9, 10, 1, 3, "S");
-  r(3, 12, 1, 1, "s"); r(9, 12, 1, 1, "s"); // hands
-  // Skirt — A-line flare (rows 13-16), accent stripe
-  r(4, 13, 5, 1, "P");   // waist
-  r(3, 14, 7, 1, "P");   // hip
-  r(2, 15, 9, 1, "P");   // flare
-  r(2, 16, 9, 1, "P");   // hem
-  // Accent detail on skirt
-  g[15][3] = "A"; g[15][9] = "A";
+// ═══════════════════════════════════════════════════════════════
+// HAIR STYLES — Front / Side / Back for each style
+// Head occupies rows 0-9, face area rows 4-9
+// ═══════════════════════════════════════════════════════════════
+
+// LONG FLOWING (LUNA)
+function hairLongFront(g: string[][], r: P) {
+  // Hair crown
+  r(5, 0, 6, 1, "H");
+  r(4, 1, 8, 1, "H"); g[1][7] = "h"; g[1][9] = "h";
+  r(4, 2, 8, 1, "H"); g[2][5] = "h"; g[2][8] = "h";
+  r(4, 3, 8, 1, "H");
+  // Face
+  r(4, 4, 8, 6, "S");
+  // Side hair flowing long
+  r(3, 2, 1, 9, "H"); r(12, 2, 1, 9, "H");
+  r(2, 3, 1, 8, "H"); r(13, 3, 1, 8, "H");
+  drawFace(g);
+}
+function hairLongSide(g: string[][], r: P) {
+  r(6, 0, 5, 1, "H");
+  r(5, 1, 7, 1, "H"); g[1][8] = "h";
+  r(5, 2, 7, 1, "H");
+  r(5, 3, 7, 1, "H");
+  // Flowing back
+  r(11, 2, 2, 9, "H"); r(12, 4, 2, 7, "H");
+  // Face
+  r(5, 4, 6, 6, "S"); r(4, 5, 1, 4, "S");
+  g[6][4] = "S"; // nose
+  drawSideFace(g);
+}
+function hairLongBack(g: string[][], r: P) {
+  r(5, 0, 6, 1, "H");
+  r(4, 1, 8, 1, "H"); g[1][7] = "h"; g[1][9] = "h";
+  r(4, 2, 8, 8, "H"); g[3][6] = "h"; g[4][8] = "h"; g[5][7] = "h";
+  r(3, 2, 1, 9, "H"); r(12, 2, 1, 9, "H");
+  r(2, 3, 1, 8, "H"); r(13, 3, 1, 8, "H");
+  g[4][8] = "A"; // ribbon
 }
 
-function drawFemBodyBack(g: string[][], r: (x: number, y: number, w: number, h: number, c: string) => void) {
-  // Neck hidden by hair
-  r(5, 8, 3, 1, "s");
-  // Shirt collar
-  r(5, 9, 3, 1, "t");
-  // Shirt torso + arms (shirt-coloured from back)
-  r(4, 10, 5, 3, "T"); r(5, 10, 3, 1, "t");
-  r(3, 10, 1, 3, "T"); r(9, 10, 1, 3, "T");
-  // Skirt — A-line
-  r(4, 13, 5, 1, "P");
-  r(3, 14, 7, 1, "P");
-  r(2, 15, 9, 1, "P");
-  r(2, 16, 9, 1, "P");
+// BOB (CASTER)
+function hairBobFront(g: string[][], r: P) {
+  r(5, 0, 6, 1, "H");
+  r(4, 1, 8, 1, "H"); g[1][7] = "h";
+  r(4, 2, 8, 1, "H"); g[2][6] = "h";
+  r(4, 3, 8, 1, "H");
+  // Fringe/bangs
+  g[4][4] = "H"; g[4][5] = "h"; g[4][6] = "H"; g[4][7] = "h"; g[4][8] = "H"; g[4][9] = "H"; g[4][10] = "h"; g[4][11] = "H";
+  // Face
+  r(4, 5, 8, 5, "S");
+  // Short bob sides — jaw length only (to row 7)
+  r(3, 2, 1, 6, "H"); r(12, 2, 1, 6, "H");
+  drawFace(g);
+}
+function hairBobSide(g: string[][], r: P) {
+  r(6, 0, 5, 1, "H");
+  r(5, 1, 7, 1, "H"); g[1][8] = "h";
+  r(5, 2, 7, 1, "H");
+  r(5, 3, 7, 1, "H");
+  // Fringe
+  g[4][5] = "H"; g[4][6] = "h";
+  // Short back
+  r(11, 2, 1, 6, "H"); r(12, 3, 1, 4, "H");
+  // Face
+  r(5, 4, 6, 6, "S"); r(4, 5, 1, 4, "S");
+  g[6][4] = "S";
+  drawSideFace(g);
+}
+function hairBobBack(g: string[][], r: P) {
+  r(5, 0, 6, 1, "H");
+  r(4, 1, 8, 1, "H"); g[1][7] = "h";
+  r(4, 2, 8, 6, "H"); g[3][6] = "h"; g[4][8] = "h";
+  r(3, 2, 1, 6, "H"); r(12, 2, 1, 6, "H");
+  // Nape visible
+  r(5, 8, 6, 2, "S");
 }
 
-function drawFemBodySide(g: string[][], r: (x: number, y: number, w: number, h: number, c: string) => void) {
-  // Neck
-  r(5, 8, 3, 1, "S");
-  // Shirt collar
-  r(5, 9, 3, 1, "t");
-  // Shirt torso
-  r(4, 10, 5, 3, "T"); r(5, 10, 3, 1, "t");
-  // Front arm
-  r(3, 10, 1, 3, "S"); r(3, 12, 1, 1, "s");
-  // Skirt — A-line
-  r(4, 13, 5, 1, "P");
-  r(3, 14, 6, 1, "P");
-  r(3, 15, 7, 1, "P");
-  r(3, 16, 7, 1, "P");
+// PONYTAIL (DEV)
+function hairPonytailFront(g: string[][], r: P) {
+  r(5, 0, 6, 1, "H");
+  r(4, 1, 8, 1, "H"); g[1][7] = "h";
+  r(4, 2, 8, 1, "H");
+  r(4, 3, 8, 1, "H");
+  // Face
+  r(4, 4, 8, 6, "S");
+  // Pulled back — shorter sides
+  r(3, 2, 1, 5, "H"); r(12, 2, 1, 5, "H");
+  // Hair ties (accent)
+  g[3][3] = "A"; g[3][12] = "A";
+  drawFace(g);
+}
+function hairPonytailSide(g: string[][], r: P) {
+  r(6, 0, 5, 1, "H");
+  r(5, 1, 7, 1, "H"); g[1][8] = "h";
+  r(5, 2, 7, 1, "H");
+  r(5, 3, 6, 1, "H");
+  // Hair tie
+  g[3][11] = "A";
+  // Ponytail flowing behind
+  r(11, 4, 1, 2, "H"); r(12, 5, 1, 6, "H"); r(13, 6, 1, 5, "H");
+  // Face
+  r(5, 4, 6, 6, "S"); r(4, 5, 1, 4, "S");
+  g[6][4] = "S";
+  drawSideFace(g);
+}
+function hairPonytailBack(g: string[][], r: P) {
+  r(5, 0, 6, 1, "H");
+  r(4, 1, 8, 1, "H"); g[1][7] = "h";
+  r(4, 2, 8, 2, "H");
+  // Hair tie
+  g[3][8] = "A";
+  // Ponytail hanging centre
+  r(7, 4, 2, 7, "H"); g[5][7] = "h"; g[6][8] = "h"; g[7][7] = "h";
+  // Nape (skin visible at sides)
+  r(4, 4, 3, 4, "S"); r(9, 4, 3, 4, "S");
+  // Pulled-back sides
+  r(3, 2, 1, 4, "H"); r(12, 2, 1, 4, "H");
 }
 
-// ── Front idle ──
-function buildFrontIdle(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemFrontHead(g, r);
-  drawFemBodyFront(g, r);
-  // Legs (row 17)
-  r(4, 17, 2, 1, "S"); r(7, 17, 2, 1, "S");
-  // Shoes (rows 18-19)
-  r(4, 18, 2, 2, "B"); r(7, 18, 2, 2, "B");
-  return toFrame(g);
+// TWIN TAILS (META)
+function hairTwintailsFront(g: string[][], r: P) {
+  r(5, 0, 6, 1, "H");
+  r(4, 1, 8, 1, "H"); g[1][7] = "h"; g[1][9] = "h";
+  r(4, 2, 8, 1, "H"); g[2][5] = "h";
+  r(4, 3, 8, 1, "H");
+  // Face
+  r(4, 4, 8, 6, "S");
+  // Twin tails flowing down sides
+  r(2, 2, 1, 9, "H"); r(1, 3, 1, 8, "H"); r(0, 5, 1, 6, "H");
+  r(13, 2, 1, 9, "H"); r(14, 3, 1, 8, "H"); r(15, 5, 1, 6, "H");
+  // Hair ties
+  g[4][2] = "A"; g[4][13] = "A";
+  drawFace(g);
+}
+function hairTwintailsSide(g: string[][], r: P) {
+  r(6, 0, 5, 1, "H");
+  r(5, 1, 7, 1, "H"); g[1][8] = "h";
+  r(5, 2, 7, 1, "H");
+  r(5, 3, 6, 1, "H");
+  // Visible tail behind
+  r(11, 2, 2, 9, "H"); r(13, 4, 1, 7, "H");
+  g[4][12] = "A"; // tie
+  // Face
+  r(5, 4, 6, 6, "S"); r(4, 5, 1, 4, "S");
+  g[6][4] = "S";
+  drawSideFace(g);
+}
+function hairTwintailsBack(g: string[][], r: P) {
+  r(5, 0, 6, 1, "H");
+  r(4, 1, 8, 1, "H"); g[1][7] = "h"; g[1][9] = "h";
+  r(4, 2, 8, 3, "H"); g[2][6] = "h";
+  // Twin tails
+  r(2, 2, 1, 9, "H"); r(1, 3, 1, 8, "H"); r(0, 5, 1, 6, "H");
+  r(13, 2, 1, 9, "H"); r(14, 3, 1, 8, "H"); r(15, 5, 1, 6, "H");
+  g[4][2] = "A"; g[4][13] = "A";
+  // Nape
+  r(5, 5, 6, 4, "S");
 }
 
-// ── Front walk 1 ──
-function buildFrontWalk1(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemFrontHead(g, r);
-  drawFemBodyFront(g, r);
-  // Walk stride: legs apart
-  r(3, 17, 2, 1, "S"); r(8, 17, 2, 1, "S");
-  r(2, 18, 2, 1, "B"); r(9, 18, 2, 1, "B");
-  r(2, 19, 2, 1, "B"); r(9, 19, 2, 1, "B");
-  return toFrame(g);
-}
-
-// ── Front walk 2 ──
-function buildFrontWalk2(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemFrontHead(g, r);
-  drawFemBodyFront(g, r);
-  // Walk stride: legs together-ish (opposite phase)
-  r(5, 17, 2, 1, "S"); r(7, 17, 2, 1, "S");
-  r(4, 18, 2, 1, "B"); r(8, 18, 2, 1, "B");
-  r(4, 19, 2, 1, "B"); r(8, 19, 2, 1, "B");
-  return toFrame(g);
-}
-
-// ── Side idle ──
-function buildSideIdle(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemSideHead(g, r);
-  drawFemBodySide(g, r);
-  // Legs + shoes
-  r(5, 17, 2, 1, "S");
-  r(5, 18, 2, 1, "B"); r(5, 19, 2, 1, "B");
-  return toFrame(g);
-}
-
-// ── Side walk 1 ──
-function buildSideWalk1(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemSideHead(g, r);
-  drawFemBodySide(g, r);
-  // Walk stride: legs apart
-  r(3, 17, 2, 1, "S"); r(7, 17, 2, 1, "S");
-  r(2, 18, 2, 1, "B"); r(8, 18, 2, 1, "B");
-  r(2, 19, 2, 1, "B"); r(8, 19, 2, 1, "B");
-  return toFrame(g);
-}
-
-// ── Side walk 2 ──
-function buildSideWalk2(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemSideHead(g, r);
-  drawFemBodySide(g, r);
-  // Walk stride: opposite phase
-  r(5, 17, 2, 1, "S"); r(7, 17, 1, 1, "S");
-  r(5, 18, 2, 1, "B"); r(7, 18, 1, 1, "B");
-  r(4, 19, 2, 1, "B"); r(7, 19, 1, 1, "B");
-  return toFrame(g);
-}
-
-// ── Back idle ──
-function buildBackIdle(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemBackHead(g, r);
-  drawFemBodyBack(g, r);
-  // Legs + shoes
-  r(4, 17, 2, 1, "S"); r(7, 17, 2, 1, "S");
-  r(4, 18, 2, 2, "B"); r(7, 18, 2, 2, "B");
-  return toFrame(g);
-}
-
-// ── Back walk 1 ──
-function buildBackWalk1(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemBackHead(g, r);
-  drawFemBodyBack(g, r);
-  // Walk stride
-  r(3, 17, 2, 1, "S"); r(8, 17, 2, 1, "S");
-  r(2, 18, 2, 1, "B"); r(9, 18, 2, 1, "B");
-  r(2, 19, 2, 1, "B"); r(9, 19, 2, 1, "B");
-  return toFrame(g);
-}
-
-// ── Back walk 2 ──
-function buildBackWalk2(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemBackHead(g, r);
-  drawFemBodyBack(g, r);
-  // Walk stride: opposite
-  r(5, 17, 2, 1, "S"); r(7, 17, 2, 1, "S");
-  r(4, 18, 2, 1, "B"); r(8, 18, 2, 1, "B");
-  r(4, 19, 2, 1, "B"); r(8, 19, 2, 1, "B");
-  return toFrame(g);
-}
-
-// ── Sitting front (facing down toward camera) ──
-function buildSitting(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemFrontHead(g, r);
-  // Neck
-  r(5, 8, 3, 1, "S");
-  // Shirt collar
-  r(5, 9, 3, 1, "t");
-  // Shirt torso (rows 10-12)
-  r(4, 10, 5, 3, "T"); r(5, 10, 3, 1, "t");
-  // Arms on desk (rows 10-13 — reaching forward)
-  r(3, 10, 1, 4, "S"); r(9, 10, 1, 4, "S");
-  r(3, 13, 1, 1, "s"); r(9, 13, 1, 1, "s");
-  // Skirt — seated, wider spread (rows 13-15)
-  r(4, 13, 5, 1, "P");
-  r(3, 14, 7, 1, "P");
-  r(2, 15, 9, 1, "P"); // seat spread
-  // Legs (rows 16-17, hanging)
-  r(3, 16, 2, 2, "S"); r(8, 16, 2, 2, "S");
-  // Shoes (rows 18-19)
-  r(3, 18, 2, 2, "B"); r(8, 18, 2, 2, "B");
-  return toFrame(g);
-}
-
-// ── Sitting back (facing up away from camera) ──
-function buildSittingBack(): string[] {
-  const g = createGrid();
-  const r = (x: number, y: number, w: number, h: number, c: string) => paint(g, x, y, w, h, c);
-  drawFemBackHead(g, r);
-  // Neck hidden by hair
-  r(5, 8, 3, 1, "s");
-  // Shirt collar
-  r(5, 9, 3, 1, "t");
-  // Shirt torso + arms
-  r(4, 10, 5, 3, "T"); r(5, 10, 3, 1, "t");
-  r(3, 10, 1, 4, "T"); r(9, 10, 1, 4, "T");
-  // Skirt — seated spread
-  r(4, 13, 5, 1, "P");
-  r(3, 14, 7, 1, "P");
-  r(2, 15, 9, 1, "P");
-  // Legs (rows 16-17)
-  r(3, 16, 2, 2, "S"); r(8, 16, 2, 2, "S");
-  // Shoes (rows 18-19)
-  r(3, 18, 2, 2, "B"); r(8, 18, 2, 2, "B");
-  return toFrame(g);
-}
-
-const SPRITES = {
-  front: { idle: buildFrontIdle(), walk1: buildFrontWalk1(), walk2: buildFrontWalk2() },
-  side:  { idle: buildSideIdle(), walk1: buildSideWalk1(), walk2: buildSideWalk2() },
-  back:  { idle: buildBackIdle(), walk1: buildBackWalk1(), walk2: buildBackWalk2() },
-  sitFront: buildSitting(),
-  sitBack:  buildSittingBack(),
+// Hair dispatcher
+type HeadFn = (g: string[][], r: P) => void;
+const HAIR_FNS: Record<HairStyle, { front: HeadFn; side: HeadFn; back: HeadFn }> = {
+  long:      { front: hairLongFront,      side: hairLongSide,      back: hairLongBack },
+  bob:       { front: hairBobFront,       side: hairBobSide,       back: hairBobBack },
+  ponytail:  { front: hairPonytailFront,  side: hairPonytailSide,  back: hairPonytailBack },
+  twintails: { front: hairTwintailsFront, side: hairTwintailsSide, back: hairTwintailsBack },
 };
+
+// ═══════════════════════════════════════════════════════════════
+// Body (shared) — rows 10-23
+// ═══════════════════════════════════════════════════════════════
+function drawBodyFront(g: string[][], r: P) {
+  // Neck (row 10)
+  r(7, 10, 2, 1, "S");
+  // Shirt (rows 11-14)
+  r(6, 11, 4, 1, "t"); // collar
+  r(5, 12, 6, 3, "T"); r(6, 12, 4, 1, "t");
+  // Arms
+  r(4, 12, 1, 3, "S"); r(11, 12, 1, 3, "S");
+  r(4, 14, 1, 1, "s"); r(11, 14, 1, 1, "s"); // hands
+  // Skirt (rows 15-18)
+  r(5, 15, 6, 1, "P");
+  r(4, 16, 8, 1, "P");
+  r(3, 17, 10, 1, "P");
+  r(3, 18, 10, 1, "P");
+  g[17][4] = "A"; g[17][11] = "A"; // accent stripe
+}
+function drawBodyBack(g: string[][], r: P) {
+  r(7, 10, 2, 1, "s");
+  r(6, 11, 4, 1, "t");
+  r(5, 12, 6, 3, "T"); r(6, 12, 4, 1, "t");
+  r(4, 12, 1, 3, "T"); r(11, 12, 1, 3, "T");
+  r(5, 15, 6, 1, "P"); r(4, 16, 8, 1, "P");
+  r(3, 17, 10, 1, "P"); r(3, 18, 10, 1, "P");
+}
+function drawBodySide(g: string[][], r: P) {
+  r(7, 10, 2, 1, "S");
+  r(6, 11, 4, 1, "t");
+  r(5, 12, 6, 3, "T"); r(6, 12, 4, 1, "t");
+  r(4, 12, 1, 3, "S"); r(4, 14, 1, 1, "s");
+  r(5, 15, 6, 1, "P"); r(4, 16, 7, 1, "P");
+  r(4, 17, 8, 1, "P"); r(4, 18, 8, 1, "P");
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Leg/feet variations — PROPER WALK CYCLE
+// Walk uses 3 frames: idle (standing), stepL (left forward), stepR (right forward)
+// The cycle is: stepL → idle → stepR → idle (natural alternating gait)
+// Each step: ONE foot goes forward, other stays back. NOT symmetric splay.
+// ═══════════════════════════════════════════════════════════════
+
+// Front legs
+function legsFrontIdle(g: string[][], r: P) {
+  r(5, 19, 2, 1, "S"); r(9, 19, 2, 1, "S"); // thighs
+  r(5, 20, 2, 2, "S"); r(9, 20, 2, 2, "S"); // calves
+  r(5, 22, 2, 2, "B"); r(9, 22, 2, 2, "B"); // shoes
+}
+function legsFrontStepL(g: string[][], r: P) {
+  // Left foot forward (shifted down-left), right foot back (centre)
+  r(4, 19, 2, 1, "S"); r(9, 19, 2, 1, "S");
+  r(3, 20, 2, 2, "S"); r(9, 20, 2, 1, "S");
+  r(3, 22, 2, 2, "B"); r(9, 21, 2, 2, "B");
+}
+function legsFrontStepR(g: string[][], r: P) {
+  // Right foot forward (shifted down-right), left foot back (centre)
+  r(5, 19, 2, 1, "S"); r(10, 19, 2, 1, "S");
+  r(5, 20, 2, 1, "S"); r(11, 20, 2, 2, "S");
+  r(5, 21, 2, 2, "B"); r(11, 22, 2, 2, "B");
+}
+
+// Side legs
+function legsSideIdle(g: string[][], r: P) {
+  r(6, 19, 3, 1, "S");
+  r(6, 20, 3, 2, "S");
+  r(6, 22, 3, 2, "B");
+}
+function legsSideStepL(g: string[][], r: P) {
+  // Front leg forward, back leg behind
+  r(4, 19, 2, 1, "S"); r(8, 19, 2, 1, "S");
+  r(3, 20, 2, 2, "S"); r(9, 20, 2, 1, "S");
+  r(3, 22, 2, 2, "B"); r(9, 21, 2, 2, "B");
+}
+function legsSideStepR(g: string[][], r: P) {
+  // Back leg forward, front leg behind (swap)
+  r(5, 19, 2, 1, "S"); r(9, 19, 2, 1, "S");
+  r(5, 20, 2, 1, "S"); r(9, 20, 2, 2, "S");
+  r(5, 21, 2, 2, "B"); r(9, 22, 2, 2, "B");
+}
+
+// Back legs (same positions as front)
+const legsBackIdle = legsFrontIdle;
+const legsBackStepL = legsFrontStepL;
+const legsBackStepR = legsFrontStepR;
+
+// ═══════════════════════════════════════════════════════════════
+// Sprite set builder
+// ═══════════════════════════════════════════════════════════════
+interface SpriteSet {
+  front: { idle: string[]; stepL: string[]; stepR: string[] };
+  side:  { idle: string[]; stepL: string[]; stepR: string[] };
+  back:  { idle: string[]; stepL: string[]; stepR: string[] };
+  sitFront: string[];
+  sitBack: string[];
+}
+
+function buildSpriteSet(style: HairStyle): SpriteSet {
+  const hair = HAIR_FNS[style];
+
+  function make(headFn: HeadFn, bodyFn: (g: string[][], r: P) => void, legsFn: (g: string[][], r: P) => void): string[] {
+    const g = createGrid();
+    const r: P = (x, y, w, h, c) => paint(g, x, y, w, h, c);
+    headFn(g, r);
+    bodyFn(g, r);
+    legsFn(g, r);
+    return toFrame(g);
+  }
+
+  return {
+    front: {
+      idle:  make(hair.front, drawBodyFront, legsFrontIdle),
+      stepL: make(hair.front, drawBodyFront, legsFrontStepL),
+      stepR: make(hair.front, drawBodyFront, legsFrontStepR),
+    },
+    side: {
+      idle:  make(hair.side, drawBodySide, legsSideIdle),
+      stepL: make(hair.side, drawBodySide, legsSideStepL),
+      stepR: make(hair.side, drawBodySide, legsSideStepR),
+    },
+    back: {
+      idle:  make(hair.back, drawBodyBack, legsBackIdle),
+      stepL: make(hair.back, drawBodyBack, legsBackStepL),
+      stepR: make(hair.back, drawBodyBack, legsBackStepR),
+    },
+    sitFront: (() => {
+      const g = createGrid();
+      const r: P = (x, y, w, h, c) => paint(g, x, y, w, h, c);
+      hair.front(g, r);
+      // Sitting body — arms forward, skirt spread
+      r(7, 10, 2, 1, "S"); r(6, 11, 4, 1, "t");
+      r(5, 12, 6, 3, "T"); r(6, 12, 4, 1, "t");
+      r(4, 12, 1, 4, "S"); r(11, 12, 1, 4, "S"); // arms reaching
+      r(4, 15, 1, 1, "s"); r(11, 15, 1, 1, "s");
+      // Seated skirt — wider spread
+      r(5, 15, 6, 1, "P"); r(4, 16, 8, 1, "P"); r(3, 17, 10, 1, "P");
+      // Thighs (seated, horizontal)
+      r(4, 18, 3, 1, "S"); r(9, 18, 3, 1, "S");
+      // Lower legs (hanging down)
+      r(4, 19, 2, 2, "S"); r(10, 19, 2, 2, "S");
+      // Shoes
+      r(4, 21, 2, 2, "B"); r(10, 21, 2, 2, "B");
+      return toFrame(g);
+    })(),
+    sitBack: (() => {
+      const g = createGrid();
+      const r: P = (x, y, w, h, c) => paint(g, x, y, w, h, c);
+      hair.back(g, r);
+      r(7, 10, 2, 1, "s"); r(6, 11, 4, 1, "t");
+      r(5, 12, 6, 3, "T"); r(6, 12, 4, 1, "t");
+      r(4, 12, 1, 4, "T"); r(11, 12, 1, 4, "T");
+      r(5, 15, 6, 1, "P"); r(4, 16, 8, 1, "P"); r(3, 17, 10, 1, "P");
+      r(4, 18, 3, 1, "S"); r(9, 18, 3, 1, "S");
+      r(4, 19, 2, 2, "S"); r(10, 19, 2, 2, "S");
+      r(4, 21, 2, 2, "B"); r(10, 21, 2, 2, "B");
+      return toFrame(g);
+    })(),
+  };
+}
+
+// Build per-character sprite sets
+const CHAR_SPRITES: Record<string, SpriteSet> = {};
+for (const [id, style] of Object.entries(HAIR_STYLES)) {
+  CHAR_SPRITES[id] = buildSpriteSet(style);
+}
 
 /* ── Colour mapping ──────────────────────────────────────────── */
 
@@ -337,6 +418,7 @@ function getPalColors(pal: Pal): Record<string, string> {
     H: pal.hair, h: lighten(pal.hair, 40),
     S: pal.skin, s: lighten(pal.skin, -20),
     E: "#1a1218", W: "#ffffff", L: "#1a1218",
+    M: "#c06060",
     T: pal.shirt, t: lighten(pal.shirt, -25),
     P: pal.pants, A: pal.accent,
     B: pal.shoe,
@@ -352,22 +434,21 @@ function renderSprite(
   bx: number, by: number, zoom: number,
   mirror: boolean,
 ) {
-  const W = 13, H = 20, ox = 6, oy = 19;
-  for (let row = 0; row < H; row++) {
+  for (let row = 0; row < SH; row++) {
     const line = frame[row];
     let col = 0;
-    while (col < W) {
+    while (col < SW) {
       const ch = line[col];
       if (ch === ".") { col++; continue; }
       const color = colors[ch];
       if (!color) { col++; continue; }
       let runLen = 1;
-      while (col + runLen < W && line[col + runLen] === ch) runLen++;
+      while (col + runLen < SW && line[col + runLen] === ch) runLen++;
       ctx.fillStyle = color;
-      const px = mirror ? (W - 1 - (col + runLen - 1)) : col;
+      const px = mirror ? (SW - 1 - (col + runLen - 1)) : col;
       ctx.fillRect(
-        Math.round(bx + (px - ox) * zoom),
-        Math.round(by + (row - oy) * zoom),
+        Math.round(bx + (px - AX) * zoom),
+        Math.round(by + (row - AY) * zoom),
         Math.max(1, Math.round(runLen * zoom)),
         Math.max(1, Math.round(zoom)),
       );
@@ -378,12 +459,16 @@ function renderSprite(
 
 /* ── Char class ─────────────────────────────────────────────── */
 
+// Sitting offset — pushes character down into chair visually
+const SITTING_OFFSET = 4;
+
 export class Char {
   x: number; y: number; tx: number; ty: number;
-  dir: Dir; frame = 0; frameTimer = 0; wanderTimer = 0;
+  dir: Dir; walkFrame = 0; frameTimer = 0; wanderTimer = 0;
   atDesk = true; isWorking = false;
   activity: string | null = null;
   readonly pal: Pal; readonly zone: DeskZone;
+  readonly sprites: SpriteSet;
   path: [number, number][] | null = null;
   pathIdx = 0; idleSince = 0;
   breathPhase: number; blinkTimer: number; isBlinking = false;
@@ -391,6 +476,7 @@ export class Char {
   constructor(readonly zoneId: string) {
     this.zone = DESK_ZONES.find(z => z.id === zoneId)!;
     this.pal = CHAR_PALETTES[zoneId];
+    this.sprites = CHAR_SPRITES[zoneId];
     this.x = this.zone.seatX; this.y = this.zone.seatY;
     this.tx = this.x; this.ty = this.y;
     this.dir = this.zone.facing;
@@ -416,7 +502,7 @@ export class Char {
     const dist = Math.hypot(this.x - this.tx, this.y - this.ty);
 
     if (dist < 1) {
-      this.x = this.tx; this.y = this.ty; this.frame = 0;
+      this.x = this.tx; this.y = this.ty; this.walkFrame = 0;
       if (this.isWorking) {
         this.atDesk = true; this.dir = this.zone.facing;
         this.activity = null; return;
@@ -485,8 +571,12 @@ export class Char {
           ? (dx > 0 ? "right" : "left")
           : (dy > 0 ? "down" : "up");
       }
+      // Walk cycle: 4 steps — stepL(0) → idle(1) → stepR(2) → idle(3)
       this.frameTimer += dt;
-      if (this.frameTimer > 0.18) { this.frame = 1 - this.frame; this.frameTimer = 0; }
+      if (this.frameTimer > 0.15) {
+        this.walkFrame = (this.walkFrame + 1) % 4;
+        this.frameTimer = 0;
+      }
       this.activity = null;
     }
   }
@@ -510,64 +600,55 @@ export function drawChar(
   panY: number,
 ) {
   const bx = panX + ch.x * zoom;
-  const by = panY + ch.y * zoom;
+  const sitting = ch.atDesk;
+  // Sitting offset — push character DOWN into the chair
+  const sittingOff = sitting ? SITTING_OFFSET : 0;
+  const by = panY + (ch.y + sittingOff) * zoom;
   const colors = getPalColors(ch.pal);
   const isMoving = Math.hypot(ch.x - ch.tx, ch.y - ch.ty) > 1;
 
-  // Blink: replace eye colours with skin
+  // Blink
   const drawColors = { ...colors };
   if (ch.isBlinking) {
     drawColors.W = ch.pal.skin;
     drawColors.E = lighten(ch.pal.skin, -20);
   }
 
-  // Breathing: subtle vertical bob
-  const breathOff = Math.sin(ch.breathPhase) * 0.4;
+  // Breathing bob
+  const breathOff = sitting ? 0 : Math.sin(ch.breathPhase) * 0.3;
 
-  // Shadow — ellipse under feet
+  // Shadow
   ctx.globalAlpha = 0.2;
   ctx.fillStyle = "#000";
   ctx.beginPath();
-  ctx.ellipse(bx, by + zoom, zoom * 5, zoom * 1.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(bx, panY + (ch.y + sittingOff) * zoom + zoom, zoom * 6, zoom * 1.5, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.globalAlpha = 1;
 
   // Select sprite frame
+  const sp = ch.sprites;
   let frame: string[];
   let mirror = false;
-  const sitting = ch.atDesk;
 
   if (sitting) {
-    frame = ch.dir === "up" ? SPRITES.sitBack : SPRITES.sitFront;
+    frame = ch.dir === "up" ? sp.sitBack : sp.sitFront;
   } else if (isMoving) {
-    const wf = ch.frame === 0 ? "walk1" : "walk2";
-    if (ch.dir === "down") frame = SPRITES.front[wf];
-    else if (ch.dir === "up") frame = SPRITES.back[wf];
-    else { frame = SPRITES.side[wf]; mirror = ch.dir === "left"; }
+    // Walk cycle: [stepL, idle, stepR, idle]
+    const walkCycle = [0, 1, 2, 1]; // 0=stepL, 1=idle, 2=stepR
+    const cycleIdx = walkCycle[ch.walkFrame];
+    const dirFrames = ch.dir === "down" ? sp.front
+      : ch.dir === "up" ? sp.back : sp.side;
+    if (ch.dir === "left") mirror = true;
+    frame = cycleIdx === 0 ? dirFrames.stepL
+      : cycleIdx === 2 ? dirFrames.stepR
+      : dirFrames.idle;
   } else {
-    if (ch.dir === "down") frame = SPRITES.front.idle;
-    else if (ch.dir === "up") frame = SPRITES.back.idle;
-    else { frame = SPRITES.side.idle; mirror = ch.dir === "left"; }
+    if (ch.dir === "down") frame = sp.front.idle;
+    else if (ch.dir === "up") frame = sp.back.idle;
+    else { frame = sp.side.idle; mirror = ch.dir === "left"; }
   }
 
   renderSprite(ctx, frame, drawColors, bx, by + breathOff * zoom, zoom, mirror);
-
-  // Hair bob animation when walking
-  if (isMoving && !sitting) {
-    const bobOff = Math.sin(ch.breathPhase * 3) * 0.3;
-    // Extra hair sway pixel at bottom of hair (cosmetic)
-    const hairCol = ch.pal.hair;
-    ctx.fillStyle = hairCol;
-    const hx = mirror ? bx + 5 * zoom : bx - 5 * zoom;
-    ctx.globalAlpha = 0.5;
-    ctx.fillRect(
-      Math.round(hx + bobOff * zoom),
-      Math.round(by + (breathOff - 11) * zoom),
-      Math.max(1, Math.round(zoom)),
-      Math.max(1, Math.round(zoom * 2)),
-    );
-    ctx.globalAlpha = 1;
-  }
 
   // Activity / state bubble
   const showActivity = !ch.isWorking && ch.activity && !ch.atDesk;
@@ -576,7 +657,7 @@ export function drawChar(
     : showActivity ? ch.activity!.slice(0, 20) : null;
 
   if (bubbleLabel) {
-    const lby = by - 24 * zoom;
+    const lby = by - 26 * zoom;
     const col = showState ? ch.zone.monitorGlow : "rgba(60,40,80,0.85)";
     ctx.font = `${Math.max(9, Math.round(9 * zoom / 2))}px 'Courier New',monospace`;
     ctx.textAlign = "center";
@@ -592,7 +673,7 @@ export function drawChar(
 
   // Name label
   {
-    const nby = by - (bubbleLabel ? 40 : 24) * zoom;
+    const nby = by - (bubbleLabel ? 44 : 26) * zoom;
     const nm = ch.zone.label.slice(0, 16);
     ctx.font = `bold ${Math.max(8, Math.round(8 * zoom / 2))}px sans-serif`;
     ctx.textAlign = "center";
