@@ -290,62 +290,32 @@ export function drawDoor(helpers: DrawHelpers, tx: number, ty: number): void {
 // Grass
 // ---------------------------------------------------------------------------
 
-// Grass tile sprite variants — deterministic per tile position
-const GRASS_SPRITES_PLAIN = [() => SPR.grass1, () => SPR.grass2];
-const GRASS_SPRITES_DETAIL = [
-  () => SPR.grassFlower1, () => SPR.grassFlower2, () => SPR.grassFlower3,
-  () => SPR.grassFlower4, () => SPR.grassFlower5, () => SPR.grassFlower6,
-];
-
 export function drawGrass(
   helpers: DrawHelpers,
   tx: number,
   ty: number,
   season: Season,
 ): void {
-  const { spr, wr, we, lighten } = helpers;
+  const { wr, lighten } = helpers;
   const x = tx * TS,
     y = ty * TS,
     v = fv(tx, ty);
 
-  // Winter and autumn: fallback to coloured tiles (sprites are green-only)
-  if (season === "winter") {
-    const wc = v < 0.5 ? "#b8c8c0" : "#c0d0c8";
-    wr(x, y, TS, TS, wc);
-    if (v > 0.6) wr(x + ((v * 12) % 14), y + ((v * 10) % 14), 3, 1, "#e8f0f0");
-    return;
-  }
+  const gc: Record<Season, string[]> = {
+    spring: ["#58b04a", "#60b852", "#54a844", "#68c05a"],
+    summer: ["#38a028", "#40a830", "#36982a", "#4aaa34"],
+    autumn: ["#b09030", "#a88828", "#b89838", "#c0a040"],
+    winter: ["#b8c8c0", "#c0d0c8", "#b0c0b8", "#c8d8d0"],
+  };
+  const cols = gc[season];
+  wr(x, y, TS, TS, cols[Math.floor(v * cols.length)]);
 
-  if (season === "autumn") {
-    const ac = v < 0.5 ? "#b09030" : "#a88828";
-    wr(x, y, TS, TS, ac);
-    if (v > 0.72) {
-      wr(x + ((v * 10) % 13), y + ((v * 7) % 13), 1, 3, lighten(ac, -15));
-    }
-    return;
+  if (season !== "winter" && v > 0.72) {
+    wr(x + ((v * 10) % 13), y + ((v * 7) % 13), 1, 3, lighten(cols[0], -15));
+    wr(x + ((v * 13) % 12), y + ((v * 11) % 12), 1, 2, lighten(cols[0], -8));
   }
-
-  // Spring/summer: use cozy pack grass sprites
-  const variant = ((tx * 7 + ty * 13) % 10);
-  if (variant < 3) {
-    // ~30% tiles get flower/detail variants
-    const detailIdx = ((tx * 11 + ty * 5) % GRASS_SPRITES_DETAIL.length);
-    const img = GRASS_SPRITES_DETAIL[detailIdx]();
-    if (img.complete && img.naturalWidth) {
-      spr(img, x, y);
-    } else {
-      wr(x, y, TS, TS, "#58b04a");
-    }
-  } else {
-    // 70% plain grass
-    const plainIdx = ((tx * 3 + ty * 7) % GRASS_SPRITES_PLAIN.length);
-    const img = GRASS_SPRITES_PLAIN[plainIdx]();
-    if (img.complete && img.naturalWidth) {
-      spr(img, x, y);
-    } else {
-      wr(x, y, TS, TS, "#58b04a");
-    }
-  }
+  if (season === "winter" && v > 0.6)
+    wr(x + ((v * 12) % 14), y + ((v * 10) % 14), 3, 1, "#e8f0f0");
 }
 
 // ---------------------------------------------------------------------------
