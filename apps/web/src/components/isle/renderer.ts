@@ -57,6 +57,7 @@ export class IsleRenderer {
   private pinchDist = 0;
   private pinchMidX = 0;
   private pinchMidY = 0;
+  private minZoom = 1;
 
   constructor(canvas: HTMLCanvasElement, onClick: (target: ClickTarget) => void) {
     this.canvas = canvas;
@@ -142,7 +143,9 @@ export class IsleRenderer {
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
     this.ctx.imageSmoothingEnabled = false;
-    this.zoom = Math.max(1, Math.min(4,
+    // Min zoom = scene fills canvas width exactly
+    this.minZoom = this.canvas.width / WORLD_W;
+    this.zoom = Math.max(this.minZoom, Math.min(4,
       Math.min(this.canvas.width / WORLD_W, this.canvas.height / WORLD_H) * 0.92
     ));
     this.targetZoom = this.zoom;
@@ -226,7 +229,7 @@ export class IsleRenderer {
     // Store focus point for smooth zoom lerp
     this.zoomFocusX = (e.clientX - rect.left) * dpr;
     this.zoomFocusY = (e.clientY - rect.top) * dpr;
-    this.targetZoom = Math.max(0.5, Math.min(10, this.targetZoom * f));
+    this.targetZoom = Math.max(this.minZoom, Math.min(10, this.targetZoom * f));
   }
 
   // Keyboard handlers — WASD / arrows for panning, +/- for zoom
@@ -280,7 +283,7 @@ export class IsleRenderer {
         const midY = ((t0.clientY + t1.clientY) / 2 - rect.top) * dpr;
         const bx = (midX - this.panX) / this.zoom;
         const by = (midY - this.panY) / this.zoom;
-        this.zoom = Math.max(0.5, Math.min(10, this.zoom * scale));
+        this.zoom = Math.max(this.minZoom, Math.min(10, this.zoom * scale));
         this.targetZoom = this.zoom;
         this.panX = midX - bx * this.zoom;
         this.panY = midY - by * this.zoom;
@@ -362,7 +365,7 @@ export class IsleRenderer {
     if (this.keysDown.has("-")) {
       this.zoomFocusX = this.canvas.width / 2;
       this.zoomFocusY = this.canvas.height / 2;
-      this.targetZoom = Math.max(0.5, this.targetZoom * (1 - 1.5 * dt));
+      this.targetZoom = Math.max(this.minZoom, this.targetZoom * (1 - 1.5 * dt));
     }
     if (this.keysDown.size > 0) this.clampPan();
 
