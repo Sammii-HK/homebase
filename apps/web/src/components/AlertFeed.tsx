@@ -83,6 +83,11 @@ function deriveAlerts(stats: DashboardStats | null, heartbeat: HeartbeatResponse
     alerts.push({ id: "orbit-offline", severity: "critical", title: "Orbit is offline", detail: "Agent command centre unreachable", room: "orbit", ts: now });
   }
 
+  // Orbit auth expired
+  if (stats.orbit?.authStatus === "auth-expired") {
+    alerts.push({ id: "orbit-auth", severity: "critical", title: "Orbit auth expired", detail: "SSH in and run: claude auth login", room: "orbit", ts: now });
+  }
+
   // ═══ WARNING ═══
 
   // Failed posts with quick action

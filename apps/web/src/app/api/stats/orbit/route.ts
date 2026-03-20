@@ -88,6 +88,9 @@ export async function GET(req: NextRequest) {
     // KPIs
     const kpis = state.kpis ?? null;
 
+    // Auth status (from health check)
+    const authStatus = state.authStatus ?? null;
+
     // Activity (last 20)
     const activityRaw = state.activity ?? [];
     const activity = activityRaw.slice(0, 20).map((a: Record<string, unknown>) => ({

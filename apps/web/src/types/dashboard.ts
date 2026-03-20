@@ -51,7 +51,7 @@ export interface DashboardStats {
     scheduledTomorrow: number;
   };
   engagement: { unread: number; total: number; byPlatform: Record<string, number> };
-  orbit: { online: boolean; agentCount: number; runningAgents: number; errorAgents: number; pipelineRunning: boolean };
+  orbit: { online: boolean; agentCount: number; runningAgents: number; errorAgents: number; pipelineRunning: boolean; authStatus: string | null };
   seo: {
     impressions: number;
     clicks: number;

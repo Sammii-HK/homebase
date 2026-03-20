@@ -339,15 +339,17 @@ async function getOrbitSummary() {
     if (!res.ok) return { online: false, agentCount: 0, runningAgents: 0, errorAgents: 0, pipelineRunning: false };
     const state = await res.json();
     const agents = Object.values(state.agents ?? {}) as Record<string, unknown>[];
+    const authStatus = state.authStatus?.status ?? null;
     return {
       online: true,
       agentCount: agents.length,
       runningAgents: agents.filter((a) => a.status === "running").length,
       errorAgents: agents.filter((a) => a.status === "error" || a.status === "failed").length,
       pipelineRunning: agents.some((a) => a.status === "running"),
+      authStatus,
     };
   } catch {
-    return { online: false, agentCount: 0, runningAgents: 0, errorAgents: 0, pipelineRunning: false };
+    return { online: false, agentCount: 0, runningAgents: 0, errorAgents: 0, pipelineRunning: false, authStatus: null };
   }
 }
 
