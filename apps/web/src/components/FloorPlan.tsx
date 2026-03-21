@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useActivityStream } from "@/hooks/useActivityStream";
+import { useLiveFavicon } from "@/hooks/useLiveFavicon";
 import type { DashboardStats, HeartbeatResponse } from "@/types/dashboard";
 import type { ClickTarget, IsleStats, BadgeInfo } from "./isle/types";
 import { IsleRenderer } from "./isle/renderer";
@@ -98,11 +99,8 @@ export default function FloorPlan({ stats, heartbeat, token, selectedRoom: exter
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Bridge data to renderer
-  useEffect(() => {
-    if (!rendererRef.current) return;
-
-    const isleStats: IsleStats = {
+  // Bridge data to renderer + live favicon
+  const isleStats: IsleStats | null = stats ? {
       lunary: {
         mau: stats?.lunary.mau ?? 0,
         mrr: stats?.lunary.mrr ?? 0,
@@ -156,10 +154,14 @@ export default function FloorPlan({ stats, heartbeat, token, selectedRoom: exter
         meta: getRoomBadge("meta", stats, heartbeat),
       } as Record<string, import("./isle/types").BadgeInfo>,
       hotRooms: activity.hotRooms,
-    };
+  } : null;
 
+  useLiveFavicon(isleStats);
+
+  useEffect(() => {
+    if (!rendererRef.current || !isleStats) return;
     rendererRef.current.updateData(isleStats);
-  }, [stats, heartbeat, activity.hotRooms]);
+  }, [isleStats]);
 
   return (
     <>

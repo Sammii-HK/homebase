@@ -996,6 +996,20 @@ export function drawWindow(helpers: DrawHelpers, tx: number, ty: number, tod: TO
 // Pond
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Pond health tier
+// 0 = pristine  1 = heads up  2 = attention needed  3 = critical / dead
+// ---------------------------------------------------------------------------
+export function getPondTier(stats: IsleStats | null): 0 | 1 | 2 | 3 {
+  if (!stats) return 0;
+  const { systemsUp, totalSystems } = stats.infra;
+  const failedPosts = stats.content?.failedPosts ?? 0;
+  if (systemsUp === 0) return 3;
+  if (systemsUp < totalSystems - 1) return 2; // 1/3 up
+  if (systemsUp < totalSystems || failedPosts > 0) return 1; // 2/3 up or minor issue
+  return 0;
+}
+
 export function drawPond(helpers: DrawHelpers, tod: TOD, stats: IsleStats | null, animTick: number): void {
   const { wr, we, lighten } = helpers;
   const x = POND_TX * TS,
@@ -1005,9 +1019,43 @@ export function drawPond(helpers: DrawHelpers, tod: TOD, stats: IsleStats | null
   const cx = x + w / 2,
     cy = y + h / 2;
 
-  // Health affects water colour — clear blue when healthy, murky when not
-  const allOk = !stats || stats.infra.systemsUp === stats.infra.totalSystems;
-  const healthyMix = allOk ? 1 : stats ? stats.infra.systemsUp / stats.infra.totalSystems : 1;
+  const tier = getPondTier(stats);
+
+  // --- Per-tier palette ---
+  // wc = water base, wl = water light, bankCol, mudCol
+  type Palette = { wc: string; wl: string; bank: string; mud: string };
+  const palettes: Record<0 | 1 | 2 | 3, Record<TOD, Palette>> = {
+    0: { // pristine — clear blue
+      morning:   { wc: "#1878c8", wl: "#2090d8", bank: "#388030", mud: "#4a6030" },
+      afternoon: { wc: "#1878c8", wl: "#2090d8", bank: "#388030", mud: "#4a6030" },
+      dusk:      { wc: "#3848a0", wl: "#5060b0", bank: "#388030", mud: "#4a6030" },
+      dawn:      { wc: "#3060a8", wl: "#4070b8", bank: "#388030", mud: "#4a6030" },
+      night:     { wc: "#0a1838", wl: "#101840", bank: "#285020", mud: "#3a5028" },
+    },
+    1: { // heads up — blue-green algae tinge
+      morning:   { wc: "#1a8870", wl: "#209878", bank: "#3a8028", mud: "#527030" },
+      afternoon: { wc: "#1a8870", wl: "#209878", bank: "#3a8028", mud: "#527030" },
+      dusk:      { wc: "#306858", wl: "#407868", bank: "#387028", mud: "#486030" },
+      dawn:      { wc: "#207060", wl: "#307870", bank: "#387028", mud: "#486030" },
+      night:     { wc: "#081c18", wl: "#0e2820", bank: "#285020", mud: "#3a5028" },
+    },
+    2: { // attention — murky brown-green
+      morning:   { wc: "#6a6020", wl: "#807830", bank: "#5a5018", mud: "#7a6828" },
+      afternoon: { wc: "#6a6020", wl: "#807830", bank: "#5a5018", mud: "#7a6828" },
+      dusk:      { wc: "#584818", wl: "#685828", bank: "#504010", mud: "#685820" },
+      dawn:      { wc: "#604818", wl: "#705820", bank: "#504010", mud: "#685820" },
+      night:     { wc: "#1a1408", wl: "#201808", bank: "#302808", mud: "#403010" },
+    },
+    3: { // critical — dead brackish
+      morning:   { wc: "#1a1208", wl: "#201608", bank: "#3a2808", mud: "#2a1c08" },
+      afternoon: { wc: "#1a1208", wl: "#201608", bank: "#3a2808", mud: "#2a1c08" },
+      dusk:      { wc: "#140e06", wl: "#180e06", bank: "#301808", mud: "#201408" },
+      dawn:      { wc: "#140e06", wl: "#180e06", bank: "#301808", mud: "#201408" },
+      night:     { wc: "#0c0804", wl: "#100a04", bank: "#201008", mud: "#180c06" },
+    },
+  };
+
+  const pal = palettes[tier][tod];
 
   // --- Rocks/pebbles around the pond edge ---
   const rng = seededRng("pond-rocks");
@@ -1017,121 +1065,194 @@ export function drawPond(helpers: DrawHelpers, tod: TOD, stats: IsleStats | null
     const ry = cy + Math.sin(angle) * (h / 2 + 1 + rng() * 2);
     const rw = 1.5 + rng() * 2;
     const rh = 1 + rng() * 1.5;
-    const rockCol = rng() > 0.5 ? "#787878" : "#8a8880";
+    // Rocks darken in higher tiers (algae / scum)
+    const rockCol = tier >= 2
+      ? (rng() > 0.5 ? "#585040" : "#686050")
+      : (rng() > 0.5 ? "#787878" : "#8a8880");
     wr(rx, ry, rw, rh, rockCol);
-    // Highlight on top of each rock
-    wr(rx + 0.2, ry, rw - 0.4, 0.4, lighten(rockCol, 15));
+    wr(rx + 0.2, ry, rw - 0.4, 0.4, lighten(rockCol, tier >= 2 ? 8 : 15));
   }
 
   // Bank
-  we(cx, cy, w / 2 + 3, h / 2 + 3, "#388030", 0.7);
-  // Muddy edge between bank and water
-  we(cx, cy, w / 2 + 1, h / 2 + 1, "#4a6030", 0.5);
+  we(cx, cy, w / 2 + 3, h / 2 + 3, pal.bank, 0.7);
+  we(cx, cy, w / 2 + 1, h / 2 + 1, pal.mud, 0.5);
 
-  // Water colours shift: healthy = blue, unhealthy = murky amber
-  let wc: string, wl: string;
-  if (tod === "night") {
-    wc = allOk ? "#0a1838" : "#181808";
-    wl = allOk ? "#101840" : "#202010";
-  } else if (tod === "dusk") {
-    wc = allOk ? "#3848a0" : "#604830";
-    wl = allOk ? "#5060b0" : "#705838";
-  } else {
-    wc = allOk ? "#1878c8" : "#887830";
-    wl = allOk ? "#2090d8" : "#988838";
-  }
+  // Water body
+  we(cx, cy, w / 2, h / 2, pal.wc);
+  we(cx, cy, w / 2 - 2, h / 2 - 2, pal.wl);
+  we(cx, cy, w / 2 - 4, h / 2 - 4, lighten(pal.wl, 15));
 
-  we(cx, cy, w / 2, h / 2, wc);
-  we(cx, cy, w / 2 - 2, h / 2 - 2, wl);
-  we(cx, cy, w / 2 - 4, h / 2 - 4, lighten(wl, 20));
-
-  // --- Animated ripples — concentric arcs that expand outward ---
-  const ripplePhase = (animTick * 0.15) % 3;
-  for (let r = 0; r < 3; r++) {
-    const rPhase = (ripplePhase + r) % 3;
-    const rRadius = 3 + rPhase * 5;
-    const rAlpha = Math.max(0, 0.25 - rPhase * 0.08);
-    const rippleCol = `rgba(${tod === "night" ? "80,100,180" : "100,190,240"},${rAlpha.toFixed(2)})`;
-    // Draw arc as a thin ellipse at varying radii
-    we(cx - 2, cy - 1, rRadius, rRadius * 0.5, rippleCol, rAlpha);
-  }
-  // Secondary ripple cluster offset
-  const rOff2 = ((animTick * 0.2) + 1.5) % 3;
-  const r2Alpha = Math.max(0, 0.2 - rOff2 * 0.07);
-  we(cx + 6, cy + 3, 2 + rOff2 * 3, 1 + rOff2 * 1.5,
-    `rgba(${tod === "night" ? "80,100,180" : "100,190,240"},${r2Alpha.toFixed(2)})`, r2Alpha);
-
-  // --- Small fish — subtle orange dots that drift ---
-  if (healthyMix > 0.4) {
-    const fishX = cx - 5 + Math.sin(animTick * 0.08) * 8;
-    const fishY = cy + 2 + Math.cos(animTick * 0.06) * 3;
-    const fishAlpha = 0.4 + 0.15 * Math.sin(animTick * 0.12);
-    // Fish body
-    wr(fishX, fishY, 2, 1, `rgba(220,140,50,${fishAlpha.toFixed(2)})`);
-    // Tail
-    wr(fishX - 1, fishY - 0.2, 1, 1.4, `rgba(200,120,40,${(fishAlpha * 0.7).toFixed(2)})`);
-    // Second fish, different path
-    if (healthyMix > 0.7) {
-      const f2x = cx + 4 + Math.cos(animTick * 0.05 + 2) * 6;
-      const f2y = cy - 2 + Math.sin(animTick * 0.07 + 1) * 3;
-      const f2a = 0.3 + 0.1 * Math.sin(animTick * 0.1 + 1);
-      wr(f2x, f2y, 1.5, 0.8, `rgba(230,160,60,${f2a.toFixed(2)})`);
-      wr(f2x + 1.5, f2y - 0.1, 0.8, 1, `rgba(210,140,50,${(f2a * 0.6).toFixed(2)})`);
+  // Tier 2+: surface scum / algae film
+  if (tier >= 2) {
+    const scumRng = seededRng("pond-scum");
+    for (let i = 0; i < 6; i++) {
+      const sx = cx - w * 0.3 + scumRng() * w * 0.6;
+      const sy = cy - h * 0.3 + scumRng() * h * 0.6;
+      const sa = 0.08 + scumRng() * 0.06;
+      we(sx, sy, 4 + scumRng() * 5, 2 + scumRng() * 3, tier === 3 ? "#181008" : "#5a6010", sa);
     }
   }
 
-  // --- Lily pads with vein detail ---
-  const bob = Math.sin(animTick * 0.15) * 0.5;
+  // --- Ripples — active in 0, slow in 1, barely there in 2, bubbles only in 3 ---
+  if (tier < 3) {
+    const rippleSpeed = tier === 0 ? 0.15 : tier === 1 ? 0.08 : 0.04;
+    const rippleCount = tier === 0 ? 3 : tier === 1 ? 2 : 1;
+    const rippleAlpha = tier === 0 ? 0.25 : tier === 1 ? 0.15 : 0.08;
+    const ripplePhase = (animTick * rippleSpeed) % 3;
+    const rippleRgb = tier === 0
+      ? (tod === "night" ? "80,100,180" : "100,190,240")
+      : tier === 1 ? "80,160,120" : "100,100,60";
+
+    for (let r = 0; r < rippleCount; r++) {
+      const rPhase = (ripplePhase + r) % 3;
+      const rRadius = 3 + rPhase * 5;
+      const rAlpha = Math.max(0, rippleAlpha - rPhase * 0.07);
+      we(cx - 2, cy - 1, rRadius, rRadius * 0.5, `rgba(${rippleRgb},${rAlpha.toFixed(2)})`, rAlpha);
+    }
+  } else {
+    // Tier 3: slow dark gas bubbles rising from the depths
+    for (let b = 0; b < 3; b++) {
+      const bPhase = ((animTick * 0.03) + b * 1.2) % 4;
+      const bx = cx - 8 + b * 8;
+      const by = cy + 4 - bPhase * 3;
+      const bAlpha = Math.max(0, 0.2 - bPhase * 0.04);
+      if (bAlpha > 0) we(bx, by, 1.2, 0.8, `rgba(40,30,10,${bAlpha.toFixed(2)})`, bAlpha);
+    }
+  }
+
+  // --- Fish ---
+  if (tier === 0) {
+    // Two active fish swimming
+    const f1x = cx - 5 + Math.sin(animTick * 0.08) * 8;
+    const f1y = cy + 2 + Math.cos(animTick * 0.06) * 3;
+    const f1a = 0.4 + 0.15 * Math.sin(animTick * 0.12);
+    wr(f1x, f1y, 2, 1, `rgba(220,140,50,${f1a.toFixed(2)})`);
+    wr(f1x - 1, f1y - 0.2, 1, 1.4, `rgba(200,120,40,${(f1a * 0.7).toFixed(2)})`);
+
+    const f2x = cx + 4 + Math.cos(animTick * 0.05 + 2) * 6;
+    const f2y = cy - 2 + Math.sin(animTick * 0.07 + 1) * 3;
+    const f2a = 0.3 + 0.1 * Math.sin(animTick * 0.1 + 1);
+    wr(f2x, f2y, 1.5, 0.8, `rgba(230,160,60,${f2a.toFixed(2)})`);
+    wr(f2x + 1.5, f2y - 0.1, 0.8, 1, `rgba(210,140,50,${(f2a * 0.6).toFixed(2)})`);
+
+  } else if (tier === 1) {
+    // One fish, slower, slightly paler
+    const f1x = cx - 3 + Math.sin(animTick * 0.04) * 6;
+    const f1y = cy + 1 + Math.cos(animTick * 0.03) * 2;
+    const f1a = 0.25 + 0.08 * Math.sin(animTick * 0.06);
+    wr(f1x, f1y, 2, 1, `rgba(180,140,80,${f1a.toFixed(2)})`);
+    wr(f1x - 1, f1y - 0.2, 1, 1.4, `rgba(160,120,60,${(f1a * 0.7).toFixed(2)})`);
+
+  } else if (tier === 2) {
+    // Fish barely visible near surface, gasping slowly
+    const f1x = cx - 2 + Math.sin(animTick * 0.02) * 3;
+    const f1y = cy - h * 0.3; // near surface
+    const f1a = 0.12 + 0.05 * Math.sin(animTick * 0.03);
+    wr(f1x, f1y, 2.5, 1, `rgba(150,120,60,${f1a.toFixed(2)})`);
+    wr(f1x - 0.8, f1y - 0.3, 1, 1.5, `rgba(130,100,50,${(f1a * 0.6).toFixed(2)})`);
+
+  } else {
+    // Tier 3: dead fish floating belly-up, static
+    const df1x = cx - 7, df1y = cy - 2;
+    wr(df1x, df1y, 3, 1.2, "rgba(200,190,170,0.55)");      // pale body
+    wr(df1x + 0.5, df1y - 0.8, 1.5, 0.8, "rgba(180,170,150,0.4)"); // belly
+    wr(df1x - 0.8, df1y + 0.2, 1.2, 1.8, "rgba(180,170,150,0.35)"); // tail (sideways)
+    // White eye
+    wr(df1x + 2, df1y - 0.1, 0.7, 0.7, "rgba(240,240,230,0.6)");
+    wr(df1x + 2.2, df1y + 0.1, 0.3, 0.3, "rgba(30,20,10,0.5)");
+
+    // Second dead fish, partly submerged
+    const df2x = cx + 4, df2y = cy + 3;
+    wr(df2x, df2y, 2.5, 1, "rgba(180,170,150,0.4)");
+    wr(df2x - 0.6, df2y + 0.3, 1, 1.5, "rgba(160,150,130,0.3)");
+  }
+
+  // --- Lily pads ---
+  const bob = tier < 2 ? Math.sin(animTick * 0.15) * 0.5 : Math.sin(animTick * 0.05) * 0.15;
+
+  // Pad colours per tier
+  const padOuter  = ["#388030", "#4a7828", "#806830", "#5a3818"][tier];
+  const padInner  = ["#409038", "#508030", "#907838", "#6a4020"][tier];
+  const padVein   = ["#2a6820", "#386020", "#685820", "#4a2810"][tier];
 
   // Pad 1 — large
   const lp1x = x + w * 0.28, lp1y = y + h * 0.65 + bob;
-  we(lp1x, lp1y, 4, 3, "#388030");
-  we(lp1x, lp1y, 3.5, 2.5, "#409038"); // lighter inner
-  // Vein lines
-  wr(lp1x - 2, lp1y, 4, 0.3, "#2a6820"); // centre vein
-  wr(lp1x - 1, lp1y - 1, 2, 0.3, "#2a6820"); // top vein
-  wr(lp1x - 1, lp1y + 1, 2, 0.3, "#2a6820"); // bottom vein
-  // Notch in pad (small dark wedge)
-  wr(lp1x + 2, lp1y - 0.5, 1.5, 1, wl);
+  we(lp1x, lp1y, 4, tier === 3 ? 2 : 3, padOuter);
+  we(lp1x, lp1y, 3.5, tier === 3 ? 1.5 : 2.5, padInner);
+  if (tier < 3) {
+    wr(lp1x - 2, lp1y, 4, 0.3, padVein);
+    wr(lp1x - 1, lp1y - 1, 2, 0.3, padVein);
+    wr(lp1x - 1, lp1y + 1, 2, 0.3, padVein);
+  }
+  wr(lp1x + 2, lp1y - 0.5, 1.5, 1, pal.wl); // notch
 
   // Pad 2
   const lp2x = x + w * 0.72, lp2y = y + h * 0.35 - bob;
-  we(lp2x, lp2y, 3, 2, "#309020");
-  we(lp2x, lp2y, 2.5, 1.5, "#389828");
-  wr(lp2x - 1.5, lp2y, 3, 0.25, "#20781a");
-  wr(lp2x + 1.5, lp2y - 0.3, 1, 0.7, wl); // notch
+  we(lp2x, lp2y, 3, tier === 3 ? 1.2 : 2, padOuter);
+  we(lp2x, lp2y, 2.5, tier === 3 ? 0.9 : 1.5, padInner);
+  if (tier < 3) wr(lp2x - 1.5, lp2y, 3, 0.25, padVein);
+  wr(lp2x + 1.5, lp2y - 0.3, 1, 0.7, pal.wl);
 
-  // Pad 3
-  const lp3x = x + w * 0.5, lp3y = y + h * 0.8 + bob * 0.5;
-  we(lp3x, lp3y, 3, 2, "#3a8828");
-  we(lp3x, lp3y, 2.5, 1.5, "#429030");
-  wr(lp3x - 1.5, lp3y, 3, 0.25, "#287820");
-
-  // Lily flower on first pad (blooms when healthy)
-  if (healthyMix > 0.6) {
-    const flx = lp1x + 1, fly = lp1y - 1.5;
-    // Outer petals
-    we(flx, fly, 2, 1.5, "#f0a0c0", healthyMix * 0.6);
-    // Inner petals
-    we(flx, fly, 1.2, 0.9, "#f8c0d8", healthyMix * 0.7);
-    // Yellow centre
-    we(flx, fly, 0.5, 0.4, "#f0d040", healthyMix * 0.8);
+  // Pad 3 — disappears at tier 3
+  if (tier < 3) {
+    const lp3x = x + w * 0.5, lp3y = y + h * 0.8 + bob * 0.5;
+    we(lp3x, lp3y, 3, 2, padOuter);
+    we(lp3x, lp3y, 2.5, 1.5, padInner);
+    wr(lp3x - 1.5, lp3y, 3, 0.25, padVein);
   }
 
-  // --- Reeds/cattails at edge positions ---
-  // Left reeds
-  const reedX1 = x + 4, reedY1 = y + h * 0.3;
-  wr(reedX1, reedY1 - 4, 0.6, 6, "#4a7830");
-  wr(reedX1 - 0.2, reedY1 - 5, 1, 2, "#5a4020"); // cattail head
-  wr(reedX1 + 1.5, reedY1 - 3, 0.5, 5, "#508030");
-  wr(reedX1 + 1.3, reedY1 - 4, 0.8, 1.8, "#5a4020"); // cattail head
+  // --- Lily flower ---
+  if (tier === 0) {
+    // Blooming
+    const flx = lp1x + 1, fly = lp1y - 1.5;
+    we(flx, fly, 2, 1.5, "#f0a0c0", 0.6);
+    we(flx, fly, 1.2, 0.9, "#f8c0d8", 0.7);
+    we(flx, fly, 0.5, 0.4, "#f0d040", 0.85);
+  } else if (tier === 1) {
+    // Wilted — smaller, paler, no yellow centre
+    const flx = lp1x + 1, fly = lp1y - 1.2;
+    we(flx, fly, 1.4, 1.0, "#c89090", 0.4);
+    we(flx, fly, 0.8, 0.6, "#d8a8a8", 0.35);
+  }
+  // Tier 2+: flower completely gone
 
-  // Right reeds
+  // --- Reeds/cattails ---
+  const reedX1 = x + 4, reedY1 = y + h * 0.3;
   const reedX2 = x + w - 5, reedY2 = y + h * 0.5;
-  wr(reedX2, reedY2 - 3, 0.6, 5, "#4a7830");
-  wr(reedX2 - 0.2, reedY2 - 4, 1, 2, "#5a4020");
-  // A thin grass blade
-  wr(reedX2 + 1.2, reedY2 - 2, 0.4, 4, "#508830");
+
+  if (tier === 0) {
+    // Tall, healthy green reeds
+    wr(reedX1, reedY1 - 4, 0.6, 6, "#4a7830");
+    wr(reedX1 - 0.2, reedY1 - 5, 1, 2, "#5a4020");
+    wr(reedX1 + 1.5, reedY1 - 3, 0.5, 5, "#508030");
+    wr(reedX1 + 1.3, reedY1 - 4, 0.8, 1.8, "#5a4020");
+    wr(reedX2, reedY2 - 3, 0.6, 5, "#4a7830");
+    wr(reedX2 - 0.2, reedY2 - 4, 1, 2, "#5a4020");
+    wr(reedX2 + 1.2, reedY2 - 2, 0.4, 4, "#508830");
+
+  } else if (tier === 1) {
+    // Yellowing reeds, slightly shorter
+    wr(reedX1, reedY1 - 3, 0.6, 5, "#7a8028");
+    wr(reedX1 - 0.2, reedY1 - 4, 1, 1.8, "#6a5020");
+    wr(reedX1 + 1.5, reedY1 - 2, 0.5, 4, "#708028");
+    wr(reedX2, reedY2 - 2.5, 0.6, 4, "#7a8028");
+    wr(reedX2 - 0.2, reedY2 - 3.5, 1, 1.8, "#6a5020");
+
+  } else if (tier === 2) {
+    // Drooping, brown-yellow, broken stems
+    wr(reedX1, reedY1 - 2, 0.5, 4, "#806020");
+    wr(reedX1 - 0.2, reedY1 - 3, 0.9, 1.5, "#604818");
+    // Drooping top — angled using short segments
+    wr(reedX1 + 0.3, reedY1 - 2.5, 2.5, 0.5, "#706018");
+    wr(reedX2, reedY2 - 1.5, 0.5, 3, "#806020");
+    wr(reedX2 - 0.2, reedY2 - 2.5, 0.9, 1.5, "#604818");
+
+  } else {
+    // Tier 3: snapped dead stubs
+    wr(reedX1, reedY1 - 1, 0.6, 2.5, "#4a3010");
+    wr(reedX1 + 1.5, reedY1 - 0.5, 0.5, 1.5, "#403010");
+    wr(reedX2, reedY2 - 0.8, 0.6, 2, "#4a3010");
+  }
 }
 
 // ---------------------------------------------------------------------------
