@@ -11,7 +11,7 @@ interface HeartbeatPayload {
 const g = global as typeof globalThis & { _heartbeat?: HeartbeatPayload };
 
 export async function POST(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   try {
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   const hb = g._heartbeat;

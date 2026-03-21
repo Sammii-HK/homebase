@@ -42,7 +42,7 @@ function extractText(msg: {
 }
 
 export async function POST(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   const body = await req.json();

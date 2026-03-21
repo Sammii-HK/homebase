@@ -55,7 +55,7 @@ function pickNextSlot(scheduledKeys: Set<string>): string {
 }
 
 export async function POST(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   let body: { threshold?: number } = {};

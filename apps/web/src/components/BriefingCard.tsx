@@ -1,5 +1,6 @@
 "use client";
 
+import { authHeaders } from "@/lib/client-auth";
 import { useState, useEffect, useCallback, useMemo } from "react";
 
 const PS2P = "'Press Start 2P', monospace";
@@ -127,7 +128,7 @@ export default function BriefingCard({ token, onOpenApprovalQueue, inline = fals
   const fetchBriefing = useCallback(async () => {
     try {
       const res = await fetch("/api/briefing", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token ?? ""),
       });
       if (res.status === 404) {
         setBriefing(null);

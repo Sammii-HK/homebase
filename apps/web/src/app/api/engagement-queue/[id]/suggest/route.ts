@@ -9,7 +9,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   const { id } = await params;

@@ -14,13 +14,25 @@ import LaunchTracker from "./LaunchTracker";
 import ChatPanel from "./ChatPanel";
 import AlertStrip from "./AlertStrip";
 import FloorPlan from "./FloorPlan";
+import CastQueue from "./CastQueue";
 import type { Alert } from "@/app/api/alerts/route";
+import {
+  startAuthentication,
+  startRegistration,
+} from "@simplewebauthn/browser";
 
 const PS2P = "'Press Start 2P', monospace";
 const POLL_MS = 60_000;
 
-type TabId = "status" | "queue" | "chat";
+type TabId = "status" | "queue" | "cast" | "chat";
 type ViewMode = "list" | "pixel";
+
+// "cookie" means authenticated via hb_session cookie (no Bearer header needed)
+// A hex string means authenticated via legacy Bearer token
+function authHeaders(token: string): Record<string, string> {
+  if (token === "cookie") return {};
+  return { Authorization: `Bearer ${token}` };
+}
 
 export default function Dashboard() {
   const [token, setToken] = useState<string | null>(null);
@@ -28,18 +40,51 @@ export default function Dashboard() {
   const [heartbeat, setHeartbeat] = useState<HeartbeatResponse | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loginSecret, setLoginSecret] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [passkeyRegistered, setPasskeyRegistered] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>("status");
   const [isDesktop, setIsDesktop] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
 
+  // On mount: check for existing session cookie, then fall back to localStorage token
   useEffect(() => {
-    setToken(localStorage.getItem("homebase_token"));
-    // Restore view mode preference
+    async function init() {
+      // Check if passkey is registered (affects which button to show)
+      try {
+        const statusRes = await fetch("/api/auth/status");
+        if (statusRes.ok) {
+          const { registered } = await statusRes.json();
+          setPasskeyRegistered(registered);
+        }
+      } catch {
+        setPasskeyRegistered(false);
+      }
+
+      // Check for active session cookie first
+      try {
+        const sessionRes = await fetch("/api/auth/session");
+        if (sessionRes.ok) {
+          setToken("cookie");
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // No session cookie
+      }
+
+      // Fall back to legacy localStorage token
+      const stored = localStorage.getItem("homebase_token");
+      setToken(stored);
+      setLoading(false);
+    }
+    init();
+  }, []);
+
+  // Restore view mode preference
+  useEffect(() => {
     const saved = localStorage.getItem("homebase_view") as ViewMode | null;
     if (saved === "pixel" || saved === "list") setViewMode(saved);
-    setLoading(false);
   }, []);
 
   // Detect desktop and listen for resize
@@ -53,7 +98,7 @@ export default function Dashboard() {
   const fetchData = useCallback(
     async (t: string) => {
       if (document.hidden) return;
-      const headers = { Authorization: `Bearer ${t}` };
+      const headers = authHeaders(t);
       try {
         const [statsRes, hbRes, alertsRes] = await Promise.all([
           fetch("/api/stats", { headers }),
@@ -102,24 +147,73 @@ export default function Dashboard() {
     }
   }, [stats]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Passkey: register (first time setup)
+  const handleRegister = async () => {
     setLoginError("");
+    setLoginLoading(true);
     try {
-      const res = await fetch("/api/login", {
+      const challengeRes = await fetch("/api/auth/challenge?type=registration");
+      if (!challengeRes.ok) throw new Error("Failed to get challenge");
+      const options = await challengeRes.json();
+      const { _clientId, ...regOptions } = options;
+
+      const attResp = await startRegistration({ optionsJSON: regOptions });
+
+      const verifyRes = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret: loginSecret }),
+        body: JSON.stringify({ ...attResp, _clientId }),
       });
-      if (res.ok) {
-        localStorage.setItem("homebase_token", loginSecret);
-        setToken(loginSecret);
-        setLoginSecret("");
-      } else {
-        setLoginError("Invalid secret");
+
+      if (!verifyRes.ok) {
+        const err = await verifyRes.json().catch(() => ({}));
+        throw new Error(err.error ?? "Registration failed");
       }
-    } catch {
-      setLoginError("Connection failed");
+
+      setPasskeyRegistered(true);
+      // Automatically sign in after registration
+      await handleSignIn();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Registration failed";
+      if (!msg.includes("cancelled") && !msg.includes("NotAllowed")) {
+        setLoginError(msg);
+      }
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  // Passkey: authenticate
+  const handleSignIn = async () => {
+    setLoginError("");
+    setLoginLoading(true);
+    try {
+      const challengeRes = await fetch("/api/auth/challenge");
+      if (!challengeRes.ok) throw new Error("Failed to get challenge");
+      const options = await challengeRes.json();
+      const { _clientId, ...authOptions } = options;
+
+      const assertResp = await startAuthentication({ optionsJSON: authOptions });
+
+      const verifyRes = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...assertResp, _clientId }),
+      });
+
+      if (!verifyRes.ok) {
+        const err = await verifyRes.json().catch(() => ({}));
+        throw new Error(err.error ?? "Authentication failed");
+      }
+
+      setToken("cookie");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Authentication failed";
+      if (!msg.includes("cancelled") && !msg.includes("NotAllowed")) {
+        setLoginError(msg);
+      }
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -135,7 +229,7 @@ export default function Dashboard() {
     });
   }, []);
 
-  // Keyboard shortcuts: 1/2/3 for tabs, r to refresh, p for pixel toggle
+  // Keyboard shortcuts: 1/2/3/4 for tabs, r to refresh, p for pixel toggle
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName;
@@ -160,6 +254,14 @@ export default function Dashboard() {
           }
           break;
         case "3":
+          e.preventDefault();
+          setActiveTab("cast");
+          if (viewMode === "pixel") {
+            setViewMode("list");
+            localStorage.setItem("homebase_view", "list");
+          }
+          break;
+        case "4":
           e.preventDefault();
           setActiveTab("chat");
           if (viewMode === "pixel") {
@@ -192,29 +294,157 @@ export default function Dashboard() {
   if (!token) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <form onSubmit={handleLogin} className="w-full max-w-xs space-y-4">
-          <div className="text-center space-y-1">
-            <h1 className="text-white text-sm tracking-widest">HOMEBASE</h1>
-            <p className="text-white/30 text-[7px]">COMMAND CENTRE</p>
+        <div className="w-full max-w-xs space-y-6">
+          <div className="text-center space-y-2">
+            <div style={{ fontSize: 36, lineHeight: 1 }}>🏠</div>
+            <h1
+              style={{
+                fontFamily: PS2P,
+                fontSize: 11,
+                color: "rgba(255,255,255,0.85)",
+                letterSpacing: 2,
+              }}
+            >
+              HOMEBASE
+            </h1>
+            <p
+              style={{
+                fontFamily: PS2P,
+                fontSize: 7,
+                color: "rgba(255,255,255,0.3)",
+                letterSpacing: 1,
+              }}
+            >
+              COMMAND CENTRE
+            </p>
           </div>
-          <input
-            type="password"
-            value={loginSecret}
-            onChange={(e) => setLoginSecret(e.target.value)}
-            placeholder="Enter secret"
-            className="w-full bg-white/5 border border-white/20 rounded px-3 py-2.5 text-white text-[10px] focus:outline-none focus:border-purple-400 transition-colors"
-            autoFocus
-          />
-          {loginError && (
-            <p className="text-red-400 text-[8px]">{loginError}</p>
+
+          {passkeyRegistered === false ? (
+            // First-time setup
+            <div className="space-y-3">
+              <p
+                style={{
+                  fontFamily: PS2P,
+                  fontSize: 7,
+                  color: "rgba(255,255,255,0.4)",
+                  textAlign: "center",
+                  lineHeight: 1.8,
+                }}
+              >
+                No passkey found.{"\n"}Set up Touch ID to continue.
+              </p>
+              <button
+                onClick={handleRegister}
+                disabled={loginLoading}
+                style={{
+                  width: "100%",
+                  background: loginLoading ? "rgba(167,139,250,0.3)" : "rgba(167,139,250,0.15)",
+                  border: "1px solid rgba(167,139,250,0.4)",
+                  borderRadius: 6,
+                  padding: "14px 16px",
+                  cursor: loginLoading ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  transition: "all 0.15s",
+                }}
+              >
+                <span style={{ fontSize: 20 }}>🔑</span>
+                <span
+                  style={{
+                    fontFamily: PS2P,
+                    fontSize: 8,
+                    color: loginLoading ? "rgba(167,139,250,0.5)" : "#a78bfa",
+                    letterSpacing: 1,
+                  }}
+                >
+                  {loginLoading ? "SETTING UP..." : "SET UP PASSKEY"}
+                </span>
+              </button>
+            </div>
+          ) : (
+            // Sign in with passkey
+            <div className="space-y-3">
+              <button
+                onClick={handleSignIn}
+                disabled={loginLoading}
+                style={{
+                  width: "100%",
+                  background: loginLoading ? "rgba(167,139,250,0.3)" : "rgba(167,139,250,0.12)",
+                  border: "1px solid rgba(167,139,250,0.35)",
+                  borderRadius: 6,
+                  padding: "16px",
+                  cursor: loginLoading ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!loginLoading)
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "rgba(167,139,250,0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!loginLoading)
+                    (e.currentTarget as HTMLButtonElement).style.background =
+                      "rgba(167,139,250,0.12)";
+                }}
+              >
+                {/* Passkey / Touch ID icon */}
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ opacity: loginLoading ? 0.4 : 1 }}
+                >
+                  <circle cx="12" cy="8" r="3.5" stroke="#a78bfa" strokeWidth="1.5" />
+                  <path
+                    d="M5 20c0-3.866 3.134-7 7-7s7 3.134 7 7"
+                    stroke="#a78bfa"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M18 11l1.5 1.5L22 10"
+                    stroke="#4ade80"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span
+                  style={{
+                    fontFamily: PS2P,
+                    fontSize: 8,
+                    color: loginLoading ? "rgba(167,139,250,0.5)" : "#a78bfa",
+                    letterSpacing: 1,
+                  }}
+                >
+                  {loginLoading ? "AUTHENTICATING..." : "SIGN IN WITH PASSKEY"}
+                </span>
+              </button>
+            </div>
           )}
-          <button
-            type="submit"
-            className="w-full bg-purple-600 hover:bg-purple-500 text-white rounded px-3 py-2.5 text-[8px] uppercase tracking-widest transition-colors"
-          >
-            Enter
-          </button>
-        </form>
+
+          {loginError && (
+            <p
+              style={{
+                fontFamily: PS2P,
+                fontSize: 7,
+                color: "#f87171",
+                textAlign: "center",
+                letterSpacing: 0.5,
+              }}
+            >
+              {loginError}
+            </p>
+          )}
+        </div>
       </div>
     );
   }
@@ -226,6 +456,7 @@ export default function Dashboard() {
   const TABS: { id: TabId; label: string; icon: string }[] = [
     { id: "status", label: "STATUS", icon: "📊" },
     { id: "queue", label: "QUEUE", icon: "✅" },
+    { id: "cast", label: "CAST", icon: "💼" },
     { id: "chat", label: "CHAT", icon: "💬" },
   ];
 
@@ -598,6 +829,31 @@ export default function Dashboard() {
                     <EngagementQueue token={token} />
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* CAST TAB */}
+            {activeTab === "cast" && (
+              <div
+                className="hb-content-area"
+                style={{
+                  padding: "16px 12px",
+                  maxWidth: 720,
+                  margin: "0 auto",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: PS2P,
+                    fontSize: 10,
+                    color: "#60a5fa",
+                    letterSpacing: 1,
+                    marginBottom: 12,
+                  }}
+                >
+                  CAST — JOB PIPELINE
+                </div>
+                <CastQueue token={token} />
               </div>
             )}
 

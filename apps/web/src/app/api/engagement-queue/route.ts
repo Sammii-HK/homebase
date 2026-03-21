@@ -107,7 +107,7 @@ function contentKey(platform: string, author: string, content: string): string {
 }
 
 export async function GET(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   const apiKey = process.env.SPELLCAST_API_KEY;

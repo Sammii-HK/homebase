@@ -10,7 +10,7 @@ const g = global as typeof globalThis & {
 if (!g._healthHistory) g._healthHistory = [];
 
 export async function GET(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   try {

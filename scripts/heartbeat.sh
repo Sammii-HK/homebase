@@ -14,10 +14,9 @@ check() {
   fi
 }
 
-# Active local services
-orbit=$(check orbit http://localhost:3001/health)
+# Local Mac services only (cloud services like Orbit are checked via their public URLs)
 n8n=$(check n8n http://localhost:5678/healthz)
-brandApi=$(check brandApi http://localhost:3020/health)
+brandApi=$(check brandApi http://localhost:9002/health)
 whisper=$(check whisper http://localhost:9000/health)
 
 # Docker containers (comma-separated name:status)
@@ -28,7 +27,7 @@ agents=$(launchctl list 2>/dev/null | grep sammii | awk '{print $3":"$1}' | tr '
 
 ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-payload="{\"ts\":\"${ts}\",\"services\":{${orbit},${n8n},${brandApi},${whisper}},\"docker\":\"${docker_status}\",\"launchAgents\":\"${agents}\"}"
+payload="{\"ts\":\"${ts}\",\"services\":{${n8n},${brandApi},${whisper}},\"docker\":\"${docker_status}\",\"launchAgents\":\"${agents}\"}"
 
 curl -sf -X POST "${HOMEBASE_URL}/api/heartbeat" \
   -H "Content-Type: application/json" \

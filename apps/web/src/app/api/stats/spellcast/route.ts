@@ -4,7 +4,7 @@ import { checkAuth } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   const apiKey = process.env.SPELLCAST_API_KEY;

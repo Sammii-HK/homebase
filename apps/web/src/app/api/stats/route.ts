@@ -83,7 +83,7 @@ async function getSpellcast() {
 async function checkService(
   url: string,
   headers?: Record<string, string>
-): Promise<{ status: "ok" | "down"; latencyMs: number }> {
+): Promise<{ status: "ok" | "degraded" | "down"; latencyMs: number }> {
   const start = Date.now();
   try {
     const res = await fetch(url, {
@@ -91,6 +91,8 @@ async function checkService(
       signal: AbortSignal.timeout(5000),
       cache: "no-store",
     });
+    // 403 = Cloudflare blocking datacenter IPs (not actually down)
+    if (res.status === 403) return { status: "degraded", latencyMs: Date.now() - start };
     return { status: res.ok ? "ok" : "down", latencyMs: Date.now() - start };
   } catch {
     return { status: "down", latencyMs: Date.now() - start };
@@ -101,10 +103,11 @@ async function getHealth() {
   const lunaryUrl = process.env.LUNARY_URL ?? "https://lunary.app";
   const spellcastUrl = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
   const contentUrl = process.env.CONTENT_CREATOR_URL ?? "https://content.sammii.dev";
+  const orbitUrl = process.env.ORBIT_URL ?? "https://orbit.sammii.dev";
   const key = process.env.LUNARY_ADMIN_API_KEY;
   const spellcastKey = process.env.SPELLCAST_API_KEY ?? process.env.SPELLCAST_CRON_SECRET;
 
-  const [lunary, spellcast, contentCreator] = await Promise.all([
+  const [lunary, spellcast, contentCreator, orbit] = await Promise.all([
     checkService(
       `${lunaryUrl}/api/admin/health/db`,
       key ? { Authorization: `Bearer ${key}` } : undefined
@@ -114,9 +117,10 @@ async function getHealth() {
       spellcastKey ? { Authorization: `Bearer ${spellcastKey}` } : undefined
     ),
     checkService(`${contentUrl}/api/health`),
+    checkService(`${orbitUrl}/api/state`),
   ]);
 
-  return { lunary, spellcast, contentCreator };
+  return { lunary, spellcast, contentCreator, orbit };
 }
 
 // ── Content pipeline ────────────────────────────────────────────────
@@ -417,7 +421,7 @@ function computeTrends(
 // ── Route handler ───────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   const [github, lunary, spellcast, health, content, seo, opportunities, orbit, engagement] =

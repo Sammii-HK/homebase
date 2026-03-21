@@ -34,7 +34,7 @@ interface Deploy {
 }
 
 export async function GET(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   const token = process.env.VERCEL_TOKEN;

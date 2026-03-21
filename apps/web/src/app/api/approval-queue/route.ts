@@ -108,7 +108,7 @@ async function approvePostInSpellcast(
 }
 
 export async function GET(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   const apiKey = process.env.SPELLCAST_API_KEY;

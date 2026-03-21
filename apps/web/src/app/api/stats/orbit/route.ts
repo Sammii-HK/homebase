@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 const ORBIT_URL = process.env.ORBIT_URL ?? "http://localhost:3001";
 
 export async function GET(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   try {

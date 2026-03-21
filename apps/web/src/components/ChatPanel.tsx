@@ -1,8 +1,9 @@
 "use client";
 
+import { authHeaders } from "@/lib/client-auth";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 
 const PS2P = "'Press Start 2P', monospace";
 
@@ -55,15 +56,50 @@ function formatContent(text: string): React.ReactNode {
   });
 }
 
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: ((e: SpeechRecognitionEvent) => void) | null;
+  onerror: ((e: Event) => void) | null;
+  onend: (() => void) | null;
+}
+
+function getSpeechRecognition(): (new () => SpeechRecognitionInstance) | null {
+  if (typeof window === "undefined") return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const w = window as any;
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
+
 export default function ChatPanel({ token }: { token: string }) {
   const [input, setInput] = useState("");
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastSpokenIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setSpeechSupported(!!getSpeechRecognition());
+    // Load TTS preference
+    const saved = localStorage.getItem("hb_tts");
+    if (saved === "false") setTtsEnabled(false);
+  }, []);
 
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token ?? ""),
       }),
     [token]
   );
@@ -75,6 +111,51 @@ export default function ChatPanel({ token }: { token: string }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // Speak last assistant message via Kokoro TTS
+  const speak = useCallback(
+    async (text: string) => {
+      if (!ttsEnabled || !text.trim()) return;
+      try {
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders(token ?? ""),
+          },
+          body: JSON.stringify({ text }),
+        });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          URL.revokeObjectURL(audioRef.current.src);
+        }
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.play().catch(() => {});
+        audio.onended = () => URL.revokeObjectURL(url);
+      } catch {
+        // TTS unavailable, silently skip
+      }
+    },
+    [ttsEnabled, token]
+  );
+
+  // Speak completed assistant messages
+  useEffect(() => {
+    if (isLoading) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant") return;
+    if (last.id === lastSpokenIdRef.current) return;
+    lastSpokenIdRef.current = last.id;
+    const text = last.parts
+      .filter((p): p is { type: "text"; text: string } => p.type === "text")
+      .map((p) => p.text)
+      .join("");
+    speak(text);
+  }, [messages, isLoading, speak]);
 
   const submit = () => {
     const trimmed = input.trim();
@@ -90,6 +171,50 @@ export default function ChatPanel({ token }: { token: string }) {
     }
   };
 
+  const toggleMic = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SR = getSpeechRecognition();
+    if (!SR) return;
+
+    const recognition = new SR();
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onresult = (e: SpeechRecognitionEvent) => {
+      const transcript = e.results[0]?.[0]?.transcript ?? "";
+      if (transcript.trim()) {
+        setInput(transcript.trim());
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  };
+
+  const toggleTts = () => {
+    const next = !ttsEnabled;
+    setTtsEnabled(next);
+    localStorage.setItem("hb_tts", String(next));
+    if (!next && audioRef.current) {
+      audioRef.current.pause();
+    }
+  };
+
   return (
     <div
       style={{
@@ -99,6 +224,35 @@ export default function ChatPanel({ token }: { token: string }) {
         background: "rgba(0,0,0,0.2)",
       }}
     >
+      {/* TTS toggle */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          padding: "6px 12px 0",
+          gap: 6,
+        }}
+      >
+        <button
+          onClick={toggleTts}
+          title={ttsEnabled ? "Mute voice" : "Unmute voice"}
+          style={{
+            fontFamily: PS2P,
+            fontSize: 6,
+            padding: "4px 8px",
+            background: ttsEnabled
+              ? "rgba(167,139,250,0.1)"
+              : "rgba(255,255,255,0.04)",
+            border: `1px solid ${ttsEnabled ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.08)"}`,
+            borderRadius: 4,
+            color: ttsEnabled ? "#a78bfa" : "rgba(255,255,255,0.3)",
+            cursor: "pointer",
+          }}
+        >
+          {ttsEnabled ? "VOICE ON" : "VOICE OFF"}
+        </button>
+      </div>
+
       {/* Messages */}
       <div
         style={{
@@ -253,11 +407,35 @@ export default function ChatPanel({ token }: { token: string }) {
           alignItems: "flex-end",
         }}
       >
+        {speechSupported && (
+          <button
+            onClick={toggleMic}
+            title={isListening ? "Stop listening" : "Speak"}
+            style={{
+              fontFamily: PS2P,
+              fontSize: 12,
+              padding: "8px 10px",
+              background: isListening
+                ? "rgba(239,68,68,0.15)"
+                : "rgba(255,255,255,0.04)",
+              border: `1px solid ${isListening ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.1)"}`,
+              borderRadius: 6,
+              color: isListening ? "#f87171" : "rgba(255,255,255,0.4)",
+              cursor: "pointer",
+              minHeight: 38,
+              animation: isListening ? "micPulse 1s ease-in-out infinite" : "none",
+            }}
+          >
+            🎙
+          </button>
+        )}
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask anything or give a command..."
+          placeholder={
+            isListening ? "Listening..." : "Ask anything or give a command..."
+          }
           rows={1}
           style={{
             flex: 1,
@@ -265,7 +443,7 @@ export default function ChatPanel({ token }: { token: string }) {
             fontSize: 13,
             padding: "9px 11px",
             background: "rgba(0,0,0,0.4)",
-            border: "1px solid rgba(255,255,255,0.1)",
+            border: `1px solid ${isListening ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`,
             borderRadius: 6,
             color: "#fff",
             resize: "none",
@@ -305,6 +483,10 @@ export default function ChatPanel({ token }: { token: string }) {
         @keyframes pulse {
           0%, 100% { opacity: 0.3; transform: scale(0.8); }
           50% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes micPulse {
+          0%, 100% { border-color: rgba(239,68,68,0.4); }
+          50% { border-color: rgba(239,68,68,0.8); }
         }
       `}</style>
     </div>

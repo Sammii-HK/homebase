@@ -163,7 +163,7 @@ async function getSpellcastAlerts(): Promise<Alert[]> {
 // ── Route handler ────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  const denied = checkAuth(req);
+  const denied = await checkAuth(req);
   if (denied) return denied;
 
   // All sources in parallel — each has its own try/catch

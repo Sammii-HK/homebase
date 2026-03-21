@@ -26,7 +26,7 @@ export default function AlertStrip({
   onTabChange,
 }: {
   alerts: Alert[];
-  onTabChange?: (tab: "status" | "queue" | "chat") => void;
+  onTabChange?: (tab: "status" | "queue" | "cast" | "chat") => void;
 }) {
   if (!alerts || alerts.length === 0) return null;
 

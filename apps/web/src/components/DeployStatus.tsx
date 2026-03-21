@@ -1,5 +1,6 @@
 "use client";
 
+import { authHeaders } from "@/lib/client-auth";
 import { useEffect, useState, useCallback } from "react";
 
 interface Deploy {
@@ -57,7 +58,7 @@ export default function DeployStatus({ token }: Props) {
   const fetchDeploys = useCallback(async () => {
     try {
       const res = await fetch("/api/deploys", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token ?? ""),
       });
       if (!res.ok) return;
       const data = await res.json();

@@ -1,5 +1,6 @@
 "use client";
 
+import { authHeaders } from "@/lib/client-auth";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { DashboardStats, HeartbeatResponse } from "@/types/dashboard";
 
@@ -375,7 +376,7 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenA
     try {
       await fetch("/api/actions", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { ...authHeaders(token ?? ""), "Content-Type": "application/json" },
         body: JSON.stringify({ action: actionId, ...payload }),
       });
       // Refresh data after action

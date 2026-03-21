@@ -1,5 +1,6 @@
 "use client";
 
+import { authHeaders } from "@/lib/client-auth";
 import { useState, useEffect, useCallback } from "react";
 
 const PS2P = "'Press Start 2P', monospace";
@@ -88,10 +89,7 @@ function EngagementCard({
     try {
       const res = await fetch(`/api/engagement-queue/${item.id}/reply`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { ...authHeaders(token), "Content-Type": "application/json" },
         body: JSON.stringify({ reply: reply.trim() }),
       });
       const data = await res.json();
@@ -114,7 +112,7 @@ function EngagementCard({
     try {
       const res = await fetch(`/api/engagement-queue/${item.id}/dismiss`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token ?? ""),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -138,7 +136,7 @@ function EngagementCard({
         ? `/api/engagement-queue/${item.id}/suggest?accountSetId=${item.accountSetId}`
         : `/api/engagement-queue/${item.id}/suggest`;
       const res = await fetch(suggestUrl, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token ?? ""),
       });
       if (res.ok) {
         const data = await res.json();
@@ -498,7 +496,7 @@ export default function EngagementQueue({ token, compact }: Props) {
   const fetchQueue = useCallback(async () => {
     try {
       const res = await fetch("/api/engagement-queue", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token ?? ""),
       });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
@@ -703,7 +701,7 @@ export function useEngagementCount(token: string | null): number {
     const fetchCount = async () => {
       try {
         const res = await fetch("/api/engagement-queue", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: authHeaders(token ?? ""),
         });
         if (res.ok) {
           const data = await res.json();

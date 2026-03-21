@@ -1,5 +1,6 @@
 "use client";
 
+import { authHeaders } from "@/lib/client-auth";
 import { useState, useEffect, useCallback } from "react";
 
 const PS2P = "'Press Start 2P', monospace";
@@ -82,10 +83,7 @@ function ApprovalCard({ item, token, onComplete }: { item: ApprovalItem; token: 
       try {
         const res = await fetch(`/api/approval-queue/${item.id}/approve`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          headers: { ...authHeaders(token), "Content-Type": "application/json" },
           body: JSON.stringify({}),
         });
         const data = await res.json();
@@ -110,10 +108,7 @@ function ApprovalCard({ item, token, onComplete }: { item: ApprovalItem; token: 
       // Preview what time it would be scheduled for
       const res = await fetch(`/api/approval-queue/${item.id}/approve`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { ...authHeaders(token), "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
       const data = await res.json();
@@ -142,10 +137,7 @@ function ApprovalCard({ item, token, onComplete }: { item: ApprovalItem; token: 
     try {
       const res = await fetch(`/api/approval-queue/${item.id}/reject`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { ...authHeaders(token), "Content-Type": "application/json" },
         body: JSON.stringify({ reason: rejectReason || undefined }),
       });
       const data = await res.json();
@@ -443,7 +435,7 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
   const fetchQueue = useCallback(async () => {
     try {
       const res = await fetch("/api/approval-queue", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token ?? ""),
       });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
@@ -491,10 +483,7 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
       try {
         const res = await fetch(`/api/approval-queue/${snapshot[i].id}/approve`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          headers: { ...authHeaders(token), "Content-Type": "application/json" },
           body: JSON.stringify({}),
         });
         if (res.ok) approved++;
@@ -519,10 +508,7 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
     try {
       const res = await fetch("/api/approval-queue/auto-approve", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { ...authHeaders(token), "Content-Type": "application/json" },
         body: JSON.stringify({ threshold: 80 }),
       });
       const data = await res.json();
@@ -773,7 +759,7 @@ export function useApprovalCount(token: string | null): number {
     const fetchCount = async () => {
       try {
         const res = await fetch("/api/approval-queue", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: authHeaders(token ?? ""),
         });
         if (res.ok) {
           const data = await res.json();

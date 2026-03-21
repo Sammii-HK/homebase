@@ -1,5 +1,6 @@
 "use client";
 
+import { authHeaders } from "@/lib/client-auth";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { DashboardStats } from "@/types/dashboard";
 
@@ -49,7 +50,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
     try {
       const res = await fetch("/api/actions", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { ...authHeaders(token ?? ""), "Content-Type": "application/json" },
         body: JSON.stringify({ action, ...extra }),
       });
       const data = await res.json();

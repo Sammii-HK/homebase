@@ -21,19 +21,19 @@ const DOT: Record<string, string> = {
 export default function ServiceHealth({ stats, heartbeat }: Props) {
   const cloud: ServiceRow[] = stats?.health
     ? [
-        { name: "Lunary", status: stats.health.lunary.status, source: "cloud" },
         { name: "Spellcast", status: stats.health.spellcast.status, source: "cloud" },
         { name: "Content", status: stats.health.contentCreator.status, source: "cloud" },
+        { name: "Orbit", status: stats.health.orbit.status, source: "cloud" },
       ]
     : [
-        { name: "Lunary", status: "unknown", source: "cloud" },
         { name: "Spellcast", status: "unknown", source: "cloud" },
         { name: "Content", status: "unknown", source: "cloud" },
+        { name: "Orbit", status: "unknown", source: "cloud" },
       ];
 
   const hbServices = heartbeat?.heartbeat?.services ?? {};
-  // Orbit + n8n are the active local systems (Windmill decommissioned)
-  const localKeys = ["orbit", "n8n", "brandApi", "whisper"] as const;
+  // Local Mac services only — Orbit is a cloud service checked via its public URL
+  const localKeys = ["n8n", "brandApi", "whisper"] as const;
   const local: ServiceRow[] = localKeys.map((key) => ({
     name: key === "brandApi" ? "Brand API" : key === "n8n" ? "n8n" : key.charAt(0).toUpperCase() + key.slice(1),
     status: hbServices[key]

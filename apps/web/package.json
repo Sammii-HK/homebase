@@ -9,8 +9,11 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.136",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.0",
     "ai": "^6.0.134",
     "astronomy-engine": "^2.1.19",
+    "jose": "^6.2.2",
     "next": "^15.2.4",
     "react": "^19",
     "react-dom": "^19"

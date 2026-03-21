@@ -43,6 +43,7 @@ export interface DashboardStats {
     lunary: HealthStatus;
     spellcast: HealthStatus;
     contentCreator: HealthStatus;
+    orbit: HealthStatus;
   };
   content: {
     failedPosts: number;

@@ -1,5 +1,6 @@
 "use client";
 
+import { authHeaders } from "@/lib/client-auth";
 import { useEffect, useState, useCallback } from "react";
 import type { LaunchTrackerData, LaunchProduct, LaunchStatus } from "@/types/dashboard";
 
@@ -38,7 +39,7 @@ export default function LaunchTracker({ token }: Props) {
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch("/api/stats/launch", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token ?? ""),
       });
       if (!res.ok) return;
       setData(await res.json());
