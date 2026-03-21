@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { authHeaders } from "@/lib/client-auth";
 
 const PS2P = "'Press Start 2P', monospace";
@@ -383,6 +383,62 @@ export default function CastQueue({ token }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  // New application form state
+  const [showForm, setShowForm] = useState(false);
+  const [formUrl, setFormUrl] = useState("");
+  const [formCompany, setFormCompany] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [submitMessage, setSubmitMessage] = useState("");
+  const urlInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showForm) {
+      setTimeout(() => urlInputRef.current?.focus(), 50);
+    }
+  }, [showForm]);
+
+  const handleStartApplication = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formUrl.trim() || submitting) return;
+
+    setSubmitting(true);
+    setSubmitStatus("idle");
+
+    try {
+      const res = await fetch("/api/cast/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders(token),
+        },
+        body: JSON.stringify({ url: formUrl.trim(), company: formCompany.trim() }),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        setSubmitStatus("success");
+        setSubmitMessage(json.message ?? "APPLICATION QUEUED");
+        setFormUrl("");
+        setFormCompany("");
+        setTimeout(() => {
+          setShowForm(false);
+          setSubmitStatus("idle");
+          setSubmitMessage("");
+        }, 3000);
+      } else {
+        setSubmitStatus("error");
+        setSubmitMessage(json.error ?? "Failed to queue application");
+      }
+    } catch {
+      setSubmitStatus("error");
+      setSubmitMessage("Network error — try again");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [formUrl, formCompany, submitting, token]);
+
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch("/api/stats/cast", {
@@ -405,77 +461,257 @@ export default function CastQueue({ token }: Props) {
     fetchData();
   }, [fetchData]);
 
-  if (loading) {
-    return (
+  // Helper: renders the START APPLICATION button + inline form
+  const renderNewApplicationForm = () => (
+    <>
       <div
         style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 8,
-          padding: 16,
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: showForm ? 12 : 16,
         }}
       >
-        <p
+        <button
+          onClick={() => {
+            setShowForm((v) => !v);
+            setSubmitStatus("idle");
+            setSubmitMessage("");
+          }}
           style={{
             fontFamily: PS2P,
-            fontSize: 8,
-            color: "rgba(255,255,255,0.3)",
+            fontSize: 7,
+            padding: "8px 12px",
+            background: showForm
+              ? "rgba(255,255,255,0.06)"
+              : "rgba(167,139,250,0.12)",
+            border: `1px solid ${showForm ? "rgba(255,255,255,0.12)" : "rgba(167,139,250,0.3)"}`,
+            borderRadius: 5,
+            color: showForm ? "rgba(255,255,255,0.4)" : "#a78bfa",
+            cursor: "pointer",
+            letterSpacing: 0.5,
           }}
         >
-          Loading jobs...
-        </p>
+          {showForm ? "CANCEL" : "START APPLICATION"}
+        </button>
+      </div>
+
+      {showForm && (
+        <form
+          onSubmit={handleStartApplication}
+          style={{
+            background: "rgba(167,139,250,0.05)",
+            border: "1px solid rgba(167,139,250,0.15)",
+            borderRadius: 8,
+            padding: "14px 16px",
+            marginBottom: 16,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: PS2P,
+              fontSize: 7,
+              color: "rgba(167,139,250,0.7)",
+              letterSpacing: 1,
+              marginBottom: 2,
+            }}
+          >
+            NEW APPLICATION
+          </div>
+
+          <input
+            ref={urlInputRef}
+            type="url"
+            required
+            value={formUrl}
+            onChange={(e) => setFormUrl(e.target.value)}
+            placeholder="Job URL (required)"
+            style={{
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              fontSize: 13,
+              padding: "9px 11px",
+              background: "rgba(0,0,0,0.4)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 5,
+              color: "#fff",
+              outline: "none",
+              width: "100%",
+              boxSizing: "border-box",
+            }}
+          />
+
+          <input
+            type="text"
+            value={formCompany}
+            onChange={(e) => setFormCompany(e.target.value)}
+            placeholder="Company name (optional)"
+            style={{
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              fontSize: 13,
+              padding: "9px 11px",
+              background: "rgba(0,0,0,0.4)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 5,
+              color: "#fff",
+              outline: "none",
+              width: "100%",
+              boxSizing: "border-box",
+            }}
+          />
+
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              type="submit"
+              disabled={!formUrl.trim() || submitting}
+              style={{
+                fontFamily: PS2P,
+                fontSize: 7,
+                padding: "9px 14px",
+                background:
+                  !formUrl.trim() || submitting
+                    ? "rgba(167,139,250,0.05)"
+                    : "rgba(167,139,250,0.18)",
+                border: "1px solid rgba(167,139,250,0.25)",
+                borderRadius: 5,
+                color:
+                  !formUrl.trim() || submitting
+                    ? "rgba(167,139,250,0.3)"
+                    : "#a78bfa",
+                cursor: !formUrl.trim() || submitting ? "default" : "pointer",
+                letterSpacing: 0.5,
+              }}
+            >
+              {submitting ? "RUNNING CAST..." : "QUEUE APPLICATION"}
+            </button>
+
+            {submitStatus === "success" && (
+              <span
+                style={{
+                  fontFamily: PS2P,
+                  fontSize: 6,
+                  color: "#4ade80",
+                  letterSpacing: 0.5,
+                }}
+              >
+                APPLICATION STARTED
+              </span>
+            )}
+
+            {submitStatus === "error" && (
+              <span
+                style={{
+                  fontFamily: PS2P,
+                  fontSize: 6,
+                  color: "#f87171",
+                  letterSpacing: 0.3,
+                }}
+              >
+                {submitMessage}
+              </span>
+            )}
+          </div>
+
+          {submitStatus === "success" && (
+            <div
+              style={{
+                fontFamily: PS2P,
+                fontSize: 6,
+                color: "rgba(74,222,128,0.6)",
+                letterSpacing: 0.3,
+              }}
+            >
+              {submitMessage}
+            </div>
+          )}
+        </form>
+      )}
+    </>
+  );
+
+  if (loading) {
+    return (
+      <div>
+        {renderNewApplicationForm()}
+        <div
+          style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 8,
+            padding: 16,
+          }}
+        >
+          <p
+            style={{
+              fontFamily: PS2P,
+              fontSize: 8,
+              color: "rgba(255,255,255,0.3)",
+            }}
+          >
+            Loading jobs...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div
-        style={{
-          background: "rgba(248,113,113,0.06)",
-          border: "1px solid rgba(248,113,113,0.2)",
-          borderRadius: 8,
-          padding: 16,
-        }}
-      >
-        <p
+      <div>
+        {renderNewApplicationForm()}
+        <div
           style={{
-            fontFamily: PS2P,
-            fontSize: 8,
-            color: "#f87171",
+            background: "rgba(248,113,113,0.06)",
+            border: "1px solid rgba(248,113,113,0.2)",
+            borderRadius: 8,
+            padding: 16,
           }}
         >
-          Could not load jobs — check NOTION_TOKEN
-        </p>
+          <p
+            style={{
+              fontFamily: PS2P,
+              fontSize: 8,
+              color: "#f87171",
+            }}
+          >
+            Could not load jobs — check NOTION_TOKEN
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!data || data.total === 0) {
     return (
-      <div
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 8,
-          padding: 16,
-        }}
-      >
-        <p
+      <div>
+        {renderNewApplicationForm()}
+        <div
           style={{
-            fontFamily: PS2P,
-            fontSize: 8,
-            color: "rgba(255,255,255,0.3)",
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 8,
+            padding: 16,
           }}
         >
-          No active applications
-        </p>
+          <p
+            style={{
+              fontFamily: PS2P,
+              fontSize: 8,
+              color: "rgba(255,255,255,0.3)",
+            }}
+          >
+            No active applications
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div>
+      {renderNewApplicationForm()}
+
       {/* Stats summary row */}
       <div
         style={{

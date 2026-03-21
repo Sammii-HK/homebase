@@ -1,77 +1,212 @@
-import type { DashboardStats } from "@/types/dashboard";
+"use client";
 
-interface Props {
-  stats: DashboardStats | null;
-}
+import { Opportunity, DashboardStats } from "@/types/dashboard";
 
-const PLATFORM_ICON: Record<string, string> = {
-  threads: "TH",
+const PS2P = "'Press Start 2P', monospace";
+
+const PLATFORM_ICONS: Record<string, string> = {
   instagram: "IG",
+  threads: "TH",
   twitter: "X",
   x: "X",
   tiktok: "TT",
   linkedin: "LI",
+  facebook: "FB",
   reddit: "RD",
+  bluesky: "BS",
   unknown: "??",
 };
 
-const PLATFORM_COLOR: Record<string, string> = {
-  threads: "text-white",
-  instagram: "text-pink-400",
-  twitter: "text-blue-400",
-  x: "text-blue-400",
-  tiktok: "text-cyan-400",
-  linkedin: "text-blue-300",
-  reddit: "text-orange-400",
+const PLATFORM_COLORS: Record<string, string> = {
+  instagram: "#E1306C",
+  threads: "#fff",
+  twitter: "#1DA1F2",
+  x: "#1DA1F2",
+  tiktok: "#00f2ea",
+  linkedin: "#0A66C2",
+  facebook: "#1877F2",
+  reddit: "#FF4500",
+  bluesky: "#0085ff",
+  unknown: "#71717a",
 };
 
-export default function Opportunities({ stats }: Props) {
-  const opps = stats?.opportunities ?? [];
-  if (opps.length === 0 && stats) {
-    return (
-      <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
-        <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40 mb-2">
-          Engagement
-        </p>
-        <p className="text-[8px] md:text-xs text-white/30">No new opportunities</p>
-      </div>
-    );
-  }
-  if (!stats) return null;
+interface Props {
+  /** New call signature: pass opportunities array directly */
+  opportunities?: Opportunity[] | null;
+  token?: string;
+  /** Legacy call signature: pass full stats object */
+  stats?: DashboardStats | null;
+}
+
+export default function Opportunities({ opportunities, stats }: Props) {
+  const items = opportunities ?? stats?.opportunities ?? [];
 
   return (
-    <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
-      <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40 mb-2">
-        Engagement ({opps.length})
-      </p>
-      <div className="space-y-2">
-        {opps.map((opp) => (
-          <a
-            key={opp.id}
-            href={opp.platformUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block bg-white/[0.03] rounded p-2 active:bg-white/[0.08] transition-colors"
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span
-                className={`text-[7px] md:text-[11px] font-bold ${PLATFORM_COLOR[opp.platform] ?? "text-white/50"}`}
-              >
-                {PLATFORM_ICON[opp.platform] ?? opp.platform.slice(0, 2).toUpperCase()}
-              </span>
-              <span className="text-[8px] md:text-xs text-white/60 truncate">
-                @{opp.authorHandle}
-              </span>
-              <span className="text-[7px] md:text-[11px] text-purple-400 ml-auto shrink-0">
-                {(opp.relevanceScore * 100).toFixed(0)}%
-              </span>
-            </div>
-            <p className="text-[7px] md:text-[11px] text-white/40 line-clamp-2 leading-relaxed">
-              {opp.content}
-            </p>
-          </a>
-        ))}
+    <div
+      style={{
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 8,
+        padding: 16,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          fontFamily: PS2P,
+          fontSize: 8,
+          color: "#a78bfa",
+          letterSpacing: 1,
+          marginBottom: 2,
+        }}
+      >
+        OPPORTUNITIES
       </div>
+
+      {items.length === 0 ? (
+        <div
+          style={{
+            fontFamily: PS2P,
+            fontSize: 8,
+            color: "rgba(255,255,255,0.2)",
+            textAlign: "center",
+            padding: "16px 0",
+          }}
+        >
+          NO OPPORTUNITIES
+        </div>
+      ) : (
+        items.map((opp) => {
+          const platformColor = PLATFORM_COLORS[opp.platform] ?? PLATFORM_COLORS.unknown;
+          const platformIcon = PLATFORM_ICONS[opp.platform] ?? PLATFORM_ICONS.unknown;
+          const isThreads = opp.platform === "threads";
+          const snippet =
+            opp.content.length > 80
+              ? opp.content.slice(0, 80) + "..."
+              : opp.content;
+          const scorePercent = Math.round(Math.min(opp.relevanceScore, 1) * 100);
+
+          return (
+            <a
+              key={opp.id}
+              href={opp.platformUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "block",
+                textDecoration: "none",
+                padding: "12px 14px",
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderLeft: `3px solid ${isThreads ? "#fff" : platformColor}`,
+                borderRadius: 6,
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.background =
+                  "rgba(255,255,255,0.06)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.background =
+                  "rgba(255,255,255,0.03)";
+              }}
+            >
+              {/* Top row: platform badge + handle */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginBottom: 8,
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: PS2P,
+                    fontSize: 7,
+                    color: isThreads ? "#fff" : platformColor,
+                    background: isThreads
+                      ? "rgba(255,255,255,0.1)"
+                      : `${platformColor}20`,
+                    padding: "2px 6px",
+                    borderRadius: 3,
+                    letterSpacing: 1,
+                    border: isThreads ? "1px solid rgba(255,255,255,0.2)" : "none",
+                  }}
+                >
+                  {platformIcon}
+                </span>
+                {opp.authorHandle && (
+                  <span
+                    style={{
+                      fontFamily: PS2P,
+                      fontSize: 6,
+                      color: "rgba(255,255,255,0.45)",
+                    }}
+                  >
+                    @{opp.authorHandle.replace(/^@/, "")}
+                  </span>
+                )}
+              </div>
+
+              {/* Content snippet */}
+              <div
+                style={{
+                  fontFamily: PS2P,
+                  fontSize: 7,
+                  color: "rgba(255,255,255,0.6)",
+                  lineHeight: 1.6,
+                  marginBottom: 10,
+                  wordBreak: "break-word",
+                }}
+              >
+                {snippet}
+              </div>
+
+              {/* Relevance score bar */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    background: "rgba(255,255,255,0.08)",
+                    borderRadius: 2,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${scorePercent}%`,
+                      height: "100%",
+                      background:
+                        scorePercent >= 75
+                          ? "#4ade80"
+                          : scorePercent >= 50
+                          ? "#f59e0b"
+                          : "#60a5fa",
+                      borderRadius: 2,
+                    }}
+                  />
+                </div>
+                <span
+                  style={{
+                    fontFamily: PS2P,
+                    fontSize: 6,
+                    color: "rgba(255,255,255,0.3)",
+                    minWidth: 28,
+                    textAlign: "right",
+                  }}
+                >
+                  {scorePercent}%
+                </span>
+              </div>
+            </a>
+          );
+        })
+      )}
     </div>
   );
 }

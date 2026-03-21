@@ -65,7 +65,7 @@ function formatScheduleTime(dateStr: string): string {
   return `${day} ${time} UTC (${et} ET)`;
 }
 
-function ApprovalCard({ item, token, onComplete }: { item: ApprovalItem; token: string; onComplete: () => void }) {
+function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalItem; token: string; onComplete: () => void; onDismiss?: (id: string) => void }) {
   const [state, setState] = useState<ActionState>("idle");
   const [scheduledDate, setScheduledDate] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -160,6 +160,20 @@ function ApprovalCard({ item, token, onComplete }: { item: ApprovalItem; token: 
     setError("");
   };
 
+  const handleDismissOrbit = async () => {
+    setState("loading");
+    setError("");
+    try {
+      await fetch(`/api/approval-queue/${item.id}/dismiss-orbit`, {
+        method: "POST",
+        headers: authHeaders(token),
+      });
+    } catch {
+      // Best effort — optimistic removal regardless
+    }
+    onDismiss?.(item.id);
+  };
+
   if (state === "done") {
     return (
       <div style={{
@@ -222,6 +236,26 @@ function ApprovalCard({ item, token, onComplete }: { item: ApprovalItem; token: 
         <span style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>
           {formatRelativeTime(item.createdAt)}
         </span>
+        {item.source === "orbit" && onDismiss && (
+          <button
+            onClick={handleDismissOrbit}
+            disabled={state === "loading"}
+            title="Dismiss this Orbit draft"
+            style={{
+              fontFamily: PS2P,
+              fontSize: 9,
+              lineHeight: 1,
+              padding: "2px 6px",
+              background: "transparent",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 3,
+              color: "rgba(255,255,255,0.35)",
+              cursor: state === "loading" ? "wait" : "pointer",
+            }}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Content preview */}
@@ -420,6 +454,8 @@ interface Props {
 type ApproveAllState = "idle" | "confirming" | "running" | "done";
 type AutoApproveState = "idle" | "running" | "done";
 
+type ClearOrbitState = "idle" | "running" | "done";
+
 export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
   const token = tokenProp ?? (typeof window !== "undefined" ? localStorage.getItem("homebase_token") ?? "" : "");
   const [items, setItems] = useState<ApprovalItem[]>([]);
@@ -431,6 +467,7 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
   const [approveAllSummary, setApproveAllSummary] = useState<string | null>(null);
   const [autoApproveState, setAutoApproveState] = useState<AutoApproveState>("idle");
   const [autoApproveSummary, setAutoApproveSummary] = useState<string | null>(null);
+  const [clearOrbitState, setClearOrbitState] = useState<ClearOrbitState>("idle");
 
   const fetchQueue = useCallback(async () => {
     try {
@@ -528,6 +565,27 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
     }, 2500);
   };
 
+  const handleDismissOrbitItem = (id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleClearOrbitDrafts = async () => {
+    const orbitItems = items.filter((item) => item.source === "orbit");
+    if (orbitItems.length === 0) return;
+    setClearOrbitState("running");
+    await Promise.allSettled(
+      orbitItems.map((item) =>
+        fetch(`/api/approval-queue/${item.id}/dismiss-orbit`, {
+          method: "POST",
+          headers: authHeaders(token),
+        })
+      )
+    );
+    setItems((prev) => prev.filter((item) => item.source !== "orbit"));
+    setClearOrbitState("done");
+    setTimeout(() => setClearOrbitState("idle"), 2000);
+  };
+
   // Badge count for external use
   const count = items.length;
 
@@ -553,7 +611,13 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
         ) : (
           <div className="space-y-2">
             {items.slice(0, 3).map((item) => (
-              <ApprovalCard key={item.id} item={item} token={token} onComplete={handleComplete} />
+              <ApprovalCard
+                key={item.id}
+                item={item}
+                token={token}
+                onComplete={handleComplete}
+                onDismiss={item.source === "orbit" ? handleDismissOrbitItem : undefined}
+              />
             ))}
             {count > 3 && (
               <div className="text-[7px] md:text-[11px] text-white/25 text-center">
@@ -742,8 +806,47 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
         </div>
       )}
 
+      {/* Clear Orbit Drafts button — shown when there are orbit items */}
+      {!loading && !error && items.some((item) => item.source === "orbit") && (
+        <button
+          onClick={handleClearOrbitDrafts}
+          disabled={clearOrbitState === "running"}
+          style={{
+            fontFamily: PS2P,
+            fontSize: 8,
+            padding: "10px 14px",
+            background: clearOrbitState === "done"
+              ? "rgba(245,158,11,0.08)"
+              : clearOrbitState === "running"
+              ? "rgba(245,158,11,0.04)"
+              : "rgba(245,158,11,0.1)",
+            border: "1px solid rgba(245,158,11,0.3)",
+            borderRadius: 4,
+            color: clearOrbitState === "running"
+              ? "rgba(245,158,11,0.4)"
+              : clearOrbitState === "done"
+              ? "#4ade80"
+              : "#f59e0b",
+            cursor: clearOrbitState === "running" ? "wait" : "pointer",
+            alignSelf: "flex-start",
+          }}
+        >
+          {clearOrbitState === "running"
+            ? "CLEARING..."
+            : clearOrbitState === "done"
+            ? "CLEARED"
+            : "CLEAR ORBIT DRAFTS"}
+        </button>
+      )}
+
       {items.map((item) => (
-        <ApprovalCard key={item.id} item={item} token={token} onComplete={handleComplete} />
+        <ApprovalCard
+          key={item.id}
+          item={item}
+          token={token}
+          onComplete={handleComplete}
+          onDismiss={item.source === "orbit" ? handleDismissOrbitItem : undefined}
+        />
       ))}
     </div>
   );

@@ -16,6 +16,8 @@ import AlertStrip from "./AlertStrip";
 import FloorPlan from "./FloorPlan";
 import CastQueue from "./CastQueue";
 import QuickActions from "./QuickActions";
+import SocialStats from "./SocialStats";
+import Opportunities from "./Opportunities";
 import type { Alert } from "@/app/api/alerts/route";
 import { registerPush } from "@/lib/push";
 import {
@@ -778,6 +780,7 @@ export default function Dashboard() {
                   <div className="hb-status-right" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     <ServiceHealth stats={stats} heartbeat={heartbeat} />
                     <ContentPipeline stats={stats} />
+                    <SocialStats token={token} />
                     <DeployStatus token={token} />
                   </div>
                 </div>
@@ -838,6 +841,20 @@ export default function Dashboard() {
                       ENGAGEMENT QUEUE
                     </div>
                     <EngagementQueue token={token} />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontFamily: PS2P,
+                        fontSize: 10,
+                        color: "#a78bfa",
+                        letterSpacing: 1,
+                        marginBottom: 12,
+                      }}
+                    >
+                      OPPORTUNITIES
+                    </div>
+                    <Opportunities opportunities={stats?.opportunities ?? null} token={token} />
                   </div>
                 </div>
               </div>

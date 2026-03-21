@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
   if (apiKey) {
     try {
       const res = await fetch(`${spellcastUrl}/api/engagement?status=unread&limit=20`, {
-        headers: { "x-api-key": apiKey },
+        headers: { Authorization: `Bearer ${apiKey}` },
         signal: AbortSignal.timeout(5000),
         cache: "no-store",
       });
@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
               const suggestRes = await fetch(
                 `${spellcastUrl}/api/engagement/${id}/ai-reply?tone=helpful&accountSetId=${accountSetId}`,
                 {
-                  headers: { "x-api-key": apiKey },
+                  headers: { Authorization: `Bearer ${apiKey}` },
                   signal: AbortSignal.timeout(8000),
                   cache: "no-store",
                 }

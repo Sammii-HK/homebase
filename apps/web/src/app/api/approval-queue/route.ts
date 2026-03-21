@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAuth } from "@/lib/auth";
+import { readFile } from "fs/promises";
+import path from "path";
 
 export const dynamic = "force-dynamic";
+
+const DISMISSED_FILE = path.join(process.cwd(), "src/app/data/dismissed-orbit-posts.json");
+
+async function loadDismissedIds(): Promise<Set<string>> {
+  try {
+    const raw = await readFile(DISMISSED_FILE, "utf-8");
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+}
 
 const AUTO_APPROVE_SCORE_THRESHOLD = 82;
 
@@ -60,7 +74,7 @@ async function approvePostInSpellcast(
 ): Promise<void> {
   // Fetch currently scheduled times to pick next available slot
   const scheduledRes = await fetch(`${spellcastUrl}/api/posts?status=scheduled&limit=200`, {
-    headers: { "x-api-key": apiKey },
+    headers: { Authorization: `Bearer ${apiKey}` },
     signal: AbortSignal.timeout(5000),
     cache: "no-store",
   });
@@ -114,6 +128,8 @@ export async function GET(req: NextRequest) {
   const apiKey = process.env.SPELLCAST_API_KEY;
   const spellcastUrl = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
 
+  const dismissedIds = await loadDismissedIds();
+
   const items: ApprovalItem[] = [];
   let autoApproved = 0;
 
@@ -121,7 +137,7 @@ export async function GET(req: NextRequest) {
   if (apiKey) {
     try {
       const res = await fetch(`${spellcastUrl}/api/posts?status=pending_review`, {
-        headers: { "x-api-key": apiKey },
+        headers: { Authorization: `Bearer ${apiKey}` },
         signal: AbortSignal.timeout(8000),
         cache: "no-store",
       });
@@ -140,7 +156,7 @@ export async function GET(req: NextRequest) {
           if (score === undefined && postId) {
             try {
               const fullRes = await fetch(`${spellcastUrl}/api/posts/${postId}`, {
-                headers: { "x-api-key": apiKey },
+                headers: { Authorization: `Bearer ${apiKey}` },
                 signal: AbortSignal.timeout(4000),
                 cache: "no-store",
               });
@@ -200,9 +216,11 @@ export async function GET(req: NextRequest) {
         : data.items ?? data.content ?? [];
 
       for (const item of orbitItems) {
+        const content = String(item.content ?? item.title ?? "").trim();
+        if (!content) continue; // skip blank posts
         items.push({
           id: `orbit-${item.id ?? Math.random().toString(36).slice(2)}`,
-          content: String(item.content ?? item.title ?? ""),
+          content,
           platform: String(item.platform ?? "unknown"),
           accountName: item.persona ?? "Orbit",
           createdAt: String(item.createdAt ?? new Date().toISOString()),
@@ -226,13 +244,17 @@ export async function GET(req: NextRequest) {
       const draftContent = data?.queue?.["draft-content"];
       if (draftContent?.exists && Array.isArray(draftContent.content) && draftContent.content.length > 0) {
         const drafts: OrbitDraftContent[] = draftContent.content;
+        // Use Orbit state timestamp as stable reference for all drafts
+        const orbitStateTime = data?.compiled_at ?? data?.ts ?? new Date().toISOString();
         drafts.forEach((draft, index) => {
+          const content = (draft.content ?? "").trim();
+          if (!content) return; // skip blank drafts
           const item: ApprovalItem = {
             id: `orbit-draft-${draft.id ?? index}`,
-            content: draft.content ?? "",
+            content,
             platform: draft.platform ?? "unknown",
             accountName: draft.account_name ?? "Orbit",
-            createdAt: new Date().toISOString(),
+            createdAt: orbitStateTime,
             source: "orbit",
           };
           if (Array.isArray(draft.thread_slides) && draft.thread_slides.length > 0) {
@@ -246,8 +268,13 @@ export async function GET(req: NextRequest) {
     // Orbit may be offline - that's fine
   }
 
-  // Sort by created date, newest first
-  items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // Filter out dismissed orbit items
+  const filteredItems = items.filter(
+    (item) => item.source !== "orbit" || !dismissedIds.has(item.id)
+  );
 
-  return NextResponse.json({ items, count: items.length, autoApproved });
+  // Sort by created date, newest first
+  filteredItems.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  return NextResponse.json({ items: filteredItems, count: filteredItems.length, autoApproved });
 }

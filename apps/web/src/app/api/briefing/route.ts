@@ -37,157 +37,46 @@ export async function GET(req: NextRequest) {
   if (denied) return denied;
 
   const orbitUrl = process.env.ORBIT_URL ?? "http://localhost:3001";
-  const lunaryUrl = process.env.LUNARY_URL ?? "https://lunary.app";
-  const lunaryKey = process.env.LUNARY_ADMIN_API_KEY;
-  const spellcastUrl = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
-  const spellcastKey = process.env.SPELLCAST_API_KEY;
-
   const today = new Date().toISOString().slice(0, 10);
 
   try {
-    // Phase 1: Try Orbit briefing (short timeout, may not exist)
-    let orbitBriefing: Record<string, unknown> | null = null;
-    try {
-      const orbitRes = await fetch(`${orbitUrl}/api/briefing`, {
+    // Pull from /api/stats (already correct) and Orbit briefing in parallel
+    const authHeader = req.headers.get("authorization") ?? "";
+    const cookieHeader = req.headers.get("cookie") ?? "";
+
+    const [statsRes, orbitBriefingRes] = await Promise.all([
+      fetch(`http://localhost:${process.env.PORT ?? 3005}/api/stats`, {
+        headers: {
+          ...(authHeader ? { authorization: authHeader } : {}),
+          ...(cookieHeader ? { cookie: cookieHeader } : {}),
+        },
+        signal: AbortSignal.timeout(8000),
+        cache: "no-store",
+      }).catch(() => null),
+      fetch(`${orbitUrl}/api/briefing`, {
         signal: AbortSignal.timeout(3000),
         cache: "no-store",
-      });
-      if (orbitRes.ok) {
-        orbitBriefing = await orbitRes.json();
-      }
-    } catch {
-      // Orbit not available — that's fine
-    }
+      }).catch(() => null),
+    ]);
 
-    // Phase 2: Fetch live data in parallel
-    const lunaryHeaders = lunaryKey
-      ? { Authorization: `Bearer ${lunaryKey}` }
-      : undefined;
-    const spellcastHeaders = spellcastKey
-      ? { Authorization: `Bearer ${spellcastKey}` }
-      : undefined;
+    const stats = statsRes?.ok ? await statsRes.json() : null;
+    const orbitBriefing: Record<string, unknown> | null =
+      orbitBriefingRes?.ok ? await orbitBriefingRes.json() : null;
 
-    const [lunaryRes, pendingRes, scheduledRes, failedRes, engagementRes] =
-      await Promise.all([
-        // Lunary stats
-        lunaryHeaders
-          ? fetch(`${lunaryUrl}/api/internal/homebase-stats`, {
-              headers: lunaryHeaders,
-              signal: AbortSignal.timeout(5000),
-              cache: "no-store",
-            }).catch(() => null)
-          : Promise.resolve(null),
+    // Pull values from stats (already correct Spellcast data)
+    const pendingReview: number = stats?.content?.pendingReview ?? 0;
+    const scheduledToday: number = stats?.content?.scheduledToday ?? 0;
+    const failedPosts: number = stats?.content?.failedPosts ?? 0;
+    const unread: number = stats?.engagement?.unread ?? 0;
+    const dau: number = stats?.lunary?.activeToday ?? 0;
+    const mau: number = stats?.lunary?.mau ?? 0;
+    const mrr: number = stats?.lunary?.mrr ?? 0;
 
-        // Spellcast: pending review
-        spellcastHeaders
-          ? fetch(
-              `${spellcastUrl}/posts?status=pending_review&limit=50`,
-              {
-                headers: spellcastHeaders,
-                signal: AbortSignal.timeout(5000),
-                cache: "no-store",
-              }
-            ).catch(() => null)
-          : Promise.resolve(null),
-
-        // Spellcast: scheduled
-        spellcastHeaders
-          ? fetch(`${spellcastUrl}/posts?status=scheduled&limit=50`, {
-              headers: spellcastHeaders,
-              signal: AbortSignal.timeout(5000),
-              cache: "no-store",
-            }).catch(() => null)
-          : Promise.resolve(null),
-
-        // Spellcast: failed
-        spellcastHeaders
-          ? fetch(`${spellcastUrl}/posts?status=failed&limit=10`, {
-              headers: spellcastHeaders,
-              signal: AbortSignal.timeout(5000),
-              cache: "no-store",
-            }).catch(() => null)
-          : Promise.resolve(null),
-
-        // Spellcast: engagement stats
-        spellcastHeaders
-          ? fetch(`${spellcastUrl}/engagement/stats`, {
-              headers: spellcastHeaders,
-              signal: AbortSignal.timeout(5000),
-              cache: "no-store",
-            }).catch(() => null)
-          : Promise.resolve(null),
-      ]);
-
-    // Parse Lunary metrics
-    let dau = 0;
-    let mau = 0;
-    let mrr = 0;
-    if (lunaryRes?.ok) {
-      const data = await lunaryRes.json();
-      dau = Number(data.activeToday ?? data.dau ?? 0);
-      mau = Number(data.mau ?? 0);
-      mrr = Number(data.mrr ?? 0);
-    }
-
-    // Parse pending review — capture platform breakdown too
-    let pendingReview = 0;
+    // Platform breakdown from failed post details
     const pendingPlatforms: string[] = [];
-    let pendingNextTime: string | null = null;
-    if (pendingRes?.ok) {
-      const data = await pendingRes.json();
-      const arr: Array<{ platform?: string; scheduledFor?: string; scheduledAt?: string }> =
-        Array.isArray(data) ? data : data.posts ?? data.data ?? [];
-      pendingReview = arr.length;
-      const platformSet = new Set<string>();
-      for (const p of arr) {
-        if (p.platform) platformSet.add(p.platform);
-        const t = p.scheduledFor ?? p.scheduledAt;
-        if (t && !pendingNextTime) pendingNextTime = t;
-      }
-      pendingPlatforms.push(...Array.from(platformSet));
-    }
-
-    // Parse scheduled posts — count today's only, find next post time
-    let scheduledToday = 0;
-    let nextScheduledTime: string | null = null;
+    const pendingNextTime: string | null = null;
     const postsByPlatform: Record<string, number> = {};
-    if (scheduledRes?.ok) {
-      const data = await scheduledRes.json();
-      const arr: Array<{ scheduledFor?: string; scheduledAt?: string; platform?: string }> =
-        Array.isArray(data) ? data : data.posts ?? data.data ?? [];
-      const todayPosts = arr.filter((p) =>
-        (p.scheduledFor ?? p.scheduledAt ?? "").startsWith(today)
-      );
-      scheduledToday = todayPosts.length;
-      // Sort to find next post time
-      const sorted = todayPosts
-        .map((p) => p.scheduledFor ?? p.scheduledAt ?? "")
-        .filter(Boolean)
-        .sort();
-      const now = new Date().toISOString();
-      nextScheduledTime = sorted.find((t) => t > now) ?? sorted[0] ?? null;
-      // Platform counts
-      for (const p of todayPosts) {
-        if (p.platform) {
-          postsByPlatform[p.platform] = (postsByPlatform[p.platform] ?? 0) + 1;
-        }
-      }
-    }
-
-    // Parse failed posts count
-    let failedPosts = 0;
-    if (failedRes?.ok) {
-      const data = await failedRes.json();
-      const arr = Array.isArray(data) ? data : data.posts ?? data.data ?? [];
-      failedPosts = arr.length;
-    }
-
-    // Parse engagement stats
-    let unread = 0;
-    if (engagementRes?.ok) {
-      const data = await engagementRes.json();
-      unread = Number(data.unread ?? data.total ?? 0);
-    }
+    const nextScheduledTime: string | null = null;
 
     // Extract Orbit-specific fields if available
     const orbitData = orbitBriefing as Record<string, unknown> | null;

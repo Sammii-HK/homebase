@@ -238,7 +238,7 @@ export default function ChatPanel({ token }: { token: string }) {
           title={ttsEnabled ? "Mute voice" : "Unmute voice"}
           style={{
             fontFamily: PS2P,
-            fontSize: 6,
+            fontSize: 7,
             padding: "4px 8px",
             background: ttsEnabled
               ? "rgba(167,139,250,0.1)"
@@ -269,7 +269,7 @@ export default function ChatPanel({ token }: { token: string }) {
             <div
               style={{
                 fontFamily: PS2P,
-                fontSize: 8,
+                fontSize: 9,
                 color: "rgba(255,255,255,0.25)",
                 textAlign: "center",
                 marginBottom: 20,
@@ -284,8 +284,8 @@ export default function ChatPanel({ token }: { token: string }) {
                   onClick={() => setInput(cmd)}
                   style={{
                     fontFamily: PS2P,
-                    fontSize: 7,
-                    padding: "10px 12px",
+                    fontSize: 8,
+                    padding: "11px 14px",
                     background: "rgba(167,139,250,0.06)",
                     border: "1px solid rgba(167,139,250,0.15)",
                     borderRadius: 6,
@@ -319,7 +319,7 @@ export default function ChatPanel({ token }: { token: string }) {
               <div
                 style={{
                   maxWidth: "85%",
-                  padding: "10px 12px",
+                  padding: "14px 12px",
                   borderRadius:
                     m.role === "user"
                       ? "8px 8px 2px 8px"
@@ -333,7 +333,7 @@ export default function ChatPanel({ token }: { token: string }) {
                       ? "1px solid rgba(167,139,250,0.2)"
                       : "1px solid rgba(255,255,255,0.08)",
                   fontFamily: "system-ui, -apple-system, sans-serif",
-                  fontSize: 13,
+                  fontSize: 15,
                   lineHeight: 1.6,
                   color:
                     m.role === "user"
@@ -413,7 +413,7 @@ export default function ChatPanel({ token }: { token: string }) {
             title={isListening ? "Stop listening" : "Speak"}
             style={{
               fontFamily: PS2P,
-              fontSize: 12,
+              fontSize: 16,
               padding: "8px 10px",
               background: isListening
                 ? "rgba(239,68,68,0.15)"
@@ -440,8 +440,8 @@ export default function ChatPanel({ token }: { token: string }) {
           style={{
             flex: 1,
             fontFamily: "system-ui, -apple-system, sans-serif",
-            fontSize: 13,
-            padding: "9px 11px",
+            fontSize: 15,
+            padding: "11px 13px",
             background: "rgba(0,0,0,0.4)",
             border: `1px solid ${isListening ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`,
             borderRadius: 6,
@@ -458,7 +458,7 @@ export default function ChatPanel({ token }: { token: string }) {
           disabled={!input.trim() || isLoading}
           style={{
             fontFamily: PS2P,
-            fontSize: 7,
+            fontSize: 8,
             padding: "10px 12px",
             background:
               !input.trim() || isLoading

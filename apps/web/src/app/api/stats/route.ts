@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAuth } from "@/lib/auth";
+import { readMetricsSnapshot } from "@/lib/metrics-snapshot";
 
 export const dynamic = "force-dynamic";
 
@@ -53,9 +54,38 @@ async function getLunary() {
       next: { revalidate: 300 },
     });
     if (!res.ok) throw new Error(`${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    // If API returned zeros (Cloudflare block), fall back to heartbeat snapshot
+    if (!data.mau && !data.activeToday) {
+      const snapshot = readMetricsSnapshot();
+      if (snapshot && (snapshot.mau || snapshot.dau)) {
+        return {
+          mau: snapshot.mau,
+          mrr: snapshot.mrr,
+          subscribers: data.subscribers ?? 0,
+          activeToday: snapshot.dau,
+          wau: snapshot.wau,
+          signups7d: snapshot.signups7d,
+          _source: "heartbeat-snapshot",
+        };
+      }
+    }
+    return data;
   } catch (e) {
     console.error("[homebase] lunary fetch failed:", e);
+    // Fallback to heartbeat snapshot on error
+    const snapshot = readMetricsSnapshot();
+    if (snapshot) {
+      return {
+        mau: snapshot.mau,
+        mrr: snapshot.mrr,
+        subscribers: 0,
+        activeToday: snapshot.dau,
+        wau: snapshot.wau,
+        signups7d: snapshot.signups7d,
+        _source: "heartbeat-snapshot",
+      };
+    }
     return { mau: 0, mrr: 0, subscribers: 0, activeToday: 0 };
   }
 }
