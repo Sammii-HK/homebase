@@ -18,7 +18,7 @@ check() {
 # Local Mac services only (cloud services like Orbit are checked via their public URLs)
 n8n=$(check n8n http://localhost:5678/healthz)
 brandApi=$(check brandApi http://localhost:9002/health)
-whisper=$(check whisper http://localhost:9000/health)
+whisper=$(check whisper http://localhost:9001/health)
 
 # Docker containers (comma-separated name:status)
 docker_status=$(docker ps --format '{{.Names}}:{{.Status}}' 2>/dev/null | tr '\n' ',' | sed 's/,$//')
@@ -86,5 +86,20 @@ if [ -n "$cast_response" ]; then
         fi
       fi
     done
+  fi
+fi
+
+# --- Morning briefing push notification ---
+# Only fires between 07:00 and 07:10 UTC to avoid duplicate sends
+current_hour=$(date -u +%H)
+current_min=$(date -u +%M)
+if [ "$current_hour" = "07" ] && [ "$current_min" -lt 10 ]; then
+  briefing_result=$(curl -sf --max-time 10 \
+    -H "Authorization: Bearer ${HOMEBASE_SECRET}" \
+    "${HOMEBASE_URL}/api/push/briefing" 2>&1)
+  if [ $? -eq 0 ]; then
+    echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) [briefing-push] ok: ${briefing_result}" >> /tmp/briefing-push.log
+  else
+    echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) [briefing-push] failed: ${briefing_result}" >> /tmp/briefing-push.log
   fi
 fi
