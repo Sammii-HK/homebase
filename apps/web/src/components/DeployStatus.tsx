@@ -88,28 +88,28 @@ export default function DeployStatus({ token }: Props) {
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-[8px] uppercase tracking-wider text-white/40">
+        <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40">
           Deploys
         </p>
         <div className="flex items-center gap-2">
           {buildingCount > 0 && (
             <span
-              className="text-[7px] font-bold uppercase animate-pulse"
+              className="text-[7px] md:text-[11px] font-bold uppercase animate-pulse"
               style={{ color: STATE_COLOURS.BUILDING }}
             >
               {buildingCount} building
             </span>
           )}
-          <span className="text-[8px] text-white/30">{deploys.length}</span>
+          <span className="text-[8px] md:text-xs text-white/30">{deploys.length}</span>
         </div>
       </div>
 
       {loading && deploys.length === 0 && (
-        <p className="text-[8px] text-white/20">Loading...</p>
+        <p className="text-[8px] md:text-xs text-white/20">Loading...</p>
       )}
 
       {!loading && deploys.length === 0 && (
-        <p className="text-[8px] text-white/20">No deployments</p>
+        <p className="text-[8px] md:text-xs text-white/20">No deployments</p>
       )}
 
       <div className="flex flex-col gap-1.5">
@@ -135,11 +135,11 @@ export default function DeployStatus({ token }: Props) {
               <div className="flex-1 min-w-0">
                 {/* Project + state badge */}
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[8px] font-bold text-white/80 uppercase">
+                  <span className="text-[8px] md:text-xs font-bold text-white/80 uppercase">
                     {d.project}
                   </span>
                   <span
-                    className="text-[6px] font-bold uppercase px-1 py-px rounded"
+                    className="text-[6px] md:text-[10px] md:text-sm font-bold uppercase px-1 py-px rounded"
                     style={{
                       color: colour,
                       backgroundColor: `${colour}20`,
@@ -148,7 +148,7 @@ export default function DeployStatus({ token }: Props) {
                     {label}
                   </span>
                   {d.branch && (
-                    <span className="text-[6px] text-white/25 truncate">
+                    <span className="text-[6px] md:text-[10px] md:text-sm text-white/25 truncate">
                       {d.branch}
                     </span>
                   )}
@@ -156,14 +156,14 @@ export default function DeployStatus({ token }: Props) {
 
                 {/* Commit message */}
                 {d.commitMessage && (
-                  <p className="text-[7px] text-white/40 truncate leading-tight mt-0.5">
+                  <p className="text-[7px] md:text-[11px] text-white/40 truncate leading-tight mt-0.5">
                     {truncate(d.commitMessage, 60)}
                   </p>
                 )}
               </div>
 
               {/* Time */}
-              <span className="text-[7px] text-white/25 shrink-0 mt-0.5">
+              <span className="text-[7px] md:text-[11px] text-white/25 shrink-0 mt-0.5">
                 {relativeTime(d.createdAt)}
               </span>
             </a>

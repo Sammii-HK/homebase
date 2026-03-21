@@ -172,6 +172,79 @@ export function drawSky(
     }
   }
 
+  // Sun — arcs across the sky during daytime (6am-6pm)
+  if (hour >= 5.5 && hour <= 18.5 && skyH > 10) {
+    // Progress: 0 at sunrise (6am), 0.5 at zenith (noon), 1 at sunset (6pm)
+    const sunProgress = Math.max(0, Math.min(1, (hour - 6) / 12));
+    const sunRadius = 8 * zoom;
+
+    // Position: arc from left to right
+    const sunX = panX + w * (0.15 + sunProgress * 0.7);
+    const arcH = skyH * 0.85;
+    const sunY = 4 + arcH * (1 - 4 * sunProgress * (1 - sunProgress));
+
+    // Fade in/out near horizon
+    const sunAlpha = sunProgress < 0.05 ? sunProgress / 0.05
+      : sunProgress > 0.95 ? (1 - sunProgress) / 0.05
+      : 1;
+    // Also handle the pre-rise/post-set fade (5.5-6 and 18-18.5)
+    const edgeAlpha = hour < 6 ? (hour - 5.5) / 0.5
+      : hour > 18 ? (18.5 - hour) / 0.5
+      : 1;
+    const alpha = Math.max(0, Math.min(1, sunAlpha * edgeAlpha));
+
+    // Colour shifts: orange/red near horizon, yellow-white at zenith
+    const zenithDist = Math.abs(sunProgress - 0.5) * 2; // 0 at noon, 1 at edges
+    const r = Math.round(255);
+    const g = Math.round(200 + (1 - zenithDist) * 55); // 200-255
+    const b = Math.round(50 + (1 - zenithDist) * 150); // 50-200
+    const sunColor = `rgb(${r},${g},${b})`;
+
+    // Warm glow halo
+    ctx.globalAlpha = alpha * 0.12;
+    const glowGrad = ctx.createRadialGradient(sunX, Math.max(4, sunY), 0, sunX, Math.max(4, sunY), sunRadius * 4);
+    glowGrad.addColorStop(0, sunColor);
+    glowGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.arc(sunX, Math.max(4, sunY), sunRadius * 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sun disc
+    ctx.globalAlpha = alpha;
+    const discGrad = ctx.createRadialGradient(sunX, Math.max(4, sunY), 0, sunX, Math.max(4, sunY), sunRadius);
+    discGrad.addColorStop(0, "#fffff0");
+    discGrad.addColorStop(0.6, sunColor);
+    discGrad.addColorStop(1, `rgba(${r},${g - 50},${Math.max(0, b - 50)},0.3)`);
+    ctx.fillStyle = discGrad;
+    ctx.beginPath();
+    ctx.arc(sunX, Math.max(4, sunY), sunRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sun rays — short radiating lines that rotate slowly
+    const rayCount = 8;
+    const rayLen = sunRadius * 1.8;
+    const rayRotation = time * 0.15; // slow rotation
+    ctx.strokeStyle = sunColor;
+    ctx.lineWidth = Math.max(1, zoom * 0.5);
+    ctx.globalAlpha = alpha * 0.3;
+    for (let i = 0; i < rayCount; i++) {
+      const angle = rayRotation + (i / rayCount) * Math.PI * 2;
+      const inner = sunRadius * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(
+        sunX + Math.cos(angle) * inner,
+        Math.max(4, sunY) + Math.sin(angle) * inner,
+      );
+      ctx.lineTo(
+        sunX + Math.cos(angle) * rayLen,
+        Math.max(4, sunY) + Math.sin(angle) * rayLen,
+      );
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // Clouds — in the sky band above the world
   if (avgBright > 20 && skyH > 10) {
     const cloudAlpha = Math.min(0.9, avgBright / 120);

@@ -11,6 +11,7 @@ interface ApprovalItem {
   accountName: string;
   createdAt: string;
   source: "spellcast" | "orbit";
+  threadSlides?: string[];
 }
 
 const PLATFORM_ICONS: Record<string, string> = {
@@ -68,6 +69,7 @@ function ApprovalCard({ item, token, onComplete }: { item: ApprovalItem; token: 
   const [scheduledDate, setScheduledDate] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState(false);
 
   const platformColor = PLATFORM_COLORS[item.platform] ?? PLATFORM_COLORS.unknown;
   const platformIcon = PLATFORM_ICONS[item.platform] ?? PLATFORM_ICONS.unknown;
@@ -239,8 +241,40 @@ function ApprovalCard({ item, token, onComplete }: { item: ApprovalItem; token: 
         marginBottom: 14,
         wordBreak: "break-word",
       }}>
-        {item.content.length > 280 ? item.content.slice(0, 280) + "..." : item.content}
+        {item.content.length > 280 && !expanded
+          ? (
+            <>
+              {item.content.slice(0, 280)}...
+              <button
+                onClick={() => setExpanded(true)}
+                style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.3)", cursor: "pointer", background: "none", border: "none", marginLeft: 4 }}
+              >
+                [expand]
+              </button>
+            </>
+          )
+          : (
+            <>
+              {item.content}
+              {item.content.length > 280 && (
+                <button
+                  onClick={() => setExpanded(false)}
+                  style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.3)", cursor: "pointer", background: "none", border: "none", marginLeft: 4 }}
+                >
+                  [collapse]
+                </button>
+              )}
+            </>
+          )
+        }
       </div>
+
+      {/* Thread slides indicator */}
+      {item.threadSlides && item.threadSlides.length > 0 && (
+        <div style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.3)", marginTop: 4, marginBottom: 10 }}>
+          +{item.threadSlides.length} thread slides
+        </div>
+      )}
 
       {/* Error display */}
       {error && (
@@ -391,11 +425,20 @@ interface Props {
   compact?: boolean;
 }
 
+type ApproveAllState = "idle" | "confirming" | "running" | "done";
+type AutoApproveState = "idle" | "running" | "done";
+
 export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
   const token = tokenProp ?? (typeof window !== "undefined" ? localStorage.getItem("homebase_token") ?? "" : "");
   const [items, setItems] = useState<ApprovalItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [autoApprovedCount, setAutoApprovedCount] = useState(0);
+  const [approveAllState, setApproveAllState] = useState<ApproveAllState>("idle");
+  const [approveAllProgress, setApproveAllProgress] = useState<{ current: number; total: number } | null>(null);
+  const [approveAllSummary, setApproveAllSummary] = useState<string | null>(null);
+  const [autoApproveState, setAutoApproveState] = useState<AutoApproveState>("idle");
+  const [autoApproveSummary, setAutoApproveSummary] = useState<string | null>(null);
 
   const fetchQueue = useCallback(async () => {
     try {
@@ -405,6 +448,7 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       setItems(data.items ?? []);
+      setAutoApprovedCount(data.autoApproved ?? 0);
       setError("");
     } catch (e) {
       setError((e as Error).message);
@@ -425,6 +469,79 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
     setTimeout(fetchQueue, 500);
   };
 
+  const handleApproveAllClick = () => {
+    if (approveAllState === "confirming") {
+      // Cancel
+      setApproveAllState("idle");
+      return;
+    }
+    setApproveAllState("confirming");
+  };
+
+  const handleApproveAllConfirm = async () => {
+    const snapshot = [...items];
+    const total = snapshot.length;
+    setApproveAllState("running");
+    setApproveAllProgress({ current: 0, total });
+    setApproveAllSummary(null);
+
+    let approved = 0;
+    for (let i = 0; i < snapshot.length; i++) {
+      setApproveAllProgress({ current: i + 1, total });
+      try {
+        const res = await fetch(`/api/approval-queue/${snapshot[i].id}/approve`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        });
+        if (res.ok) approved++;
+      } catch {
+        // Continue even if one fails
+      }
+    }
+
+    setApproveAllState("done");
+    setApproveAllSummary(`APPROVED ${approved}/${total}`);
+    setTimeout(() => {
+      setApproveAllState("idle");
+      setApproveAllProgress(null);
+      setApproveAllSummary(null);
+      fetchQueue();
+    }, 2000);
+  };
+
+  const handleAutoApprove = async () => {
+    setAutoApproveState("running");
+    setAutoApproveSummary(null);
+    try {
+      const res = await fetch("/api/approval-queue/auto-approve", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ threshold: 80 }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAutoApproveSummary(`APPROVED ${data.approved} POSTS`);
+      } else {
+        setAutoApproveSummary("AUTO-APPROVE FAILED");
+      }
+    } catch {
+      setAutoApproveSummary("NETWORK ERROR");
+    }
+    setAutoApproveState("done");
+    setTimeout(() => {
+      setAutoApproveState("idle");
+      setAutoApproveSummary(null);
+      fetchQueue();
+    }, 2500);
+  };
+
   // Badge count for external use
   const count = items.length;
 
@@ -432,28 +549,28 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
     return (
       <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[8px] uppercase tracking-wider text-white/40">
+          <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40">
             Approval Queue
           </p>
           {count > 0 && (
-            <span className="text-[8px] bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded px-1.5 py-0.5">
+            <span className="text-[8px] md:text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded px-1.5 py-0.5">
               {count}
             </span>
           )}
         </div>
         {loading ? (
-          <div className="text-[8px] text-white/30 animate-pulse">Loading...</div>
+          <div className="text-[8px] md:text-xs text-white/30 animate-pulse">Loading...</div>
         ) : error ? (
-          <div className="text-[8px] text-red-400">Error: {error}</div>
+          <div className="text-[8px] md:text-xs text-red-400">Error: {error}</div>
         ) : count === 0 ? (
-          <div className="text-[8px] text-white/30">Nothing to review</div>
+          <div className="text-[8px] md:text-xs text-white/30">Nothing to review</div>
         ) : (
           <div className="space-y-2">
             {items.slice(0, 3).map((item) => (
               <ApprovalCard key={item.id} item={item} token={token} onComplete={handleComplete} />
             ))}
             {count > 3 && (
-              <div className="text-[7px] text-white/25 text-center">
+              <div className="text-[7px] md:text-[11px] text-white/25 text-center">
                 +{count - 3} more
               </div>
             )}
@@ -490,6 +607,152 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
           <div style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.25)" }}>
             Your agents are working on it
           </div>
+        </div>
+      )}
+
+      {/* Auto-approved notice */}
+      {!loading && !error && autoApprovedCount > 0 && (
+        <div style={{
+          fontFamily: PS2P,
+          fontSize: 7,
+          color: "#4ade80",
+          padding: "6px 10px",
+          background: "rgba(74,222,128,0.06)",
+          border: "1px solid rgba(74,222,128,0.15)",
+          borderRadius: 4,
+        }}>
+          ✓ {autoApprovedCount} post{autoApprovedCount === 1 ? "" : "s"} auto-approved
+        </div>
+      )}
+
+      {/* Approve All button — shown when 2+ items and not loading */}
+      {!loading && !error && count >= 2 && (
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {approveAllState === "done" ? (
+            <div style={{
+              flex: 1,
+              fontFamily: PS2P,
+              fontSize: 9,
+              color: "#4ade80",
+              background: "rgba(74,222,128,0.08)",
+              border: "1px solid rgba(74,222,128,0.2)",
+              borderRadius: 4,
+              padding: "14px",
+              textAlign: "center",
+            }}>
+              {approveAllSummary}
+            </div>
+          ) : approveAllState === "running" ? (
+            <div style={{
+              flex: 1,
+              fontFamily: PS2P,
+              fontSize: 9,
+              color: "rgba(74,222,128,0.5)",
+              background: "rgba(74,222,128,0.05)",
+              border: "1px solid rgba(74,222,128,0.3)",
+              borderRadius: 4,
+              padding: "14px",
+              textAlign: "center",
+            }}>
+              {approveAllProgress
+                ? `APPROVING ${approveAllProgress.current}/${approveAllProgress.total}...`
+                : "APPROVING..."}
+            </div>
+          ) : approveAllState === "confirming" ? (
+            <>
+              <button
+                onClick={handleApproveAllConfirm}
+                style={{
+                  flex: 1,
+                  fontFamily: PS2P,
+                  fontSize: 9,
+                  padding: "14px",
+                  background: "rgba(74,222,128,0.18)",
+                  border: "1px solid rgba(74,222,128,0.45)",
+                  borderRadius: 4,
+                  color: "#4ade80",
+                  cursor: "pointer",
+                  minHeight: 48,
+                }}
+              >
+                APPROVE ALL ({count})?
+              </button>
+              <button
+                onClick={handleApproveAllClick}
+                style={{
+                  fontFamily: PS2P,
+                  fontSize: 8,
+                  padding: "14px 16px",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 4,
+                  color: "rgba(255,255,255,0.5)",
+                  cursor: "pointer",
+                  minHeight: 48,
+                }}
+              >
+                CANCEL
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleApproveAllClick}
+                style={{
+                  flex: 1,
+                  fontFamily: PS2P,
+                  fontSize: 9,
+                  padding: "14px",
+                  background: "rgba(74,222,128,0.12)",
+                  border: "1px solid rgba(74,222,128,0.3)",
+                  borderRadius: 4,
+                  color: "#4ade80",
+                  cursor: "pointer",
+                  minHeight: 48,
+                }}
+              >
+                APPROVE ALL ({count})
+              </button>
+              {autoApproveState === "done" ? (
+                <div style={{
+                  fontFamily: PS2P,
+                  fontSize: 7,
+                  color: "#4ade80",
+                  background: "rgba(74,222,128,0.08)",
+                  border: "1px solid rgba(74,222,128,0.2)",
+                  borderRadius: 4,
+                  padding: "14px 12px",
+                  textAlign: "center",
+                  whiteSpace: "nowrap",
+                }}>
+                  {autoApproveSummary}
+                </div>
+              ) : (
+                <button
+                  onClick={handleAutoApprove}
+                  disabled={autoApproveState === "running"}
+                  style={{
+                    fontFamily: PS2P,
+                    fontSize: 8,
+                    padding: "14px 12px",
+                    background: autoApproveState === "running"
+                      ? "rgba(96,165,250,0.05)"
+                      : "rgba(96,165,250,0.1)",
+                    border: "1px solid rgba(96,165,250,0.3)",
+                    borderRadius: 4,
+                    color: autoApproveState === "running"
+                      ? "rgba(96,165,250,0.4)"
+                      : "#60a5fa",
+                    cursor: autoApproveState === "running" ? "wait" : "pointer",
+                    minHeight: 48,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {autoApproveState === "running" ? "..." : "AUTO \u226580"}
+                </button>
+              )}
+            </>
+          )}
         </div>
       )}
 

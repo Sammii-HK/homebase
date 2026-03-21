@@ -138,6 +138,15 @@ export class ParticleSystem {
           p.opacity = Math.min(1, Math.min(p.life / 2, (p.maxLife - p.life + 2) / 2)) * 0.7;
           break;
         }
+
+        case "meteor": {
+          // Fast diagonal streak
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          // Fade out near end of life
+          p.opacity = Math.min(1, p.life / (p.maxLife * 0.3)) * 0.95;
+          break;
+        }
       }
 
       // Bounds check (garden area only for outdoor particles)
@@ -307,6 +316,34 @@ export class ParticleSystem {
           p.opacity = 0.6;
           p.phase = Math.random() * Math.PI * 2;
           p.rotation = 0;
+        }
+      }
+    }
+
+    // Shooting stars / meteors — night only, rare
+    if (tod === "night" || tod === "dusk") {
+      // 1-2% chance per spawn tick (~0.15s), max 1 at a time
+      if (this.particles.filter(p => p.type === "meteor").length < 1) {
+        if (Math.random() < 0.02) {
+          const p = this.spawn();
+          if (p) {
+            p.type = "meteor";
+            // Start from top of sky area, random x position
+            p.x = gardenLeft + Math.random() * (gardenRight - gardenLeft);
+            p.y = -5 + Math.random() * 10;
+            // Streak diagonally downward fast
+            const angle = 0.5 + Math.random() * 0.8; // 30-75 degrees from horizontal
+            const speed = 120 + Math.random() * 80;
+            p.vx = Math.cos(angle) * speed * (Math.random() > 0.5 ? 1 : -1);
+            p.vy = Math.sin(angle) * speed;
+            p.life = 0.8 + Math.random() * 0.7; // 0.8-1.5 seconds
+            p.maxLife = p.life;
+            p.size = 2;
+            p.color = "#ffffff";
+            p.opacity = 0.95;
+            p.phase = Math.random() * Math.PI * 2;
+            p.rotation = angle;
+          }
         }
       }
     }
@@ -487,6 +524,28 @@ export class ParticleSystem {
           ctx.closePath();
           ctx.fill();
           ctx.restore();
+          break;
+        }
+
+        case "meteor": {
+          // Bright white head
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(sx, sy, sz * 0.8, 0, Math.PI * 2);
+          ctx.fill();
+          // Fading trail — 3-4 trailing dots
+          const progress = 1 - p.life / p.maxLife;
+          const trailDx = -p.vx * 0.012;
+          const trailDy = -p.vy * 0.012;
+          for (let t = 1; t <= 4; t++) {
+            const tAlpha = Math.max(0, p.opacity * (1 - t * 0.25));
+            ctx.globalAlpha = tAlpha;
+            const tSize = sz * (0.7 - t * 0.12);
+            ctx.fillStyle = t <= 2 ? "#ffffd0" : "#ffc860";
+            ctx.beginPath();
+            ctx.arc(sx + trailDx * t * zoom, sy + trailDy * t * zoom, Math.max(0.5, tSize), 0, Math.PI * 2);
+            ctx.fill();
+          }
           break;
         }
       }

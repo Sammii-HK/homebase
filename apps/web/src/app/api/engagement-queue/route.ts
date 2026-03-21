@@ -3,6 +3,39 @@ import { checkAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+const ACCOUNT_SETS: Record<string, { id: string; name: string }> = {
+  lunary: { id: "a190e806-5bac-497b-88bd-b1d96ed1f2e8", name: "lunary.app" },
+  sammii: { id: "430eab81-ea60-4d11-9733-1bb126c5264c", name: "sammiihk" },
+  sparkle: { id: "89cf0e70-7bd1-48c2-bd8a-39ce54357d12", name: "sammiisparkle" },
+};
+
+const LUNARY_ACCOUNT_SET_ID = ACCOUNT_SETS.lunary.id;
+const MAX_AI_REPLY_CALLS = 5;
+const MAX_ITEMS_RETURNED = 10;
+
+/** Resolve which account set an engagement item belongs to based on its socialAccountId or accountSetId */
+function resolveAccountSet(item: SpellcastEngagement): {
+  accountSetId: string;
+  accountName: string;
+} {
+  // If the item already has an accountSetId (e.g. from Orbit), use it
+  const existingId = item.accountSetId ?? item.account_set_id ?? "";
+  if (existingId) {
+    for (const acct of Object.values(ACCOUNT_SETS)) {
+      if (acct.id === existingId) {
+        return { accountSetId: acct.id, accountName: acct.name };
+      }
+    }
+    // Unknown account set -- return it raw
+    return { accountSetId: existingId, accountName: existingId.slice(0, 8) };
+  }
+  // Default to Lunary
+  return {
+    accountSetId: ACCOUNT_SETS.lunary.id,
+    accountName: ACCOUNT_SETS.lunary.name,
+  };
+}
+
 interface SpellcastEngagement {
   id?: string;
   _id?: string;
@@ -20,6 +53,11 @@ interface SpellcastEngagement {
   platform_url?: string;
   createdAt?: string;
   created_at?: string;
+  score?: number;
+  accountSetId?: string;
+  account_set_id?: string;
+  accountName?: string;
+  account_name?: string;
 }
 
 interface OrbitEngagement {
@@ -34,6 +72,9 @@ interface OrbitEngagement {
   suggested_reply?: string;
   platformUrl?: string;
   createdAt?: string;
+  score?: number;
+  accountSetId?: string;
+  accountName?: string;
 }
 
 export interface EngagementItem {
@@ -47,6 +88,10 @@ export interface EngagementItem {
   suggestedReply: string;
   platformUrl: string;
   createdAt: string;
+  score: number;
+  source: "spellcast" | "orbit";
+  accountSetId?: string;
+  accountName?: string;
 }
 
 function normaliseType(raw: string): "comment" | "mention" | "dm" {
@@ -54,6 +99,11 @@ function normaliseType(raw: string): "comment" | "mention" | "dm" {
   if (t === "dm" || t === "direct_message") return "dm";
   if (t === "mention") return "mention";
   return "comment";
+}
+
+/** Simple content hash for deduplication */
+function contentKey(platform: string, author: string, content: string): string {
+  return `${platform}::${author}::${content.slice(0, 100).toLowerCase().trim()}`;
 }
 
 export async function GET(req: NextRequest) {
@@ -65,11 +115,12 @@ export async function GET(req: NextRequest) {
   const orbitUrl = process.env.ORBIT_URL ?? "http://localhost:3001";
 
   const items: EngagementItem[] = [];
+  const seen = new Set<string>();
 
   // 1. Fetch unread engagement from Spellcast
   if (apiKey) {
     try {
-      const res = await fetch(`${spellcastUrl}/api/engagement?status=unread&limit=30`, {
+      const res = await fetch(`${spellcastUrl}/api/engagement?status=unread&limit=20`, {
         headers: { "x-api-key": apiKey },
         signal: AbortSignal.timeout(5000),
         cache: "no-store",
@@ -80,18 +131,22 @@ export async function GET(req: NextRequest) {
           ? data
           : data.items ?? data.engagements ?? data.data ?? [];
 
-        // Fetch AI reply suggestions in parallel for each engagement
-        const withSuggestions = await Promise.all(
-          engagements.map(async (e) => {
+        // Fetch AI reply suggestions for the top 5 items only (cap AI calls)
+        const topForAI = engagements.slice(0, MAX_AI_REPLY_CALLS);
+        const restWithoutAI = engagements.slice(MAX_AI_REPLY_CALLS);
+
+        const aiResults = await Promise.all(
+          topForAI.map(async (e) => {
             const id = String(e.id ?? e._id ?? "");
+            const { accountSetId } = resolveAccountSet(e);
             let suggestedReply = "";
 
             try {
               const suggestRes = await fetch(
-                `${spellcastUrl}/api/engagement/${id}/suggest-reply`,
+                `${spellcastUrl}/api/engagement/${id}/ai-reply?tone=helpful&accountSetId=${accountSetId}`,
                 {
                   headers: { "x-api-key": apiKey },
-                  signal: AbortSignal.timeout(5000),
+                  signal: AbortSignal.timeout(8000),
                   cache: "no-store",
                 }
               );
@@ -102,14 +157,24 @@ export async function GET(req: NextRequest) {
                 );
               }
             } catch {
-              // Endpoint may not exist yet -- that is fine
+              // AI reply endpoint failed -- show item without suggestion
             }
 
             return { engagement: e, id, suggestedReply };
           })
         );
 
-        for (const { engagement: e, id, suggestedReply } of withSuggestions) {
+        // Add items with AI suggestions
+        for (const { engagement: e, id, suggestedReply } of aiResults) {
+          const key = contentKey(
+            String(e.platform ?? ""),
+            String(e.authorHandle ?? e.author_handle ?? ""),
+            String(e.content ?? e.text ?? "")
+          );
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          const { accountSetId, accountName } = resolveAccountSet(e);
           items.push({
             id,
             platform: String(e.platform ?? "unknown"),
@@ -121,6 +186,40 @@ export async function GET(req: NextRequest) {
             suggestedReply,
             platformUrl: String(e.platformUrl ?? e.platform_url ?? ""),
             createdAt: String(e.createdAt ?? e.created_at ?? new Date().toISOString()),
+            score: e.score ?? 0,
+            source: "spellcast",
+            accountSetId,
+            accountName,
+          });
+        }
+
+        // Add remaining items without AI suggestions
+        for (const e of restWithoutAI) {
+          const id = String(e.id ?? e._id ?? "");
+          const key = contentKey(
+            String(e.platform ?? ""),
+            String(e.authorHandle ?? e.author_handle ?? ""),
+            String(e.content ?? e.text ?? "")
+          );
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          const { accountSetId, accountName } = resolveAccountSet(e);
+          items.push({
+            id,
+            platform: String(e.platform ?? "unknown"),
+            type: normaliseType(String(e.type ?? "comment")),
+            authorName: String(e.authorName ?? e.author_name ?? ""),
+            authorHandle: String(e.authorHandle ?? e.author_handle ?? ""),
+            content: String(e.content ?? e.text ?? ""),
+            postContent: String(e.postContent ?? e.post_content ?? ""),
+            suggestedReply: "",
+            platformUrl: String(e.platformUrl ?? e.platform_url ?? ""),
+            createdAt: String(e.createdAt ?? e.created_at ?? new Date().toISOString()),
+            score: e.score ?? 0,
+            source: "spellcast",
+            accountSetId,
+            accountName,
           });
         }
       }
@@ -142,6 +241,14 @@ export async function GET(req: NextRequest) {
         : data.items ?? data.queue ?? data.opportunities ?? [];
 
       for (const item of orbitItems) {
+        const key = contentKey(
+          String(item.platform ?? ""),
+          String(item.authorHandle ?? ""),
+          String(item.content ?? "")
+        );
+        if (seen.has(key)) continue;
+        seen.add(key);
+
         items.push({
           id: `orbit-${item.id ?? Math.random().toString(36).slice(2)}`,
           platform: String(item.platform ?? "unknown"),
@@ -153,6 +260,10 @@ export async function GET(req: NextRequest) {
           suggestedReply: String(item.suggestedReply ?? item.suggested_reply ?? ""),
           platformUrl: String(item.platformUrl ?? ""),
           createdAt: String(item.createdAt ?? new Date().toISOString()),
+          score: item.score ?? 0,
+          source: "orbit",
+          accountSetId: item.accountSetId ?? LUNARY_ACCOUNT_SET_ID,
+          accountName: item.accountName ?? ACCOUNT_SETS.lunary.name,
         });
       }
     }
@@ -160,8 +271,18 @@ export async function GET(req: NextRequest) {
     // Orbit may be offline or endpoint may not exist -- that is fine
   }
 
-  // Sort by created date, newest first
-  items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // Sort: scored items first (highest score), then unscored by date
+  items.sort((a, b) => {
+    // Scored items (from Orbit or Spellcast with scores) come first
+    if (a.score > 0 && b.score <= 0) return -1;
+    if (b.score > 0 && a.score <= 0) return 1;
+    if (a.score > 0 && b.score > 0) return b.score - a.score;
+    // Unscored: newest first
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
-  return NextResponse.json({ items, count: items.length });
+  // Cap at 10 items
+  const capped = items.slice(0, MAX_ITEMS_RETURNED);
+
+  return NextResponse.json({ items: capped, count: capped.length });
 }

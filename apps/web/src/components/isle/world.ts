@@ -122,32 +122,32 @@ export const DESK_ZONES: DeskZone[] = [
     hitW: 5 * TS,
     hitH: 5 * TS,
   },
-  // Bottom row — monitor at bottom, character faces down
+  // Bottom row — same orientation as top: monitor at back, char in front facing up
   {
     id: "dev",
     deskX: 1 * TS,
-    deskY: 9 * TS,
+    deskY: 8 * TS,
     seatX: 2.5 * TS,
-    seatY: 8.5 * TS,
-    facing: "down" as Dir,
+    seatY: 9.5 * TS,
+    facing: "up" as Dir,
     monitorGlow: "#166534",
     label: "DEV",
     hitX: 1 * TS - TS,
-    hitY: 8 * TS - TS,
+    hitY: 7.5 * TS,
     hitW: 5 * TS,
     hitH: 5 * TS,
   },
   {
     id: "meta",
     deskX: 7 * TS,
-    deskY: 9 * TS,
+    deskY: 8 * TS,
     seatX: 8.5 * TS,
-    seatY: 8.5 * TS,
-    facing: "down" as Dir,
+    seatY: 9.5 * TS,
+    facing: "up" as Dir,
     monitorGlow: "#9d174d",
     label: "META",
     hitX: 7 * TS - TS,
-    hitY: 8 * TS - TS,
+    hitY: 7.5 * TS,
     hitW: 5 * TS,
     hitH: 5 * TS,
   },
@@ -162,8 +162,8 @@ export const FURNITURE: FurniturePiece[] = [
   { id: "rug1", type: "rug", tx: 3, ty: 4, tw: 5, th: 3, c1: "#7848a0", c2: "#9060c0" },
   // Break area (bottom of office)
   { id: "rug2", type: "rug", tx: 1, ty: 11, tw: 4, th: 2, c1: "#d05040", c2: "#e87060" },
-  { id: "sofa1", type: "sofa", tx: 1, ty: 11, tw: 3, th: 2 },
-  { id: "ctable", type: "coffeetable", tx: 4, ty: 11, tw: 2, th: 1 },
+  { id: "sofa1", type: "sofa", tx: 1, ty: 11, tw: 4, th: 2 },
+  { id: "ctable", type: "coffeetable", tx: 5, ty: 12, tw: 2, th: 1 },
   { id: "plant1", type: "plant", tx: 10, ty: 11, tw: 1, th: 1, variant: 3 },
   // Office extras
   { id: "whiteboard", type: "whiteboard", tx: 4, ty: 5, tw: 3, th: 1 },
@@ -270,12 +270,24 @@ export const BREAK_SPOTS: [number, number][] = [
 // Activities
 // ---------------------------------------------------------------------------
 
+export const SOFA_SPOTS: [number, number][] = [
+  [2 * TS, 11.5 * TS],
+  [3 * TS, 11.5 * TS],
+];
+
 export const ACTIVITIES_OUTDOOR = [
   "stargazing",
   "daydreaming",
   "stretching",
   "exploring",
   "wandering",
+  "fishing",
+];
+
+export const ACTIVITIES_SOFA = [
+  "reading",
+  "napping",
+  "scrolling",
 ];
 
 export const ACTIVITIES_BREAK = [
@@ -331,10 +343,10 @@ for (let dx = 0; dx < 3; dx++) {
   WALKABLE[1][1 + dx] = false; // LUNA desk
   WALKABLE[1][7 + dx] = false; // CASTER desk
 }
-// Bottom row desks at ty=9
+// Bottom row desks at ty=8
 for (let dx = 0; dx < 3; dx++) {
-  WALKABLE[9][1 + dx] = false; // DEV desk
-  WALKABLE[9][7 + dx] = false; // META desk
+  WALKABLE[8][1 + dx] = false; // DEV desk
+  WALKABLE[8][7 + dx] = false; // META desk
 }
 
 // Furniture blocking
@@ -354,10 +366,10 @@ for (let dx = 0; dx < 3; dx++) {
   WALKABLE[2][1 + dx] = false; // LUNA seat
   WALKABLE[2][7 + dx] = false; // CASTER seat
 }
-// Bottom row: desk at row 9, seat at row 8
+// Bottom row: desk at row 8, seat at row 9
 for (let dx = 0; dx < 3; dx++) {
-  WALKABLE[8][1 + dx] = false; // DEV seat
-  WALKABLE[8][7 + dx] = false; // META seat
+  WALKABLE[9][1 + dx] = false; // DEV seat
+  WALKABLE[9][7 + dx] = false; // META seat
 }
 
 // Pond tiles + 1-tile border
@@ -452,9 +464,18 @@ while (_rawOutdoor.length < 7 && _orSafety < 100) {
     _rawOutdoor.push([tx * TS, ty * TS]);
   }
 }
+// River-adjacent spots for fishing
+const RIVER_SPOTS: [number, number][] = [
+  [14 * TS, (RIVER_START_ROW - 1) * TS],
+  [18 * TS, (RIVER_START_ROW - 1) * TS],
+  [22 * TS, (RIVER_START_ROW - 1) * TS],
+  [26 * TS, (RIVER_START_ROW - 1) * TS],
+];
+
 export const OUTDOOR_SPOTS: [number, number][] = [
   ...BENCHES.map(b => [(b.tx + 1) * TS, (b.ty + 1) * TS] as [number, number]),
   ..._rawOutdoor,
+  ...RIVER_SPOTS,
 ];
 
 // ---------------------------------------------------------------------------

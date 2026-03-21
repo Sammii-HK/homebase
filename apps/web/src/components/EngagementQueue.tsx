@@ -15,6 +15,10 @@ interface EngagementItem {
   suggestedReply: string;
   platformUrl: string;
   createdAt: string;
+  score?: number;
+  source?: "spellcast" | "orbit";
+  accountSetId?: string;
+  accountName?: string;
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -70,6 +74,7 @@ function EngagementCard({
   const [state, setState] = useState<CardState>("idle");
   const [reply, setReply] = useState(item.suggestedReply);
   const [error, setError] = useState("");
+  const [regenerating, setRegenerating] = useState(false);
 
   const platformColor = PLATFORM_COLORS[item.platform] ?? PLATFORM_COLORS.unknown;
   const platformIcon = PLATFORM_ICONS[item.platform] ?? PLATFORM_ICONS.unknown;
@@ -122,6 +127,34 @@ function EngagementCard({
     } catch {
       setError("Network error");
       setState("error");
+    }
+  };
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    setError("");
+    try {
+      const suggestUrl = item.accountSetId
+        ? `/api/engagement-queue/${item.id}/suggest?accountSetId=${item.accountSetId}`
+        : `/api/engagement-queue/${item.id}/suggest`;
+      const res = await fetch(suggestUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.reply) {
+          setReply(data.reply);
+        } else {
+          setError("No suggestion returned");
+        }
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Failed to regenerate");
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -298,28 +331,88 @@ function EngagementCard({
         </div>
       )}
 
+      {/* Replying-as account badge */}
+      {item.accountName && (
+        <div
+          style={{
+            fontFamily: PS2P,
+            fontSize: 6,
+            color: "rgba(96,165,250,0.7)",
+            marginBottom: 6,
+          }}
+        >
+          Replying as @{item.accountName}
+        </div>
+      )}
+
       {/* AI suggested reply (editable textarea) */}
-      <textarea
-        value={reply}
-        onChange={(e) => setReply(e.target.value)}
-        placeholder="Type a reply..."
-        rows={3}
-        style={{
-          width: "100%",
-          fontFamily: PS2P,
-          fontSize: 7,
-          lineHeight: 1.6,
-          padding: "10px 12px",
-          background: "rgba(0,0,0,0.3)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          borderRadius: 4,
-          color: "#fff",
-          outline: "none",
-          boxSizing: "border-box",
-          resize: "vertical",
-          marginBottom: 10,
-        }}
-      />
+      <div style={{ position: "relative", marginBottom: 10 }}>
+        <textarea
+          value={reply}
+          onChange={(e) => setReply(e.target.value)}
+          placeholder="Type a reply..."
+          rows={3}
+          style={{
+            width: "100%",
+            fontFamily: PS2P,
+            fontSize: 7,
+            lineHeight: 1.6,
+            padding: "10px 12px",
+            paddingRight: 40,
+            background: "rgba(0,0,0,0.3)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: 4,
+            color: "#fff",
+            outline: "none",
+            boxSizing: "border-box",
+            resize: "vertical",
+          }}
+        />
+        <button
+          onClick={handleRegenerate}
+          disabled={regenerating || state === "sending" || state === "skipping"}
+          title="Regenerate AI suggestion"
+          style={{
+            position: "absolute",
+            top: 6,
+            right: 6,
+            width: 28,
+            height: 28,
+            padding: 0,
+            background: regenerating
+              ? "rgba(96,165,250,0.1)"
+              : "rgba(96,165,250,0.15)",
+            border: "1px solid rgba(96,165,250,0.3)",
+            borderRadius: 4,
+            color: regenerating ? "rgba(96,165,250,0.4)" : "#60a5fa",
+            cursor: regenerating ? "wait" : "pointer",
+            fontFamily: PS2P,
+            fontSize: 10,
+            lineHeight: "28px",
+            textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {regenerating ? (
+            <span style={{ fontSize: 7 }}>...</span>
+          ) : (
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+            </svg>
+          )}
+        </button>
+      </div>
 
       {/* Error display */}
       {error && (

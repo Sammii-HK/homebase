@@ -46,16 +46,16 @@ export default function ServiceHealth({ stats, heartbeat }: Props) {
 
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
-      <p className="text-[8px] uppercase tracking-wider text-white/40 mb-2">
+      <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40 mb-2">
         Services
       </p>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {all.map((svc) => (
           <div key={svc.name} className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full shrink-0 ${DOT[svc.status]}`} />
-            <span className="text-[8px] text-white/70">{svc.name}</span>
+            <span className="text-[8px] md:text-xs text-white/70">{svc.name}</span>
             {svc.source === "mac" && (
-              <span className="text-[6px] text-white/20 ml-auto">mac</span>
+              <span className="text-[6px] md:text-[10px] text-white/20 ml-auto">mac</span>
             )}
           </div>
         ))}

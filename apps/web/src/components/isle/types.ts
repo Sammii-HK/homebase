@@ -76,6 +76,6 @@ export interface Particle {
   color: string;
   opacity: number;
   phase: number;
-  type: "firefly" | "leaf" | "blossom" | "snow" | "dust" | "sparkle" | "butterfly" | "dragonfly" | "bird";
+  type: "firefly" | "leaf" | "blossom" | "snow" | "dust" | "sparkle" | "butterfly" | "dragonfly" | "bird" | "meteor";
   rotation: number;
 }

@@ -340,7 +340,7 @@ export function drawDesk(
   hasBadge: boolean,
   stats: IsleStats | null,
 ): void {
-  const { wr, we, spr } = helpers;
+  const { wr, we, spr, lighten } = helpers;
   const x = zone.deskX;
   const y = zone.deskY;
   const dw = 3 * TS;
@@ -349,13 +349,13 @@ export function drawDesk(
   spr(SPR.deskFront, x, y - 16);
 
   // PC on desk — sprite (16x32), placed on the desk surface
+  // ALL monitors now show their front face regardless of zone facing
   const pcX = x + dw / 2 - 8;
   const pcY = y - 24; // sits on top of desk
-  if (zone.facing === "up") {
-    // Player sees the front of the monitor
-    spr(SPR.pcOff, pcX, pcY);
-    // Overlay data-reactive screen content on the PC monitor
-    // PC screen area is roughly 10x7 pixels, starting at pcX+3, pcY+4
+  spr(SPR.pcOff, pcX, pcY);
+  // Overlay data-reactive screen content on the PC monitor
+  // PC screen area is roughly 10x7 pixels, starting at pcX+3, pcY+4
+  {
     const mx = pcX + 3;
     const my = pcY + 3;
     if (isActive) {
@@ -378,10 +378,12 @@ export function drawDesk(
     } else {
       drawMonitorData(wr, we, mx, my, zone, stats, animTick);
     }
-  } else {
-    // Player sees the back of the monitor
-    spr(SPR.pcBack, pcX, pcY);
   }
+
+  // Desk mat — coloured pad on desk surface
+  const matCol = DESK_MAT_COLS[zone.id] ?? "#404040";
+  wr(x + 4, y + 2, dw - 8, 6, matCol);
+  wr(x + 4, y + 2, dw - 8, 0.5, lighten(matCol, 20));
 
   // Zone-specific desk decorations
   const mx = x + dw / 2 - 5;
@@ -535,6 +537,12 @@ function drawDeskDecorations(
     wr(sx - 0.3, sy - 0.3, 0.6, 0.6, `rgba(255,220,255,${(pulse * 0.5).toFixed(2)})`);
     // Base
     wr(x + dw - 5.5, y + 7, 5, 1.5, "#8060a0");
+    // Tiny candle
+    wr(x + 1.5, y + 5, 1.5, 3, "#e8e0c0");
+    wr(x + 1.8, y + 4.5, 0.8, 1, "#f0a030");
+    // Candle flame flicker
+    const flick = 0.5 + 0.3 * Math.sin(animTick * 0.6);
+    we(x + 2.2, y + 4, 1, 1, "#f0c040", flick);
   } else if (zone.id === "spellcast") {
     // Scroll pile — height scales with queue depth
     const queued = stats?.spellcast.scheduled ?? 0;
@@ -557,6 +565,10 @@ function drawDeskDecorations(
       const inkAlpha = 0.3 + 0.15 * Math.sin(animTick * 0.2);
       wr(x + dw - 3, y + 9, 1.5, 0.8, `rgba(30,30,80,${inkAlpha.toFixed(2)})`);
     }
+    // Tiny desk plant
+    wr(x + dw - 2, y + 6, 2, 2, "#4a3020"); // pot
+    wr(x + dw - 1.5, y + 4.5, 1.5, 2, "#30a040"); // leaves
+    we(x + dw - 0.5, y + 4, 1, 0.8, "#40b850"); // top leaf
   } else if (zone.id === "dev") {
     // Mini terminal — shows scrolling service output
     wr(x + 1, y + 3, 5, 4, "#1a1a28");
@@ -590,6 +602,10 @@ function drawDeskDecorations(
       wr(x + dw - 3.5, y + 3.5 - t1, 0.7, 0.8, `rgba(210,210,220,${a1.toFixed(2)})`);
       wr(x + dw - 2.3, y + 3 - t2, 0.7, 0.8, `rgba(210,210,220,${a2.toFixed(2)})`);
     }
+    // Energy drink can
+    wr(x + 7, y + 3, 2, 5, "#20a040");
+    wr(x + 7, y + 3, 2, 1.5, "#c0c0c0"); // silver top
+    wr(x + 7.3, y + 5, 1.4, 1, "#f0d020"); // label stripe
   } else if (zone.id === "meta") {
     // Phone — screen shows live notification feed
     wr(x + 1, y + 3, 3, 5, "#2a2a30");
@@ -616,6 +632,12 @@ function drawDeskDecorations(
       // Camera flash glint
       we(x + dw - 3, y + 5.5, 1.5, 1.5, "#ffffff", 0.15);
     }
+    // Ring light — tiny circle with glow
+    const rlx = x + dw / 2 + 6, rly = y + 3;
+    we(rlx, rly, 2.5, 2.5, "#404040", 0.6);
+    we(rlx, rly, 1.8, 1.8, "#606060", 0.4);
+    // Inner ring glow
+    we(rlx, rly, 1.2, 1.2, "#f8f0f0", 0.3);
   }
 }
 

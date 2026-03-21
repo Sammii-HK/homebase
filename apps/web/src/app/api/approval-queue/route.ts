@@ -3,6 +3,8 @@ import { checkAuth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+const AUTO_APPROVE_SCORE_THRESHOLD = 82;
+
 interface SpellcastPost {
   id?: string;
   _id?: string;
@@ -17,6 +19,7 @@ interface SpellcastPost {
   createdAt?: string;
   created_at?: string;
   source?: string;
+  score?: number;
 }
 
 interface OrbitContent {
@@ -29,6 +32,17 @@ interface OrbitContent {
   createdAt?: string;
 }
 
+interface OrbitDraftContent {
+  id?: string;
+  account_set_id?: string;
+  account_name?: string;
+  platform?: string;
+  pillar?: string;
+  format?: string;
+  content?: string;
+  thread_slides?: string[] | null;
+}
+
 export interface ApprovalItem {
   id: string;
   content: string;
@@ -36,6 +50,61 @@ export interface ApprovalItem {
   accountName: string;
   createdAt: string;
   source: "spellcast" | "orbit";
+  threadSlides?: string[];
+}
+
+async function approvePostInSpellcast(
+  postId: string,
+  apiKey: string,
+  spellcastUrl: string
+): Promise<void> {
+  // Fetch currently scheduled times to pick next available slot
+  const scheduledRes = await fetch(`${spellcastUrl}/api/posts?status=scheduled&limit=200`, {
+    headers: { "x-api-key": apiKey },
+    signal: AbortSignal.timeout(5000),
+    cache: "no-store",
+  });
+  const scheduledKeys = new Set<string>();
+  if (scheduledRes.ok) {
+    const data = await scheduledRes.json();
+    const posts = Array.isArray(data) ? data : data.posts ?? data.data ?? [];
+    for (const p of posts) {
+      const t = p.scheduledFor ?? p.scheduledAt ?? p.scheduledDate ?? "";
+      if (t) scheduledKeys.add(t.slice(0, 13));
+    }
+  }
+
+  // US-optimised slots (UTC hours)
+  const SLOT_HOURS_UTC = [14, 16, 17, 21, 22, 25];
+  const now = new Date();
+  let scheduledDate: string | null = null;
+
+  for (let dayOffset = 0; dayOffset < 7 && !scheduledDate; dayOffset++) {
+    for (const hourUtc of SLOT_HOURS_UTC) {
+      const actualHour = hourUtc % 24;
+      const actualDayOffset = dayOffset + Math.floor(hourUtc / 24);
+      const candidate = new Date(now);
+      candidate.setUTCDate(candidate.getUTCDate() + actualDayOffset);
+      candidate.setUTCHours(actualHour, 0, 0, 0);
+      if (candidate.getTime() < now.getTime() + 15 * 60_000) continue;
+      const key = candidate.toISOString().slice(0, 13);
+      if (!scheduledKeys.has(key)) {
+        scheduledDate = candidate.toISOString();
+        break;
+      }
+    }
+  }
+
+  if (!scheduledDate) {
+    scheduledDate = new Date(now.getTime() + 24 * 60 * 60_000).toISOString();
+  }
+
+  await fetch(`${spellcastUrl}/api/posts/${postId}/schedule`, {
+    method: "POST",
+    headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ date: scheduledDate }),
+    signal: AbortSignal.timeout(5000),
+  });
 }
 
 export async function GET(req: NextRequest) {
@@ -46,6 +115,7 @@ export async function GET(req: NextRequest) {
   const spellcastUrl = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
 
   const items: ApprovalItem[] = [];
+  let autoApproved = 0;
 
   // Fetch pending review posts from Spellcast
   if (apiKey) {
@@ -62,8 +132,48 @@ export async function GET(req: NextRequest) {
           : data.posts ?? data.data ?? [];
 
         for (const p of posts) {
+          const postId = String(p.id ?? p._id ?? "");
+
+          // Check if the list response already has a score; if not, fetch the full post
+          let score = typeof p.score === "number" ? p.score : undefined;
+
+          if (score === undefined && postId) {
+            try {
+              const fullRes = await fetch(`${spellcastUrl}/api/posts/${postId}`, {
+                headers: { "x-api-key": apiKey },
+                signal: AbortSignal.timeout(4000),
+                cache: "no-store",
+              });
+              if (fullRes.ok) {
+                const full: SpellcastPost = await fullRes.json();
+                if (typeof full.score === "number") score = full.score;
+              }
+            } catch {
+              // If fetching full post fails, proceed without score
+            }
+          }
+
+          // Auto-approve high-scoring posts
+          if (typeof score === "number" && score >= AUTO_APPROVE_SCORE_THRESHOLD) {
+            try {
+              await approvePostInSpellcast(postId, apiKey, spellcastUrl);
+              autoApproved++;
+            } catch {
+              // If auto-approval fails, fall through and include in queue
+              items.push({
+                id: postId,
+                content: String(p.content ?? p.text ?? ""),
+                platform: String(p.socialAccount?.platform ?? p.platform ?? "unknown"),
+                accountName: String(p.socialAccount?.name ?? ""),
+                createdAt: String(p.createdAt ?? p.created_at ?? new Date().toISOString()),
+                source: "spellcast",
+              });
+            }
+            continue;
+          }
+
           items.push({
-            id: String(p.id ?? p._id ?? ""),
+            id: postId,
             content: String(p.content ?? p.text ?? ""),
             platform: String(p.socialAccount?.platform ?? p.platform ?? "unknown"),
             accountName: String(p.socialAccount?.name ?? ""),
@@ -105,8 +215,39 @@ export async function GET(req: NextRequest) {
     // Orbit may be offline or endpoint may not exist - that's fine
   }
 
+  // Fetch Orbit draft-content (bypasses broken scheduler)
+  try {
+    const res = await fetch("https://orbit.sammii.dev/api/state", {
+      signal: AbortSignal.timeout(3000),
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const draftContent = data?.queue?.["draft-content"];
+      if (draftContent?.exists && Array.isArray(draftContent.content) && draftContent.content.length > 0) {
+        const drafts: OrbitDraftContent[] = draftContent.content;
+        drafts.forEach((draft, index) => {
+          const item: ApprovalItem = {
+            id: `orbit-draft-${draft.id ?? index}`,
+            content: draft.content ?? "",
+            platform: draft.platform ?? "unknown",
+            accountName: draft.account_name ?? "Orbit",
+            createdAt: new Date().toISOString(),
+            source: "orbit",
+          };
+          if (Array.isArray(draft.thread_slides) && draft.thread_slides.length > 0) {
+            item.threadSlides = draft.thread_slides;
+          }
+          items.push(item);
+        });
+      }
+    }
+  } catch {
+    // Orbit may be offline - that's fine
+  }
+
   // Sort by created date, newest first
   items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  return NextResponse.json({ items, count: items.length });
+  return NextResponse.json({ items, count: items.length, autoApproved });
 }

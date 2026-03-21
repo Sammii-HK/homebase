@@ -89,11 +89,11 @@ export default function StatusBar({ stats, heartbeat, onOpenApprovalQueue, onOpe
     <div className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/10 px-3 py-2.5 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <div className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
-        <span className="text-[8px] uppercase tracking-widest text-white/60">
+        <span className="text-[8px] md:text-xs uppercase tracking-widest text-white/60">
           Homebase
         </span>
         {hasInsights && (
-          <span className="text-[7px] text-amber-400 animate-pulse ml-1">
+          <span className="text-[7px] md:text-[11px] text-amber-400 animate-pulse ml-1">
             {insights[0]}
             {insights.length > 1 && ` +${insights.length - 1}`}
           </span>
@@ -106,8 +106,8 @@ export default function StatusBar({ stats, heartbeat, onOpenApprovalQueue, onOpe
             onClick={onOpenApprovalQueue}
             className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 rounded px-1.5 py-0.5 cursor-pointer hover:bg-amber-500/25 transition-colors"
           >
-            <span className="text-[7px] text-amber-400 font-bold">{stats!.content.pendingReview}</span>
-            <span className="text-[6px] text-amber-400/70">REVIEW</span>
+            <span className="text-[7px] md:text-[11px] text-amber-400 font-bold">{stats!.content.pendingReview}</span>
+            <span className="text-[6px] md:text-[10px] md:text-sm text-amber-400/70">REVIEW</span>
           </button>
         )}
         {(stats?.engagement.unread ?? 0) > 0 && (
@@ -115,24 +115,24 @@ export default function StatusBar({ stats, heartbeat, onOpenApprovalQueue, onOpe
             onClick={onOpenEngagementQueue}
             className="flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 rounded px-1.5 py-0.5 cursor-pointer hover:bg-emerald-500/25 transition-colors"
           >
-            <span className="text-[7px] text-emerald-400 font-bold">{stats!.engagement.unread}</span>
-            <span className="text-[6px] text-emerald-400/70">ENGAGE</span>
+            <span className="text-[7px] md:text-[11px] text-emerald-400 font-bold">{stats!.engagement.unread}</span>
+            <span className="text-[6px] md:text-[10px] md:text-sm text-emerald-400/70">ENGAGE</span>
           </button>
         )}
         {/* Orbit indicator */}
         {stats?.orbit && (
           <div className="flex items-center gap-1">
-            <span className="text-[7px] text-white/40">ORBIT</span>
+            <span className="text-[7px] md:text-[11px] text-white/40">ORBIT</span>
             <div className={`w-1.5 h-1.5 rounded-full ${orbitOnline ? (orbitErrors > 0 ? "bg-red-400" : orbitRunning > 0 ? "bg-amber-400 animate-pulse" : "bg-green-400") : "bg-gray-500"}`} />
             {orbitRunning > 0 && (
-              <span className="text-[7px] text-amber-400">{orbitRunning}</span>
+              <span className="text-[7px] md:text-[11px] text-amber-400">{orbitRunning}</span>
             )}
           </div>
         )}
         {/* MAC status */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[7px] text-white/40">MAC</span>
-          <span className={`text-[8px] ${macColor}`}>{macLabel}</span>
+          <span className="text-[7px] md:text-[11px] text-white/40">MAC</span>
+          <span className={`text-[8px] md:text-xs ${macColor}`}>{macLabel}</span>
         </div>
       </div>
     </div>

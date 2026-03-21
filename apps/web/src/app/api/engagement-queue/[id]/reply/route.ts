@@ -49,6 +49,22 @@ export async function POST(
       );
     }
 
+    // Mark as read after successful reply so it clears from the queue
+    try {
+      await fetch(`${spellcastUrl}/api/engagement/${id}/mark-read`, {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+        signal: AbortSignal.timeout(3000),
+        cache: "no-store",
+      });
+    } catch {
+      // Non-critical -- reply was sent, mark-read failing is not a blocker
+      console.warn("[homebase] mark-read after reply failed for:", id);
+    }
+
     return NextResponse.json({
       ok: true,
       message: "Reply sent",

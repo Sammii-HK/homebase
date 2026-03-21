@@ -14,7 +14,7 @@ function TrendBadge({ pct }: { pct: number }) {
   if (Math.abs(pct) < 0.5) return null;
   const isUp = pct > 0;
   return (
-    <span className={`text-[6px] ${isUp ? "text-green-400" : "text-red-400"}`}>
+    <span className={`text-[6px] md:text-[10px] md:text-sm ${isUp ? "text-green-400" : "text-red-400"}`}>
       {isUp ? "\u25b2" : "\u25bc"}{Math.abs(pct).toFixed(0)}%
     </span>
   );
@@ -26,8 +26,8 @@ export default function SEOSnapshot({ stats }: Props) {
   if (!seo) {
     return (
       <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
-        <p className="text-[8px] uppercase tracking-wider text-white/40 mb-2">SEO</p>
-        <p className="text-[8px] text-white/30">No data</p>
+        <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40 mb-2">SEO</p>
+        <p className="text-[8px] md:text-xs text-white/30">No data</p>
       </div>
     );
   }
@@ -52,16 +52,16 @@ export default function SEOSnapshot({ stats }: Props) {
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
       <div className="flex items-baseline justify-between mb-2">
-        <p className="text-[8px] uppercase tracking-wider text-white/40">SEO</p>
+        <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40">SEO</p>
         {trend && (
-          <p className="text-[6px] text-white/25">7d vs prev 7d</p>
+          <p className="text-[6px] md:text-[10px] md:text-sm text-white/25">7d vs prev 7d</p>
         )}
       </div>
       <div className="grid grid-cols-4 gap-2">
         {items.map((item) => (
           <div key={item.label} className="text-center">
-            <p className="text-[9px] text-white/80">{item.value}</p>
-            <p className="text-[6px] text-white/30 mt-0.5">{item.label}</p>
+            <p className="text-[9px] md:text-sm text-white/80">{item.value}</p>
+            <p className="text-[6px] md:text-[10px] md:text-sm text-white/30 mt-0.5">{item.label}</p>
             {item.trendPct != null && <TrendBadge pct={item.trendPct} />}
           </div>
         ))}

@@ -14,7 +14,7 @@ function TrendArrow({ trend }: { trend?: Trend }) {
   if (!trend || trend.direction === "flat") return null;
   const isUp = trend.direction === "up";
   return (
-    <span className={`text-[7px] ml-1 ${isUp ? "text-green-400" : "text-red-400"}`}>
+    <span className={`text-[7px] md:text-[11px] ml-1 ${isUp ? "text-green-400" : "text-red-400"}`}>
       {isUp ? "\u25b2" : "\u25bc"}
       {Math.abs(trend.delta)}
     </span>
@@ -58,11 +58,11 @@ export default function KeyNumbers({ stats }: Props) {
           key={item.label}
           className="bg-white/[0.04] border border-white/10 rounded-lg p-3"
         >
-          <p className="text-[7px] uppercase tracking-wider text-white/40 mb-1">
+          <p className="text-[7px] md:text-[11px] uppercase tracking-wider text-white/40 mb-1">
             {item.label}
           </p>
           <div className="flex items-baseline">
-            <p className={`text-base ${item.color}`}>{item.value}</p>
+            <p className={`text-base md:text-2xl ${item.color}`}>{item.value}</p>
             <TrendArrow trend={item.trend} />
           </div>
         </div>

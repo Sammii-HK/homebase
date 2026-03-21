@@ -30,10 +30,10 @@ export default function Opportunities({ stats }: Props) {
   if (opps.length === 0 && stats) {
     return (
       <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
-        <p className="text-[8px] uppercase tracking-wider text-white/40 mb-2">
+        <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40 mb-2">
           Engagement
         </p>
-        <p className="text-[8px] text-white/30">No new opportunities</p>
+        <p className="text-[8px] md:text-xs text-white/30">No new opportunities</p>
       </div>
     );
   }
@@ -41,7 +41,7 @@ export default function Opportunities({ stats }: Props) {
 
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
-      <p className="text-[8px] uppercase tracking-wider text-white/40 mb-2">
+      <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40 mb-2">
         Engagement ({opps.length})
       </p>
       <div className="space-y-2">
@@ -55,18 +55,18 @@ export default function Opportunities({ stats }: Props) {
           >
             <div className="flex items-center gap-2 mb-1">
               <span
-                className={`text-[7px] font-bold ${PLATFORM_COLOR[opp.platform] ?? "text-white/50"}`}
+                className={`text-[7px] md:text-[11px] font-bold ${PLATFORM_COLOR[opp.platform] ?? "text-white/50"}`}
               >
                 {PLATFORM_ICON[opp.platform] ?? opp.platform.slice(0, 2).toUpperCase()}
               </span>
-              <span className="text-[8px] text-white/60 truncate">
+              <span className="text-[8px] md:text-xs text-white/60 truncate">
                 @{opp.authorHandle}
               </span>
-              <span className="text-[7px] text-purple-400 ml-auto shrink-0">
+              <span className="text-[7px] md:text-[11px] text-purple-400 ml-auto shrink-0">
                 {(opp.relevanceScore * 100).toFixed(0)}%
               </span>
             </div>
-            <p className="text-[7px] text-white/40 line-clamp-2 leading-relaxed">
+            <p className="text-[7px] md:text-[11px] text-white/40 line-clamp-2 leading-relaxed">
               {opp.content}
             </p>
           </a>

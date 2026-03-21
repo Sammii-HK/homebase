@@ -70,6 +70,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
     { id: "room-meta", label: "Meta Analytics", category: "navigate", icon: "📊", shortcut: "4", action: () => { onOpenRoom("meta"); setOpen(false); } },
     { id: "room-orbit", label: "Orbit HQ", category: "navigate", icon: "🛰", shortcut: "5", action: () => { onOpenRoom("orbit"); setOpen(false); } },
     { id: "room-engagement", label: "Engagement", category: "navigate", icon: "💬", shortcut: "6", action: () => { onOpenRoom("engagement"); setOpen(false); } },
+    { id: "launch-tracker", label: "Launch Tracker", category: "navigate", icon: "🚀", shortcut: "L", description: "GTM command centre", action: () => { const el = document.querySelector('[data-launch-tracker]'); if (el) el.scrollIntoView({ behavior: 'smooth' }); setOpen(false); } },
 
     // Actions
     {

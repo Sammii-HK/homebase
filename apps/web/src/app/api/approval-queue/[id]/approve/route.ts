@@ -72,9 +72,84 @@ export async function POST(
     return NextResponse.json({ error: "No API key configured" }, { status: 500 });
   }
 
-  // Orbit posts are not schedulable via Spellcast
-  if (id.startsWith("orbit-")) {
-    return NextResponse.json({ error: "Orbit posts cannot be scheduled via this endpoint yet" }, { status: 400 });
+  // Orbit draft posts: create in Spellcast, submit for review, then schedule
+  if (id.startsWith("orbit-draft-")) {
+    const draftId = id.replace("orbit-draft-", "");
+
+    // Fetch the draft from Orbit state
+    let draft: {
+      id?: string;
+      content?: string;
+      platform?: string;
+      account_set_id?: string;
+    } | undefined;
+
+    try {
+      const stateRes = await fetch("https://orbit.sammii.dev/api/state", {
+        signal: AbortSignal.timeout(5000),
+        cache: "no-store",
+      });
+      if (stateRes.ok) {
+        const stateData = await stateRes.json();
+        const drafts: Array<{ id?: string; content?: string; platform?: string; account_set_id?: string }> =
+          stateData?.queue?.["draft-content"]?.content ?? [];
+        draft = drafts.find((d, index) => (d.id ?? String(index)) === draftId);
+      }
+    } catch (e) {
+      console.error("[homebase] orbit state fetch failed:", e);
+    }
+
+    if (!draft) {
+      return NextResponse.json({ error: "Draft not found in Orbit state" }, { status: 404 });
+    }
+
+    // Create the post in Spellcast
+    const createRes = await fetch(`${spellcastUrl}/api/posts`, {
+      method: "POST",
+      headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: draft.content,
+        platform: draft.platform,
+        accountSetId: draft.account_set_id,
+        status: "draft",
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!createRes.ok) {
+      return NextResponse.json({ error: "Failed to create post in Spellcast" }, { status: 502 });
+    }
+
+    const created = await createRes.json();
+    const postId = created.id ?? created._id;
+
+    // Submit for review
+    try {
+      await fetch(`${spellcastUrl}/api/posts/${postId}/submit-for-review`, {
+        method: "POST",
+        headers: { "x-api-key": apiKey },
+        signal: AbortSignal.timeout(5000),
+      });
+    } catch {
+      // Non-fatal — continue to schedule
+    }
+
+    // Pick next available slot and schedule
+    const existing = await getScheduledTimes(apiKey, spellcastUrl);
+    const scheduledDate = pickNextSlot(existing);
+
+    try {
+      await fetch(`${spellcastUrl}/api/posts/${postId}/schedule`, {
+        method: "POST",
+        headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledFor: scheduledDate }),
+        signal: AbortSignal.timeout(5000),
+      });
+    } catch {
+      // Non-fatal — post was created and submitted
+    }
+
+    return NextResponse.json({ scheduledDate });
   }
 
   let body: { scheduledDate?: string } = {};

@@ -126,6 +126,43 @@ export interface EngagementDeepData {
 
 export type RoomDeepData = SpellcastDeepData | LunaryDeepData | InfraDeepData | OrbitDeepData | EngagementDeepData;
 
+// ── Launch Tracker types ──
+
+export type LaunchStatus = "live" | "building" | "ready" | "not-started" | "paused";
+export type LaunchCategory = "saas" | "marketplace" | "tool" | "package" | "temp";
+
+export interface LaunchMilestone {
+  label: string;
+  done: boolean;
+}
+
+export interface LaunchProduct {
+  id: string;
+  name: string;
+  category: LaunchCategory;
+  color: string;
+  url?: string;
+  milestones: LaunchMilestone[];
+  nextAction: string;
+  status: LaunchStatus;
+  keyMetric: { label: string; source: string };
+  pricingNote: string;
+  // enriched at runtime
+  liveMetric?: string;
+  healthy?: boolean;
+}
+
+export interface LaunchTrackerData {
+  products: LaunchProduct[];
+  summary: {
+    byStatus: Record<LaunchStatus, number>;
+    totalMRR: number;
+    priorityAction: string;
+    nextRevenue: string;
+  };
+  updatedAt: string;
+}
+
 export interface Opportunity {
   id: string;
   platform: string;

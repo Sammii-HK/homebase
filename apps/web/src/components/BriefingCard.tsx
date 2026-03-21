@@ -178,10 +178,10 @@ export default function BriefingCard({ token, onOpenApprovalQueue, inline = fals
     if (loading) {
       return (
         <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
-          <p className="text-[8px] uppercase tracking-wider text-white/40 mb-2">
+          <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40 mb-2">
             Morning Briefing
           </p>
-          <p className="text-[8px] text-white/30">Loading...</p>
+          <p className="text-[8px] md:text-xs text-white/30">Loading...</p>
         </div>
       );
     }
@@ -189,10 +189,10 @@ export default function BriefingCard({ token, onOpenApprovalQueue, inline = fals
     if (error) {
       return (
         <div className="bg-white/[0.04] border border-red-500/20 rounded-lg p-3">
-          <p className="text-[8px] uppercase tracking-wider text-white/40 mb-2">
+          <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40 mb-2">
             Morning Briefing
           </p>
-          <p className="text-[8px] text-red-400/70">Could not load briefing</p>
+          <p className="text-[8px] md:text-xs text-red-400/70">Could not load briefing</p>
         </div>
       );
     }
@@ -200,10 +200,10 @@ export default function BriefingCard({ token, onOpenApprovalQueue, inline = fals
     if (!briefing) {
       return (
         <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
-          <p className="text-[8px] uppercase tracking-wider text-white/40 mb-2">
+          <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40 mb-2">
             Morning Briefing
           </p>
-          <p className="text-[8px] text-white/30">No briefing yet today</p>
+          <p className="text-[8px] md:text-xs text-white/30">No briefing yet today</p>
         </div>
       );
     }
@@ -213,15 +213,15 @@ export default function BriefingCard({ token, onOpenApprovalQueue, inline = fals
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <p className="text-[8px] uppercase tracking-wider text-purple-400">
+            <p className="text-[8px] md:text-xs uppercase tracking-wider text-purple-400">
               Morning Briefing
             </p>
             {stale && (
-              <span className="text-[6px] text-amber-400 uppercase tracking-wider">Stale</span>
+              <span className="text-[6px] md:text-[10px] md:text-sm text-amber-400 uppercase tracking-wider">Stale</span>
             )}
           </div>
           {briefing.compiledAt && (
-            <span className="text-[7px] text-white/25">{relativeTime(briefing.compiledAt)}</span>
+            <span className="text-[7px] md:text-[11px] text-white/25">{relativeTime(briefing.compiledAt)}</span>
           )}
         </div>
 
@@ -476,7 +476,7 @@ function MetricPill({ label, value, delta }: { label: string; value: string | nu
 function MetricBox({ label, value, delta }: { label: string; value: string | number; delta: number }) {
   return (
     <div className="bg-white/[0.03] border border-white/[0.06] rounded p-2 text-center">
-      <p className="text-[6px] text-white/35 mb-1" style={{ fontFamily: PS2P }}>{label}</p>
+      <p className="text-[6px] md:text-[10px] md:text-sm text-white/35 mb-1" style={{ fontFamily: PS2P }}>{label}</p>
       <div className="flex items-center justify-center">
         <p className="text-sm text-white" style={{ fontFamily: PS2P }}>{value}</p>
         <DeltaArrow value={delta} />
@@ -551,14 +551,14 @@ function ScheduleSummary({ content }: { content: Briefing["content"] }) {
     <div>
       <div className="flex items-baseline gap-2 mb-1">
         <span className="text-white text-sm" style={{ fontFamily: PS2P }}>{content.scheduledToday}</span>
-        <span className="text-[8px] text-white/50">posts scheduled</span>
+        <span className="text-[8px] md:text-xs text-white/50">posts scheduled</span>
       </div>
       {platforms.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {platforms.map(([platform, count]) => (
             <span
               key={platform}
-              className="text-[7px] text-white/40 bg-white/[0.03] border border-white/[0.06] rounded px-1.5 py-0.5"
+              className="text-[7px] md:text-[11px] text-white/40 bg-white/[0.03] border border-white/[0.06] rounded px-1.5 py-0.5"
             >
               {platform} {count}
             </span>
@@ -566,7 +566,7 @@ function ScheduleSummary({ content }: { content: Briefing["content"] }) {
         </div>
       )}
       {content.failedPosts > 0 && (
-        <p className="text-[8px] text-red-400 mt-1">{content.failedPosts} failed</p>
+        <p className="text-[8px] md:text-xs text-red-400 mt-1">{content.failedPosts} failed</p>
       )}
     </div>
   );
@@ -602,9 +602,9 @@ function SystemStatus({ system, overlay = false }: { system: NonNullable<Briefin
     <div className="flex items-center gap-4">
       <div className="flex items-center gap-1.5">
         <div className={`w-1.5 h-1.5 rounded-full ${authOk ? "bg-green-500" : "bg-red-500 animate-pulse"}`} />
-        <span className="text-[7px] text-white/40">Auth {system.authStatus}</span>
+        <span className="text-[7px] md:text-[11px] text-white/40">Auth {system.authStatus}</span>
       </div>
-      <span className="text-[7px] text-white/40">
+      <span className="text-[7px] md:text-[11px] text-white/40">
         {system.agentsOnline} agent{system.agentsOnline !== 1 ? "s" : ""} online
       </span>
     </div>
