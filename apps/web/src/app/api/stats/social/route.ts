@@ -68,21 +68,6 @@ interface SpellcastEngagement {
   [key: string]: unknown;
 }
 
-interface SpellcastAnalyticsAccount {
-  id?: string;
-  handle?: string;
-  username?: string;
-  platformAccountId?: string;
-  platform?: string;
-  followers?: number;
-  followersCount?: number;
-  followerCount?: number;
-  // Historical snapshot fields — present when period=7d is supported
-  followersHistory?: { date: string; count: number }[];
-  previousFollowers?: number;
-  followersStart?: number;
-}
-
 interface SpellcastPostAnalytics {
   postId?: string;
   id?: string;
@@ -194,77 +179,107 @@ async function fetchEngagement(
   }
 }
 
-function extractFollowerCount(acc: SpellcastAnalyticsAccount): number {
-  return Number(acc.followers ?? acc.followersCount ?? acc.followerCount ?? 0);
+interface FollowerGrowthSnapshot {
+  snapshotDate: string;
+  followerCount: number;
 }
 
-async function fetchFollowerCounts(
+interface FollowerGrowthEntry {
+  socialAccountId: string;
+  displayName: string;
+  platform: string;
+  snapshots: FollowerGrowthSnapshot[];
+}
+
+interface FollowerGrowthData {
+  current: number | null;
+  sevenDaysAgo: number | null;
+}
+
+/** Fetch Instagram follower growth snapshots from /api/analytics/follower-growth.
+ *  Returns a map of socialAccountId -> { current, sevenDaysAgo }. */
+async function fetchFollowerGrowth(
   url: string,
   headers: Record<string, string>
-): Promise<Record<string, number>> {
-  const lookup: Record<string, number> = {};
+): Promise<Record<string, FollowerGrowthData>> {
+  const result: Record<string, FollowerGrowthData> = {};
   try {
-    const res = await fetch(`${url}/api/analytics`, {
+    const res = await fetch(`${url}/api/analytics/follower-growth`, {
       headers,
       signal: AbortSignal.timeout(8000),
       cache: "no-store",
     });
-    if (!res.ok) return lookup;
-    const data = await res.json();
-    const accounts: SpellcastAnalyticsAccount[] = data.accounts ?? [];
-    for (const acc of accounts) {
-      const handle = normaliseHandle(
-        acc.platformAccountId ?? acc.handle ?? acc.username ?? ""
+    if (!res.ok) return result;
+    const data: FollowerGrowthEntry[] = await res.json();
+    const entries = Array.isArray(data) ? data : [];
+
+    for (const entry of entries) {
+      if (!entry.socialAccountId || !Array.isArray(entry.snapshots) || entry.snapshots.length === 0) continue;
+
+      const sorted = [...entry.snapshots].sort((a, b) =>
+        a.snapshotDate > b.snapshotDate ? -1 : 1
       );
-      if (handle) {
-        lookup[handle] = extractFollowerCount(acc);
+
+      const current = sorted[0].followerCount;
+
+      let sevenDaysAgo: number | null = null;
+      if (sorted.length > 1) {
+        const now = Date.now();
+        const target = now - 7 * 86_400_000;
+        // Find snapshot closest to 7 days ago within a 3-10 day window
+        const windowMin = now - 10 * 86_400_000;
+        const windowMax = now - 3 * 86_400_000;
+        let best: FollowerGrowthSnapshot | null = null;
+        let bestDist = Infinity;
+        for (const snap of sorted.slice(1)) {
+          const ts = new Date(snap.snapshotDate).getTime();
+          if (ts < windowMin || ts > windowMax) continue;
+          const dist = Math.abs(ts - target);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = snap;
+          }
+        }
+        if (best) sevenDaysAgo = best.followerCount;
       }
+
+      result[entry.socialAccountId] = { current, sevenDaysAgo };
     }
   } catch {
-    // Analytics not available — follower counts will show as 0
+    // follower-growth endpoint not available — counts will show as 0
   }
-  return lookup;
+  return result;
 }
 
-/** Attempt to fetch follower counts from 7 days ago using period param.
- *  Returns a lookup of handle -> follower count at that point, or empty if unsupported. */
-async function fetchFollowerCounts7dAgo(
-  url: string,
-  headers: Record<string, string>
+/** Fetch Bluesky follower counts via the free public API (no auth needed).
+ *  Returns a map of lowercased handle -> followersCount. */
+async function fetchBskyFollowers(
+  handles: string[]
 ): Promise<Record<string, number>> {
-  const lookup: Record<string, number> = {};
-  try {
-    const res = await fetch(`${url}/api/analytics?period=7d`, {
-      headers,
-      signal: AbortSignal.timeout(8000),
-      cache: "no-store",
-    });
-    if (!res.ok) return lookup;
-    const data = await res.json();
-    // Some APIs return a `previous` or `start` snapshot alongside current
-    const accounts: SpellcastAnalyticsAccount[] = data.accounts ?? [];
-    for (const acc of accounts) {
-      const handle = normaliseHandle(
-        acc.platformAccountId ?? acc.handle ?? acc.username ?? ""
-      );
-      if (!handle) continue;
-      // Try dedicated history/previous fields first
-      if (acc.previousFollowers !== undefined) {
-        lookup[handle] = Number(acc.previousFollowers);
-      } else if (acc.followersStart !== undefined) {
-        lookup[handle] = Number(acc.followersStart);
-      } else if (acc.followersHistory && acc.followersHistory.length > 0) {
-        // Oldest entry in the history array is the 7d-ago snapshot
-        const sorted = [...acc.followersHistory].sort((a, b) =>
-          a.date < b.date ? -1 : 1
+  const result: Record<string, number> = {};
+  if (handles.length === 0) return result;
+
+  await Promise.all(
+    handles.map(async (handle) => {
+      const key = normaliseHandle(handle);
+      try {
+        const res = await fetch(
+          `https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(handle)}`,
+          { signal: AbortSignal.timeout(5000), cache: "no-store" }
         );
-        lookup[handle] = Number(sorted[0].count);
+        if (!res.ok) {
+          result[key] = 0;
+          return;
+        }
+        const data = await res.json();
+        result[key] = Number(data.followersCount ?? 0);
+      } catch {
+        result[key] = 0;
       }
-    }
-  } catch {
-    // 7d historical endpoint not available — gracefully ignore
-  }
-  return lookup;
+    })
+  );
+
+  return result;
 }
 
 /** Fetch analytics for a single post. Returns null if unavailable. */
@@ -313,13 +328,19 @@ export async function GET(req: NextRequest) {
   const weekAgo = getWindowStart(7);
   const monthAgo = getWindowStart(30);
 
-  const [accountSets, posts, engagement, followers, followers7dAgo] = await Promise.all([
+  const [accountSets, posts, engagement, followerGrowth] = await Promise.all([
     fetchAccountSets(url, headers),
     fetchPosts(url, headers),
     fetchEngagement(url, headers),
-    fetchFollowerCounts(url, headers),
-    fetchFollowerCounts7dAgo(url, headers),
+    fetchFollowerGrowth(url, headers),
   ]);
+
+  // Collect Bluesky handles for the public API call
+  const bskyHandles = accountSets
+    .flatMap((s) => s.socialAccounts)
+    .filter((a) => a.platform.toLowerCase() === "bluesky")
+    .map((a) => a.platformAccountId);
+  const bskyFollowers = await fetchBskyFollowers(bskyHandles);
 
   // Fetch analytics for posts published in the last 7 days (cap at 30 to avoid hammering API)
   const recentPosts = posts.filter((p) => {
@@ -390,19 +411,32 @@ export async function GET(req: NextRequest) {
       for (const acc of set.socialAccounts) {
         const overrideKey = `${acc.platform.toLowerCase()}:${acc.platformAccountId.toLowerCase()}`;
         const targetPersona = DISPLAY_PERSONA_OVERRIDE[overrideKey];
-        const normId = normaliseHandle(acc.platformAccountId);
-        const currentFollowers = followers[normId] ?? 0;
-        const historicalFollowers = followers7dAgo[normId];
-        const followersChange7d =
-          historicalFollowers !== undefined
-            ? currentFollowers - historicalFollowers
-            : null;
+        const platform = acc.platform.toLowerCase();
+
+        let followerCount = 0;
+        let followersChange7d: number | null = null;
+
+        if (platform === "instagram") {
+          const growth = followerGrowth[acc.id];
+          followerCount = growth?.current ?? 0;
+          if (growth?.current != null && growth.sevenDaysAgo != null) {
+            followersChange7d = growth.current - growth.sevenDaysAgo;
+          }
+        } else if (platform === "bluesky") {
+          followerCount = bskyFollowers[normaliseHandle(acc.platformAccountId)] ?? 0;
+          // No historical data for Bluesky
+          followersChange7d = null;
+        } else {
+          followerCount = 0;
+          followersChange7d = null;
+        }
+
         const { engagementLast7d, bestPostReach } = getAccountPostMetrics(acc.id);
         const row: AccountRowData = {
           platform: normalisePlatform(acc.platform),
           handle: cleanHandle(acc.platformAccountId, acc.displayName),
           displayName: acc.displayName ?? acc.platformAccountId,
-          followerCount: currentFollowers,
+          followerCount,
           postsThisWeek: countPostsForSocialAccountId(posts, acc.id, weekAgo),
           postsThisMonth: countPostsForSocialAccountId(posts, acc.id, monthAgo),
           followersChange7d,

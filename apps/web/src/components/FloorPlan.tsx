@@ -124,7 +124,7 @@ export default function FloorPlan({ stats, heartbeat, token, selectedRoom: exter
         reachThisWeek: stats?.meta.reachThisWeek ?? 0,
       },
       engagement: {
-        unread: stats?.engagement.unread ?? 0,
+        unread: stats?.opportunities?.length ?? 0,  // show actionable opportunities not raw unread
         total: stats?.engagement.total ?? 0,
       },
       orbit: {

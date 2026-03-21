@@ -495,7 +495,11 @@ export async function GET(req: NextRequest) {
     },
     health,
     content,
-    engagement,
+    engagement: {
+      unread: opportunities.length, // use actionable opportunities count, not raw historical unread
+      total: engagement.total,
+      byPlatform: engagement.byPlatform,
+    },
     orbit,
     seo,
     opportunities,
