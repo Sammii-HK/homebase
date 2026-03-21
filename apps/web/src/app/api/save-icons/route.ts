@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile } from "fs/promises";
 import path from "path";
+import { checkAuth } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
+  const denied = await checkAuth(req);
+  if (denied) return denied;
+
   const { png512, png192 } = await req.json();
 
   const publicDir = path.join(process.cwd(), "public");

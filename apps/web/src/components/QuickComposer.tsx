@@ -6,209 +6,185 @@ interface QuickComposerProps {
   token: string;
 }
 
-type ComposerState = "idle" | "sending" | "success" | "error";
+type ComposerState = "idle" | "generating" | "previewing" | "sending" | "success" | "error";
 
 const MAX_CHARS = 2000;
-const WARN_CHARS = 280;
 
 export default function QuickComposer({ token }: QuickComposerProps) {
   const [content, setContent] = useState("");
+  const [generated, setGenerated] = useState("");
   const [state, setState] = useState<ComposerState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const charCount = content.length;
-  const isOverWarn = charCount > WARN_CHARS;
   const isOverMax = charCount > MAX_CHARS;
+  const hasContent = content.trim().length > 0;
 
-  const submit = useCallback(async () => {
+  const headers = useCallback((): Record<string, string> => {
+    const h: Record<string, string> = { "Content-Type": "application/json" };
+    if (token !== "cookie") h["Authorization"] = `Bearer ${token}`;
+    return h;
+  }, [token]);
+
+  const autoReset = useCallback((delay = 2500) => {
+    if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    resetTimerRef.current = setTimeout(() => {
+      setState("idle");
+      setErrorMsg("");
+    }, delay);
+  }, []);
+
+  // Step 1 — generate a polished version via AI
+  const generate = useCallback(async () => {
     const trimmed = content.trim();
-    if (!trimmed || state === "sending") return;
-
-    setState("sending");
+    if (!trimmed || state === "generating") return;
+    setState("generating");
     setErrorMsg("");
-
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-      if (token !== "cookie") {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const res = await fetch("/api/quick-draft", {
+      const res = await fetch("/api/quick-draft/generate", {
         method: "POST",
-        headers,
+        headers: headers(),
         body: JSON.stringify({ content: trimmed }),
       });
+      const data = await res.json() as { result?: string; error?: string };
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      setGenerated(data.result ?? trimmed);
+      setState("previewing");
+    } catch (e: unknown) {
+      setErrorMsg(e instanceof Error ? e.message : "Generation failed");
+      setState("error");
+      autoReset(4000);
+    }
+  }, [content, state, headers, autoReset]);
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`);
-      }
-
+  // Step 2 — save the (generated or raw) content as a Spellcast dump
+  const save = useCallback(async (text: string) => {
+    if (!text.trim() || state === "sending") return;
+    setState("sending");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/quick-draft", {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({ content: text.trim() }),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
       setState("success");
       setContent("");
-
-      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-      resetTimerRef.current = setTimeout(() => setState("idle"), 2000);
+      setGenerated("");
+      autoReset(2500);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Something went wrong";
-      setErrorMsg(msg);
+      setErrorMsg(e instanceof Error ? e.message : "Failed to save");
       setState("error");
-
-      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
-      resetTimerRef.current = setTimeout(() => {
-        setState("idle");
-        setErrorMsg("");
-      }, 4000);
+      autoReset(4000);
     }
-  }, [content, state, token]);
+  }, [state, headers, autoReset]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
-      submit();
+      generate();
     }
   };
 
-  const isSending = state === "sending";
-  const isSuccess = state === "success";
-  const isError = state === "error";
+  const busy = state === "generating" || state === "sending";
 
   return (
-    <div
-      style={{
-        background: "#0d0d14",
-        border: "1px solid #1a1a2e",
-        borderRadius: 8,
-        padding: "12px 14px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-      }}
-    >
+    <div style={{ background: "#0d0d14", border: "1px solid #1a1a2e", borderRadius: 8, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
       {/* Header */}
-      <div
-        style={{
-          fontFamily: "'Press Start 2P', monospace",
-          fontSize: 7,
-          color: "rgba(255,255,255,0.35)",
-          letterSpacing: 1,
-        }}
-      >
+      <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: "rgba(255,255,255,0.35)", letterSpacing: 1 }}>
         QUICK DRAFT
       </div>
 
-      {/* Textarea */}
+      {/* Brain dump textarea */}
       <textarea
         ref={textareaRef}
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onChange={(e) => { setContent(e.target.value); if (state === "previewing" || state === "error") { setState("idle"); setGenerated(""); } }}
         onKeyDown={handleKeyDown}
-        placeholder="Write a post idea... (Ctrl+Enter to send)"
+        placeholder="Brain dump an idea... (Ctrl+Enter to polish with AI)"
         maxLength={MAX_CHARS}
-        rows={4}
-        disabled={isSending}
+        rows={3}
+        disabled={busy}
         style={{
-          width: "100%",
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 6,
-          color: isSending ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.85)",
-          fontFamily: "monospace",
-          fontSize: 12,
-          lineHeight: 1.6,
-          padding: "8px 10px",
-          resize: "vertical",
-          outline: "none",
-          boxSizing: "border-box",
-          transition: "border-color 0.15s, color 0.15s",
+          width: "100%", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 6, color: busy ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.85)",
+          fontFamily: "monospace", fontSize: 12, lineHeight: 1.6, padding: "8px 10px",
+          resize: "vertical", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s, color 0.15s",
         }}
-        onFocus={(e) => {
-          e.currentTarget.style.borderColor = "rgba(167,139,250,0.4)";
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-        }}
+        onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(167,139,250,0.4)"; }}
+        onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
       />
 
-      {/* Footer row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 8,
-        }}
-      >
-        {/* Status / error message */}
-        <div
-          style={{
-            fontFamily: "monospace",
-            fontSize: 11,
-            color: isError
-              ? "#f87171"
-              : isSuccess
-              ? "#4ade80"
-              : "transparent",
-            transition: "color 0.2s",
-            minHeight: 16,
-            flex: 1,
-          }}
-        >
-          {isSuccess && "Saved as draft \u2713"}
-          {isError && (errorMsg || "Failed to save")}
+      {/* AI preview panel */}
+      {state === "previewing" && generated && (
+        <div style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 6, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ fontFamily: "monospace", fontSize: 10, color: "rgba(167,139,250,0.7)", marginBottom: 2 }}>✦ AI polished</div>
+          <textarea
+            value={generated}
+            onChange={(e) => setGenerated(e.target.value)}
+            rows={4}
+            style={{
+              width: "100%", background: "transparent", border: "none", color: "rgba(255,255,255,0.9)",
+              fontFamily: "monospace", fontSize: 12, lineHeight: 1.6, resize: "vertical",
+              outline: "none", boxSizing: "border-box", padding: 0,
+            }}
+          />
+          <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+            <button
+              onClick={() => { setState("idle"); setGenerated(""); }}
+              style={{ fontFamily: "monospace", fontSize: 11, padding: "4px 10px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
+            >
+              Discard
+            </button>
+            <button
+              onClick={() => save(content)}
+              style={{ fontFamily: "monospace", fontSize: 11, padding: "4px 10px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)", cursor: "pointer" }}
+            >
+              Save original
+            </button>
+            <button
+              onClick={() => save(generated)}
+              style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, letterSpacing: 0.5, padding: "5px 10px", borderRadius: 4, border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.12)", color: "#a78bfa", cursor: "pointer" }}
+            >
+              SAVE TO SPELLCAST
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <div style={{ fontFamily: "monospace", fontSize: 11, color: state === "error" ? "#f87171" : state === "success" ? "#4ade80" : "transparent", transition: "color 0.2s", minHeight: 16, flex: 1 }}>
+          {state === "success" && "Saved to Spellcast \u2713"}
+          {state === "error" && (errorMsg || "Something went wrong")}
+          {state === "generating" && <span style={{ color: "#a78bfa" }}>Polishing...</span>}
         </div>
 
-        {/* Character count */}
-        <div
-          style={{
-            fontFamily: "monospace",
-            fontSize: 10,
-            color: isOverWarn
-              ? isOverMax
-                ? "#f87171"
-                : "#fbbf24"
-              : "rgba(255,255,255,0.25)",
-            flexShrink: 0,
-            transition: "color 0.15s",
-          }}
-        >
+        <div style={{ fontFamily: "monospace", fontSize: 10, color: isOverMax ? "#f87171" : charCount > 280 ? "#fbbf24" : "rgba(255,255,255,0.2)", flexShrink: 0 }}>
           {charCount}/{MAX_CHARS}
         </div>
 
-        {/* Send button */}
-        <button
-          onClick={submit}
-          disabled={isSending || !content.trim() || isOverMax}
-          title="Send to Spellcast (Ctrl+Enter)"
-          style={{
-            fontFamily: "'Press Start 2P', monospace",
-            fontSize: 6,
-            letterSpacing: 0.5,
-            padding: "6px 10px",
-            borderRadius: 5,
-            border: "1px solid rgba(167,139,250,0.35)",
-            background:
-              isSending || !content.trim() || isOverMax
-                ? "rgba(167,139,250,0.04)"
-                : "rgba(167,139,250,0.12)",
-            color:
-              isSending || !content.trim() || isOverMax
-                ? "rgba(167,139,250,0.3)"
-                : "#a78bfa",
-            cursor:
-              isSending || !content.trim() || isOverMax
-                ? "not-allowed"
-                : "pointer",
-            flexShrink: 0,
-            transition: "all 0.15s",
-          }}
-        >
-          {isSending ? "SENDING..." : "SEND TO SPELLCAST"}
-        </button>
+        {state !== "previewing" && (
+          <button
+            onClick={generate}
+            disabled={busy || !hasContent || isOverMax}
+            title="Polish with AI (Ctrl+Enter)"
+            style={{
+              fontFamily: "'Press Start 2P', monospace", fontSize: 6, letterSpacing: 0.5,
+              padding: "6px 10px", borderRadius: 5, flexShrink: 0, transition: "all 0.15s",
+              border: "1px solid rgba(167,139,250,0.35)",
+              background: busy || !hasContent || isOverMax ? "rgba(167,139,250,0.04)" : "rgba(167,139,250,0.12)",
+              color: busy || !hasContent || isOverMax ? "rgba(167,139,250,0.3)" : "#a78bfa",
+              cursor: busy || !hasContent || isOverMax ? "not-allowed" : "pointer",
+            }}
+          >
+            {state === "generating" ? "..." : "✦ GENERATE"}
+          </button>
+        )}
       </div>
     </div>
   );

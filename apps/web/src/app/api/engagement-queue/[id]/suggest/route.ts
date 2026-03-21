@@ -26,9 +26,14 @@ export async function GET(
 
   try {
     const res = await fetch(
-      `${spellcastUrl}/api/engagement/${id}/ai-reply?tone=helpful&accountSetId=${accountSetId}`,
+      `${spellcastUrl}/api/engagement/${id}/ai-reply`,
       {
-        headers: { "x-api-key": apiKey },
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ tone: "helpful", accountSetId }),
         signal: AbortSignal.timeout(10000),
         cache: "no-store",
       }
@@ -43,7 +48,11 @@ export async function GET(
     }
 
     const data = await res.json();
-    const reply = String(data.reply ?? data.suggestion ?? data.content ?? "");
+    // Response is { suggestions: [{tone, content}], sentiment }
+    const suggestions = data.suggestions as Array<{ tone: string; content: string }> | undefined;
+    const reply = String(
+      suggestions?.[0]?.content ?? data.reply ?? data.suggestion ?? data.content ?? ""
+    );
 
     return NextResponse.json({ reply });
   } catch (e) {

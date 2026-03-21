@@ -322,9 +322,11 @@ async function getOpportunities() {
 
         // Prefer Threads/Instagram (Lunary's target platforms)
         const platform = String(post.platform ?? "");
-        if (platform === "threads" || platform === "instagram") score += 0.1;
-        // Slight boost for Reddit (good for long-form answers)
-        if (platform === "reddit") score += 0.05;
+        if (platform === "threads" || platform === "instagram") score += 0.25;
+        // Boost Reddit (good for long-form answers)
+        if (platform === "reddit") score += 0.15;
+        // Penalise Bluesky slightly (not Lunary's audience)
+        if (platform === "bluesky") score -= 0.1;
 
         return { ...post, _boostedScore: Math.min(score, 1) };
       })
@@ -334,7 +336,7 @@ async function getOpportunities() {
         b._boostedScore - a._boostedScore
       );
 
-    // Take top 5, max 2 per platform
+    // Take top 5, max 2 per platform, max 1 Bluesky (not Lunary's target)
     const result: {
       id: string;
       platform: string;
@@ -347,7 +349,8 @@ async function getOpportunities() {
     for (const post of scored) {
       if (result.length >= 5) break;
       const platform = String(post.platform ?? "unknown");
-      if (result.filter((p) => p.platform === platform).length >= 3) continue;
+      const platformCap = platform === "bluesky" ? 1 : 2;
+      if (result.filter((p) => p.platform === platform).length >= platformCap) continue;
 
       result.push({
         id: String(post.id ?? post._id ?? Math.random()),

@@ -13,6 +13,7 @@ ENV PORT=3005
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 EXPOSE 3005
 CMD ["node", "server.js"]

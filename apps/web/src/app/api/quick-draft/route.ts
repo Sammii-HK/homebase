@@ -51,13 +51,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(`${spellcastUrl}/api/posts`, {
+    // Save as a brain dump (feeds into Spellcast's dump → post conversion workflow)
+    const res = await fetch(`${spellcastUrl}/api/dumps`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ content, status: "DRAFT", platforms: [] }),
+      body: JSON.stringify({ content, targetType: "post", accountSetId: process.env.SPELLCAST_DEFAULT_ACCOUNT_SET_ID }),
       signal: AbortSignal.timeout(8000),
     });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   createDrawHelpers,
   drawGrass,
@@ -110,10 +111,18 @@ function TierPreview({ tier, tick }: { tier: 0 | 1 | 2 | 3; tick: number }) {
 }
 
 export default function IconGen() {
+  const router = useRouter();
   const canvas512 = useRef<HTMLCanvasElement>(null);
   const canvas192 = useRef<HTMLCanvasElement>(null);
   const [tick, setTick] = useState(0);
   const rafRef = useRef<number>(0);
+
+  // Gate behind auth
+  useEffect(() => {
+    fetch("/api/auth/session").then(r => {
+      if (!r.ok) router.replace("/");
+    });
+  }, [router]);
 
   useEffect(() => {
     let t = 0;

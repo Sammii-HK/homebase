@@ -276,9 +276,9 @@ function EngagementCard({
       {/* Their comment/message content */}
       <div
         style={{
-          fontFamily: PS2P,
-          fontSize: 8,
-          color: "rgba(255,255,255,0.7)",
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          fontSize: 14,
+          color: "rgba(255,255,255,0.85)",
           lineHeight: 1.6,
           marginBottom: 10,
           wordBreak: "break-word",
@@ -291,9 +291,9 @@ function EngagementCard({
       {item.postContent && (
         <div
           style={{
-            fontFamily: PS2P,
-            fontSize: 7,
-            color: "rgba(255,255,255,0.3)",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            fontSize: 12,
+            color: "rgba(255,255,255,0.4)",
             lineHeight: 1.5,
             marginBottom: 12,
             padding: "8px 10px",
@@ -352,8 +352,8 @@ function EngagementCard({
           rows={3}
           style={{
             width: "100%",
-            fontFamily: PS2P,
-            fontSize: 7,
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            fontSize: 14,
             lineHeight: 1.6,
             padding: "10px 12px",
             paddingRight: 40,

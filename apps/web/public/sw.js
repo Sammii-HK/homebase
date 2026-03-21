@@ -9,7 +9,9 @@ self.addEventListener("activate", (event) => {
 });
 
 // Pass-through fetch — no offline caching needed for a live dashboard
-self.addEventListener("fetch", () => {});
+self.addEventListener("fetch", (event) => {
+  event.respondWith(fetch(event.request));
+});
 
 // ── Push notification handling ───────────────────────────────────────
 

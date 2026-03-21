@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
   // 1. Fetch unread engagement from Spellcast
   if (apiKey) {
     try {
-      const res = await fetch(`${spellcastUrl}/api/engagement?status=unread&limit=20`, {
+      const res = await fetch(`${spellcastUrl}/api/engagement?status=unread&limit=50`, {
         headers: { Authorization: `Bearer ${apiKey}` },
         signal: AbortSignal.timeout(5000),
         cache: "no-store",
@@ -281,8 +281,23 @@ export async function GET(req: NextRequest) {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
+  // Cap Bluesky to 3 items (unless high-scoring) to avoid flooding
+  const BLUESKY_CAP = 3;
+  let blueskySeen = 0;
+  const deduped: EngagementItem[] = [];
+  for (const item of items) {
+    if (item.platform === "bluesky") {
+      if (item.score > 0 || blueskySeen < BLUESKY_CAP) {
+        deduped.push(item);
+        if (item.score <= 0) blueskySeen++;
+      }
+    } else {
+      deduped.push(item);
+    }
+  }
+
   // Cap at 10 items
-  const capped = items.slice(0, MAX_ITEMS_RETURNED);
+  const capped = deduped.slice(0, MAX_ITEMS_RETURNED);
 
   return NextResponse.json({ items: capped, count: capped.length });
 }
