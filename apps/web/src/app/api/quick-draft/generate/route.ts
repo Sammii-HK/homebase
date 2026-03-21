@@ -22,9 +22,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "content is required" }, { status: 400 });
   }
 
+  const bodyRecord = typeof body === "object" && body !== null
+    ? (body as Record<string, unknown>)
+    : {};
+
+  const accountSetId =
+    typeof bodyRecord.accountSetId === "string" && bodyRecord.accountSetId
+      ? bodyRecord.accountSetId
+      : (process.env.SPELLCAST_DEFAULT_ACCOUNT_SET_ID ?? undefined);
+
   const apiKey = process.env.SPELLCAST_API_KEY;
   const spellcastUrl = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
-  const accountSetId = process.env.SPELLCAST_DEFAULT_ACCOUNT_SET_ID;
 
   if (!apiKey) {
     return NextResponse.json({ error: "Spellcast API key not configured" }, { status: 503 });

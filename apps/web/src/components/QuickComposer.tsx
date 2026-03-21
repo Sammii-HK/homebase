@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 interface QuickComposerProps {
   token: string;
+}
+
+interface AccountSet {
+  id: string;
+  name: string;
 }
 
 type ComposerState = "idle" | "generating" | "previewing" | "sending" | "success" | "error";
@@ -15,6 +20,8 @@ export default function QuickComposer({ token }: QuickComposerProps) {
   const [generated, setGenerated] = useState("");
   const [state, setState] = useState<ComposerState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [accountSets, setAccountSets] = useState<AccountSet[]>([]);
+  const [selectedAccountSetId, setSelectedAccountSetId] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -36,6 +43,26 @@ export default function QuickComposer({ token }: QuickComposerProps) {
     }, delay);
   }, []);
 
+  // Fetch account sets on mount
+  useEffect(() => {
+    const fetchAccountSets = async () => {
+      try {
+        const h: Record<string, string> = {};
+        if (token !== "cookie") h["Authorization"] = `Bearer ${token}`;
+        const res = await fetch("/api/quick-draft/account-sets", { headers: h });
+        if (!res.ok) return;
+        const data = await res.json() as AccountSet[];
+        if (Array.isArray(data) && data.length > 0) {
+          setAccountSets(data);
+          setSelectedAccountSetId(data[0].id);
+        }
+      } catch {
+        // Silently fail — falls back to env var default on the server
+      }
+    };
+    void fetchAccountSets();
+  }, [token]);
+
   // Step 1 — generate a polished version via AI
   const generate = useCallback(async () => {
     const trimmed = content.trim();
@@ -46,7 +73,10 @@ export default function QuickComposer({ token }: QuickComposerProps) {
       const res = await fetch("/api/quick-draft/generate", {
         method: "POST",
         headers: headers(),
-        body: JSON.stringify({ content: trimmed }),
+        body: JSON.stringify({
+          content: trimmed,
+          ...(selectedAccountSetId ? { accountSetId: selectedAccountSetId } : {}),
+        }),
       });
       const data = await res.json() as { result?: string; error?: string };
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
@@ -57,7 +87,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
       setState("error");
       autoReset(4000);
     }
-  }, [content, state, headers, autoReset]);
+  }, [content, state, headers, autoReset, selectedAccountSetId]);
 
   // Step 2 — save the (generated or raw) content as a Spellcast dump
   const save = useCallback(async (text: string) => {
@@ -68,7 +98,10 @@ export default function QuickComposer({ token }: QuickComposerProps) {
       const res = await fetch("/api/quick-draft", {
         method: "POST",
         headers: headers(),
-        body: JSON.stringify({ content: text.trim() }),
+        body: JSON.stringify({
+          content: text.trim(),
+          ...(selectedAccountSetId ? { accountSetId: selectedAccountSetId } : {}),
+        }),
       });
       const data = await res.json() as { ok?: boolean; error?: string };
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
@@ -81,7 +114,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
       setState("error");
       autoReset(4000);
     }
-  }, [state, headers, autoReset]);
+  }, [state, headers, autoReset, selectedAccountSetId]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -98,6 +131,34 @@ export default function QuickComposer({ token }: QuickComposerProps) {
       <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: "rgba(255,255,255,0.35)", letterSpacing: 1 }}>
         QUICK DRAFT
       </div>
+
+      {/* Account set picker */}
+      {accountSets.length > 1 && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {accountSets.map((set) => {
+            const isSelected = set.id === selectedAccountSetId;
+            return (
+              <button
+                key={set.id}
+                onClick={() => setSelectedAccountSetId(set.id)}
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: 10,
+                  padding: "3px 8px",
+                  borderRadius: 20,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  background: isSelected ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.04)",
+                  border: isSelected ? "1px solid rgba(167,139,250,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                  color: isSelected ? "#a78bfa" : "rgba(255,255,255,0.35)",
+                }}
+              >
+                {set.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Brain dump textarea */}
       <textarea

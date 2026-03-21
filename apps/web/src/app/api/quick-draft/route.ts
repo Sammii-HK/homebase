@@ -43,6 +43,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const bodyRecord = body as Record<string, unknown>;
+  const accountSetId =
+    typeof bodyRecord.accountSetId === "string" && bodyRecord.accountSetId
+      ? bodyRecord.accountSetId
+      : (process.env.SPELLCAST_DEFAULT_ACCOUNT_SET_ID ?? undefined);
+
   const apiKey = process.env.SPELLCAST_API_KEY;
   const spellcastUrl = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
 
@@ -58,7 +64,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ content, targetType: "post", accountSetId: process.env.SPELLCAST_DEFAULT_ACCOUNT_SET_ID }),
+      body: JSON.stringify({ content, targetType: "post", ...(accountSetId ? { accountSetId } : {}) }),
       signal: AbortSignal.timeout(8000),
     });
 
