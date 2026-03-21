@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export interface Alert {
   id: string;
-  level: "critical" | "warning";
+  level: "critical" | "warning" | "error" | "info";
   message: string;
   action?: { label: string; tab?: "status" | "queue" | "chat" };
 }
@@ -56,6 +56,38 @@ async function getOrbitAlerts(): Promise<Alert[]> {
           action: { label: "Check", tab: "status" },
         });
       }
+    }
+
+    // Overnight log errors
+    try {
+      const logRes = await fetch(`${orbitUrl}/api/state/overnight-log`, {
+        signal: AbortSignal.timeout(3000),
+        cache: "no-store",
+      });
+      if (logRes.ok) {
+        const log = await logRes.json();
+        const errors: { message?: string; agent?: string }[] = Array.isArray(log.errors)
+          ? log.errors
+          : Array.isArray(log)
+          ? (log as { level?: string; message?: string; agent?: string }[]).filter(
+              (e) => e.level === "error" || e.level === "fatal"
+            )
+          : [];
+        if (errors.length > 0) {
+          const summary = errors
+            .slice(0, 3)
+            .map((e) => e.message ?? e.agent ?? "unknown")
+            .join(", ");
+          alerts.push({
+            id: "orbit-overnight-errors",
+            level: "error",
+            message: `Overnight: ${errors.length} error(s) — ${summary}`,
+            action: { label: "Check", tab: "status" },
+          });
+        }
+      }
+    } catch {
+      // Overnight log not available — skip silently
     }
 
     // Auth status

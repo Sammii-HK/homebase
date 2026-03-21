@@ -13,6 +13,8 @@ interface CastJob {
   fitScore: number | null;
   interviewDate: string | null;
   notionUrl: string;
+  coverLetterPreview?: string;
+  cvHeadline?: string;
 }
 
 interface CastData {
@@ -101,109 +103,219 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function JobRow({ job }: { job: CastJob }) {
+  const [expanded, setExpanded] = useState(false);
   const color = STATUS_COLORS[job.status] ?? "rgba(255,255,255,0.4)";
   const bg = STATUS_BG[job.status] ?? "rgba(255,255,255,0.03)";
   const border = STATUS_BORDER[job.status] ?? "rgba(255,255,255,0.08)";
+  const hasPreview = !!(job.coverLetterPreview || job.cvHeadline);
 
   return (
-    <a
-      href={job.notionUrl}
-      target="_blank"
-      rel="noopener noreferrer"
+    <div
       style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 10,
-        padding: "10px 12px",
         background: bg,
         border: `1px solid ${border}`,
         borderRadius: 6,
-        textDecoration: "none",
-        cursor: "pointer",
+        overflow: "hidden",
         transition: "all 0.15s",
       }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.background =
-          `${color}18`;
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLAnchorElement).style.background = bg;
-      }}
     >
-      {/* Left accent bar */}
+      {/* Main row — expands if preview available, otherwise opens Notion */}
       <div
         style={{
-          width: 3,
-          borderRadius: 2,
-          background: color,
-          alignSelf: "stretch",
-          flexShrink: 0,
-          minHeight: 20,
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 10,
+          padding: "10px 12px",
+          cursor: "pointer",
         }}
-      />
-
-      <div style={{ flex: 1, minWidth: 0 }}>
+        onClick={() => {
+          if (hasPreview) {
+            setExpanded((v) => !v);
+          } else {
+            window.open(job.notionUrl, "_blank", "noopener,noreferrer");
+          }
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLDivElement).style.background = `${color}18`;
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLDivElement).style.background = "transparent";
+        }}
+      >
+        {/* Left accent bar */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 8,
-            marginBottom: 4,
+            width: 3,
+            borderRadius: 2,
+            background: color,
+            alignSelf: "stretch",
+            flexShrink: 0,
+            minHeight: 20,
           }}
-        >
-          <span
+        />
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
             style={{
-              fontFamily: PS2P,
-              fontSize: 9,
-              color: "#fff",
-              letterSpacing: 0.3,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+              marginBottom: 4,
             }}
           >
-            {job.company}
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            <FitScore score={job.fitScore} />
-            {job.interviewDate && (
+            <span
+              style={{
+                fontFamily: PS2P,
+                fontSize: 9,
+                color: "#fff",
+                letterSpacing: 0.3,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {job.company}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+              <FitScore score={job.fitScore} />
+              {job.interviewDate && (
+                <span
+                  style={{
+                    fontFamily: PS2P,
+                    fontSize: 7,
+                    color: "#4ade80",
+                    flexShrink: 0,
+                  }}
+                >
+                  {formatDate(job.interviewDate)}
+                </span>
+              )}
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                color: "rgba(255,255,255,0.55)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                flex: 1,
+              }}
+            >
+              {job.role}
+            </span>
+            <StatusBadge status={job.status} />
+            {hasPreview && (
               <span
                 style={{
                   fontFamily: PS2P,
-                  fontSize: 7,
-                  color: "#4ade80",
+                  fontSize: 6,
+                  color: "rgba(255,255,255,0.3)",
                   flexShrink: 0,
+                  userSelect: "none",
                 }}
               >
-                {formatDate(job.interviewDate)}
+                {expanded ? "▲" : "▼"} PREVIEW
               </span>
             )}
           </div>
         </div>
+      </div>
+
+      {/* Expanded preview panel */}
+      {expanded && hasPreview && (
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
+            borderTop: `1px solid ${border}`,
+            padding: "12px 14px",
+            background: "rgba(0,0,0,0.25)",
           }}
         >
-          <span
+          {job.cvHeadline && (
+            <div style={{ marginBottom: 10 }}>
+              <div
+                style={{
+                  fontFamily: PS2P,
+                  fontSize: 6,
+                  color: "rgba(255,255,255,0.3)",
+                  letterSpacing: 1,
+                  marginBottom: 4,
+                }}
+              >
+                CV HEADLINE
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.7)",
+                  lineHeight: 1.5,
+                }}
+              >
+                {job.cvHeadline}
+              </div>
+            </div>
+          )}
+
+          {job.coverLetterPreview && (
+            <div style={{ marginBottom: 12 }}>
+              <div
+                style={{
+                  fontFamily: PS2P,
+                  fontSize: 6,
+                  color: "rgba(255,255,255,0.3)",
+                  letterSpacing: 1,
+                  marginBottom: 4,
+                }}
+              >
+                COVER LETTER
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: "rgba(255,255,255,0.45)",
+                  lineHeight: 1.6,
+                  fontStyle: "italic",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 4,
+                  padding: "8px 10px",
+                }}
+              >
+                {job.coverLetterPreview}
+              </div>
+            </div>
+          )}
+
+          <a
+            href={job.notionUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
-              fontSize: 11,
-              color: "rgba(255,255,255,0.55)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              flex: 1,
+              display: "inline-block",
+              fontFamily: PS2P,
+              fontSize: 7,
+              color: color,
+              background: `${color}12`,
+              border: `1px solid ${color}30`,
+              borderRadius: 4,
+              padding: "5px 10px",
+              textDecoration: "none",
+              letterSpacing: 0.5,
             }}
           >
-            {job.role}
-          </span>
-          <StatusBadge status={job.status} />
+            OPEN IN NOTION
+          </a>
         </div>
-      </div>
-    </a>
+      )}
+    </div>
   );
 }
 

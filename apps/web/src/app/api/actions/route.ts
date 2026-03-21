@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.SPELLCAST_API_KEY;
   const cronSecret = process.env.SPELLCAST_CRON_SECRET;
   const url = process.env.SPELLCAST_API_URL ?? "https://api.spellcast.sammii.dev";
+  const orbitUrl = process.env.ORBIT_URL ?? "http://localhost:3001";
 
   const body = await req.json();
   const { action, postId, service } = body as {
@@ -134,6 +135,86 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: `Deploy trigger failed: ${res.status}` }, { status: res.status });
         }
         return NextResponse.json({ ok: true, message: `${service} deploy triggered` });
+      }
+
+      // ── Quick action panel ──
+
+      case "approve-all": {
+        // Approve pending posts with score >= 75
+        if (!apiKey) return NextResponse.json({ error: "No API key" }, { status: 500 });
+        const listRes = await fetch(`${url}/api/posts?status=pending_review&limit=100`, {
+          headers,
+          cache: "no-store",
+        });
+        if (!listRes.ok) {
+          return NextResponse.json({ error: "Failed to fetch pending posts" }, { status: 502 });
+        }
+        const listData = await listRes.json();
+        const allPending: Array<{ id?: string; _id?: string; score?: number; qualityScore?: number }> =
+          Array.isArray(listData) ? listData : listData.posts ?? listData.data ?? [];
+        const eligible = allPending.filter(
+          (p) => (p.score ?? p.qualityScore ?? 0) >= 75
+        );
+        let approved = 0;
+        let failed = 0;
+        const approveErrors: string[] = [];
+        await Promise.all(
+          eligible.map(async (post) => {
+            const id = post.id ?? post._id;
+            if (!id) return;
+            try {
+              const r = await fetch(`${url}/api/posts/${id}/approve`, {
+                method: "POST",
+                headers,
+                cache: "no-store",
+              });
+              if (r.ok) {
+                approved++;
+              } else {
+                failed++;
+                approveErrors.push(`${id}: ${r.status}`);
+              }
+            } catch (e) {
+              failed++;
+              approveErrors.push(`${id}: ${e}`);
+            }
+          })
+        );
+        return NextResponse.json({
+          ok: true,
+          approved,
+          failed,
+          skipped: allPending.length - eligible.length,
+          errors: approveErrors.length > 0 ? approveErrors : undefined,
+          message: `Approved ${approved} post${approved === 1 ? "" : "s"} (score ≥75)`,
+        });
+      }
+
+      case "run-briefing": {
+        // Fire and forget — trigger Orbit briefing refresh
+        fetch(`${orbitUrl}/api/briefing/refresh`, {
+          method: "POST",
+          signal: AbortSignal.timeout(3000),
+        }).catch(() => {
+          // Silently ignore — fire and forget
+        });
+        return NextResponse.json({ ok: true, message: "Briefing refresh triggered" });
+      }
+
+      case "generate-content": {
+        // Fire and forget — trigger overnight content pipeline on demand
+        fetch(`${orbitUrl}/api/pipeline/trigger`, {
+          method: "POST",
+          signal: AbortSignal.timeout(3000),
+        }).catch(() => {
+          // Silently ignore — fire and forget
+        });
+        return NextResponse.json({ ok: true, message: "Content pipeline triggered" });
+      }
+
+      case "sync": {
+        // Client re-fetches all stats — nothing to do server-side
+        return NextResponse.json({ ok: true, message: "Sync acknowledged" });
       }
 
       default:

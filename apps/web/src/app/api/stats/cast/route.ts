@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAuth } from "@/lib/auth";
+import fs from "fs";
+import path from "path";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,64 @@ export interface CastJob {
   fitScore: number | null;
   interviewDate: string | null;
   notionUrl: string;
+  coverLetterPreview?: string;
+  cvHeadline?: string;
+}
+
+const CAST_GENERATED_DIR = "/Users/sammii/development/cast/cv/generated";
+
+function companyToSlugPrefix(company: string): string {
+  return company
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function readGeneratedPreview(company: string): { coverLetterPreview?: string; cvHeadline?: string } {
+  try {
+    const slugPrefix = companyToSlugPrefix(company);
+    if (!fs.existsSync(CAST_GENERATED_DIR)) return {};
+
+    const files = fs.readdirSync(CAST_GENERATED_DIR);
+
+    // Find cover letter file matching company slug prefix
+    const clFile = files.find(
+      (f) => f.startsWith(slugPrefix) && f.endsWith("-cover-letter.md")
+    );
+    const cvFile = files.find(
+      (f) => f.startsWith(slugPrefix) && f.endsWith("-cv.md")
+    );
+
+    let coverLetterPreview: string | undefined;
+    let cvHeadline: string | undefined;
+
+    if (clFile) {
+      const clContent = fs.readFileSync(path.join(CAST_GENERATED_DIR, clFile), "utf-8");
+      // First 300 chars of the cover letter body
+      coverLetterPreview = clContent.trim().slice(0, 300) + (clContent.trim().length > 300 ? "..." : "");
+    }
+
+    if (cvFile) {
+      const cvContent = fs.readFileSync(path.join(CAST_GENERATED_DIR, cvFile), "utf-8");
+      const cvLines = cvContent.split("\n");
+      // Headline is the line after '# Samantha Kellow'
+      for (let i = 0; i < cvLines.length; i++) {
+        if (cvLines[i].startsWith("# ")) {
+          for (let j = i + 1; j < Math.min(i + 5, cvLines.length); j++) {
+            if (cvLines[j].trim()) {
+              cvHeadline = cvLines[j].trim();
+              break;
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    return { coverLetterPreview, cvHeadline };
+  } catch {
+    return {};
+  }
 }
 
 function extractText(prop: NotionProperty | undefined): string {
@@ -119,6 +179,8 @@ async function queryApplications(): Promise<CastJob[]> {
 
       const interviewDate = extractDate(props["Interview Date"] ?? props["Interview"] ?? props["Date"]);
 
+      const preview = readGeneratedPreview(company);
+
       return {
         id: page.id,
         company,
@@ -127,6 +189,7 @@ async function queryApplications(): Promise<CastJob[]> {
         fitScore,
         interviewDate,
         notionUrl: page.url,
+        ...preview,
       };
     });
   } catch (e) {

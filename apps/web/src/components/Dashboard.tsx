@@ -15,7 +15,9 @@ import ChatPanel from "./ChatPanel";
 import AlertStrip from "./AlertStrip";
 import FloorPlan from "./FloorPlan";
 import CastQueue from "./CastQueue";
+import QuickActions from "./QuickActions";
 import type { Alert } from "@/app/api/alerts/route";
+import { registerPush } from "@/lib/push";
 import {
   startAuthentication,
   startRegistration,
@@ -67,6 +69,7 @@ export default function Dashboard() {
         if (sessionRes.ok) {
           setToken("cookie");
           setLoading(false);
+          registerPush().catch(() => {});
           return;
         }
       } catch {
@@ -207,6 +210,8 @@ export default function Dashboard() {
       }
 
       setToken("cookie");
+      // Register for push notifications after successful login
+      registerPush().catch(() => {});
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Authentication failed";
       if (!msg.includes("cancelled") && !msg.includes("NotAllowed")) {
@@ -760,6 +765,12 @@ export default function Dashboard() {
                       token={token}
                       onOpenApprovalQueue={() => setActiveTab("queue")}
                       inline
+                    />
+                    <QuickActions
+                      token={token}
+                      onAction={(action) => {
+                        if (action === "sync" && token) fetchData(token);
+                      }}
                     />
                     <KeyNumbers stats={stats} />
                     <LaunchTracker token={token} />
