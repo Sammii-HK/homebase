@@ -21,6 +21,7 @@ import Opportunities from "./Opportunities";
 import WeeklyRhythm from "./WeeklyRhythm";
 import OrbitLog from "./OrbitLog";
 import DigestCard from "./DigestCard";
+import QuickComposer from "./QuickComposer";
 import type { Alert } from "@/app/api/alerts/route";
 import { registerPush } from "@/lib/push";
 import {
@@ -779,6 +780,7 @@ export default function Dashboard() {
                       }}
                     />
                     <KeyNumbers stats={stats} />
+                    <QuickComposer token={token} />
                     <WeeklyRhythm token={token} />
                     <LaunchTracker token={token} />
                   </div>
