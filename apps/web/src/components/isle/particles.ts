@@ -184,39 +184,41 @@ export class ParticleSystem {
       }
     }
 
-    // Falling leaves — autumn
+    // Falling leaves — autumn (higher density, garden columns only)
     if (season === "autumn") {
-      if (this.particles.filter(p => p.type === "leaf").length < 15) {
+      if (this.particles.filter(p => p.type === "leaf").length < 28) {
         const p = this.spawn();
         if (p) {
           p.type = "leaf";
+          // Spawn from the garden tree columns (cols 13-31)
           p.x = gardenLeft + Math.random() * (gardenRight - gardenLeft);
           p.y = -5 + Math.random() * 15;
-          p.vx = (Math.random() - 0.3) * 10; // horizontal drift
-          p.vy = 3 + Math.random() * 3; // slow fall
-          p.life = 15 + Math.random() * 10;
+          p.vx = (Math.random() - 0.35) * 12; // horizontal drift
+          p.vy = 2.5 + Math.random() * 3; // slow fall
+          p.life = 14 + Math.random() * 12;
           p.maxLife = p.life;
-          p.size = 2 + Math.random() * 2;
-          const leafCols = ["#c05820", "#e07830", "#d0a020", "#a04010", "#cc6020"];
+          p.size = 2 + Math.random() * 2.5;
+          const leafCols = ["#c05820", "#e07830", "#d0a020", "#a04010", "#cc6020", "#b84818", "#d89428"];
           p.color = leafCols[Math.floor(Math.random() * leafCols.length)];
-          p.opacity = 0.7;
+          p.opacity = 0.75;
           p.phase = Math.random() * Math.PI * 2;
           p.rotation = Math.random() * Math.PI * 2;
         }
       }
     }
 
-    // Cherry blossoms — spring
+    // Cherry blossoms — spring (lazy sideways drift, slightly more plentiful)
     if (season === "spring") {
-      if (this.particles.filter(p => p.type === "blossom").length < 18) {
+      if (this.particles.filter(p => p.type === "blossom").length < 24) {
         const p = this.spawn();
         if (p) {
           p.type = "blossom";
           p.x = gardenLeft + Math.random() * (gardenRight - gardenLeft);
           p.y = -5 + Math.random() * 20; // some start mid-air
-          p.vx = (Math.random() - 0.3) * 12; // strong horizontal drift
-          p.vy = 2 + Math.random() * 2; // very slow descent
-          p.life = 18 + Math.random() * 14; // longer life = more floating time
+          // Stronger sideways bias — lazily drifts across the garden
+          p.vx = (Math.random() - 0.25) * 14;
+          p.vy = 1.5 + Math.random() * 2; // very slow descent
+          p.life = 20 + Math.random() * 16; // longer life = more floating time
           p.maxLife = p.life;
           p.size = 1.5 + Math.random() * 2;
           const blossomCols = ["#ffb8d0", "#ffc8e0", "#ffe0ef", "#ff90b0", "#ffd0e8"];
@@ -228,21 +230,23 @@ export class ParticleSystem {
       }
     }
 
-    // Snow — winter
+    // Snow — winter (gentle, plentiful, occasional large flakes)
     if (season === "winter") {
-      if (this.particles.filter(p => p.type === "snow").length < 25) {
+      if (this.particles.filter(p => p.type === "snow").length < 38) {
         const p = this.spawn();
         if (p) {
           p.type = "snow";
-          p.x = Math.random() * (gardenRight);
+          p.x = Math.random() * gardenRight;
           p.y = -5;
           p.vx = 0;
-          p.vy = 6 + Math.random() * 6;
-          p.life = 12 + Math.random() * 8;
+          // Mix of gentle small flakes and occasional larger slower ones
+          const big = Math.random() < 0.12;
+          p.vy = big ? 2 + Math.random() * 2 : 4 + Math.random() * 5;
+          p.life = big ? 18 + Math.random() * 8 : 10 + Math.random() * 8;
           p.maxLife = p.life;
-          p.size = 1 + Math.random() * 2;
-          p.color = Math.random() > 0.5 ? "#fff" : "#e0e8ff";
-          p.opacity = 0.8;
+          p.size = big ? 3 + Math.random() : 1 + Math.random() * 1.5;
+          p.color = Math.random() > 0.5 ? "#ffffff" : "#e8f0ff";
+          p.opacity = big ? 0.7 : 0.85;
           p.phase = Math.random() * Math.PI * 2;
           p.rotation = 0;
         }
@@ -376,8 +380,27 @@ export class ParticleSystem {
     panX: number,
     panY: number,
     time: number,
+    layer: "sky" | "ground" = "ground",
+    season?: import("./types").Season,
   ) {
+    // Snow accumulation strip at bottom of world in winter
+    if (layer === "ground" && season === "winter") {
+      const worldBottom = panY + WORLD_ROWS * TS * zoom;
+      const worldW = WORLD_COLS * TS * zoom;
+      const stripH = Math.max(1, Math.round(zoom * 1.5));
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = "#e8f0f8";
+      ctx.fillRect(Math.round(panX), Math.round(worldBottom - stripH), Math.round(worldW), stripH);
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(Math.round(panX), Math.round(worldBottom - stripH), Math.round(worldW), Math.max(1, Math.round(zoom * 0.5)));
+      ctx.globalAlpha = 1;
+    }
+
     for (const p of this.particles) {
+      // Sky layer: only meteors and birds; ground layer: everything else
+      if (layer === "sky" && p.type !== "meteor" && p.type !== "bird") continue;
+      if (layer === "ground" && (p.type === "meteor" || p.type === "bird")) continue;
       const sx = panX + p.x * zoom;
       const sy = panY + p.y * zoom;
       const sz = Math.max(1, p.size * zoom);

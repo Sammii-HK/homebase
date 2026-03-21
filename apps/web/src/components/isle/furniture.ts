@@ -1276,6 +1276,10 @@ export function drawTree(
   const { we, wr, spr } = helpers;
   const rv = seededRng(`tree${t.wx},${t.wy}`);
   const variant = Math.floor(rv() * 3);
+  // Extra deterministic values for seasonal details
+  const rv2 = rv(); // 0-1: whether this tree has fruit/blossoms
+  const rv3 = rv(); // 0-1: number of decorative dots
+  const rv4 = rv(); // 0-1: blossom cluster offset
 
   // Pick sprite based on season + deterministic variant
   const sprites = TREE_SPRITES_BY_SEASON[season];
@@ -1300,6 +1304,14 @@ export function drawTree(
     const dw = Math.round(drawW * zoom);
     const dh = Math.round(drawH * zoom);
 
+    // Autumn: subtle amber tint overlay on the canopy
+    if (season === "autumn") {
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = "#c86018";
+      ctx.fillRect(dx, dy, dw, dh);
+      ctx.globalAlpha = 1;
+    }
+
     // Winter trees get lower opacity
     if (season === "winter" && variant !== 1) {
       ctx.globalAlpha = 0.7;
@@ -1307,10 +1319,37 @@ export function drawTree(
     ctx.drawImage(treeImg, dx, dy, dw, dh);
     ctx.globalAlpha = 1;
 
-    // Snow caps in winter
+    // Snow caps in winter — enhanced
     if (season === "winter") {
-      we(cx, t.wy + t.sz * 0.3, t.sz * 0.3, t.sz * 0.08, "#e8f0f8", 0.8);
-      we(cx - t.sz * 0.1, t.wy + t.sz * 0.4, t.sz * 0.2, t.sz * 0.06, "#dce8f0", 0.65);
+      we(cx, t.wy + t.sz * 0.28, t.sz * 0.35, t.sz * 0.1, "#e8f4f8", 0.85);
+      we(cx - t.sz * 0.12, t.wy + t.sz * 0.38, t.sz * 0.22, t.sz * 0.07, "#dce8f0", 0.7);
+      we(cx + t.sz * 0.08, t.wy + t.sz * 0.45, t.sz * 0.15, t.sz * 0.05, "#f0f8ff", 0.55);
+    }
+  }
+
+  // Summer: small fruit dots on lower canopy (only ~60% of trees have fruit)
+  if (season === "summer" && rv2 > 0.4) {
+    const fruitRng = seededRng(`fruit${t.wx},${t.wy}`);
+    const fruitCount = 1 + Math.floor(rv3 * 3); // 1-3 fruits
+    const fruitCols = ["#cc2020", "#dd4010", "#ee8820"]; // apple red / citrus orange
+    for (let i = 0; i < fruitCount; i++) {
+      const fx = cx + (fruitRng() - 0.5) * t.sz * 0.55;
+      const fy = t.wy + t.sz * (0.55 + fruitRng() * 0.2);
+      const fc = fruitCols[Math.floor(fruitRng() * fruitCols.length)];
+      we(fx, fy, t.sz * 0.075, t.sz * 0.075, fc, 0.9);
+      // Tiny highlight on fruit
+      we(fx - t.sz * 0.02, fy - t.sz * 0.02, t.sz * 0.03, t.sz * 0.03, "#ffffff", 0.4);
+    }
+  }
+
+  // Spring: small pink blossom cluster at top of some trees (~55%)
+  if (season === "spring" && rv2 > 0.45) {
+    const blossomRng = seededRng(`blossom${t.wx},${t.wy}`);
+    const blossomCount = 3 + Math.floor(rv4 * 4); // 3-6 blossoms
+    for (let i = 0; i < blossomCount; i++) {
+      const bx = cx + (blossomRng() - 0.5) * t.sz * 0.5;
+      const by = t.wy + t.sz * (0.15 + blossomRng() * 0.25);
+      we(bx, by, t.sz * 0.07, t.sz * 0.07, "#ffb0d0", 0.85);
     }
   }
 
@@ -1336,8 +1375,23 @@ export function drawFlower(
 
   // Winter: tiny snow mound instead of flower
   if (season === "winter") {
-    we(mid, y + TS * 0.8, TS * 0.2, TS * 0.1, "#dce8f0", 0.7);
+    we(mid, y + TS * 0.8, TS * 0.22, TS * 0.11, "#dce8f0", 0.75);
     wr(mid - 1, y + TS * 0.75, 2, 1, "#e8f4f8");
+    return;
+  }
+
+  // Autumn: withered/dried flower — brown stem, drooping head, no petals
+  if (season === "autumn") {
+    const stemCol = "#6a5520";
+    // Stem — slightly bent
+    wr(mid - 0.5, y + TS * 0.45, 1.2, TS * 0.42, stemCol);
+    wr(mid + 0.5, y + TS * 0.35, 1, TS * 0.12, stemCol);
+    // Dried seed head — small dark oval
+    we(mid + 1, y + TS * 0.32, 2, 2.5, "#7a4818", 0.85);
+    we(mid + 1, y + TS * 0.3, 1.2, 1.5, "#9a6028", 0.7);
+    // Tiny dried petal stubs
+    wr(mid - 0.5, y + TS * 0.28, 1, 1, "#6a4010");
+    wr(mid + 2, y + TS * 0.3, 1, 0.8, "#6a4010");
     return;
   }
 
@@ -1348,9 +1402,20 @@ export function drawFlower(
   const variant = ((f.tx * 7 + f.ty * 13) % 5 + 5) % 5;
   const col = cols[((f.tx * 11 + f.ty * 17) % cols.length + cols.length) % cols.length];
 
-  // Seasonal colour shifts
-  const stemCol = season === "autumn" ? "#5a6828" : "#388028";
-  const stemDark = season === "autumn" ? "#485820" : "#2a6020";
+  // Summer: scale up around flower centre for bigger, more vibrant look
+  if (season === "summer") {
+    const { ctx, zoom, panX, panY } = helpers;
+    const scx = Math.round(panX + mid * zoom);
+    const scy = Math.round(panY + (y + TS * 0.4) * zoom);
+    ctx.save();
+    ctx.translate(scx, scy);
+    ctx.scale(1.22, 1.22);
+    ctx.translate(-scx, -scy);
+  }
+
+  // Seasonal colour shifts (spring / summer only — autumn handled above)
+  const stemCol = "#388028";
+  const stemDark = "#2a6020";
 
   if (variant === 0) {
     // --- Tulip ---
@@ -1375,7 +1440,7 @@ export function drawFlower(
     wr(mid - 3, y + TS * 0.65, 2.5, 1.5, stemCol);
     wr(mid - 2.5, y + TS * 0.63, 1.5, 1, stemDark);
     // White petals radiating (8 petals as small rects around centre)
-    const petalCol = season === "autumn" ? "#e8d8a0" : "#f0f0f0";
+    const petalCol = "#f0f0f0";
     // Top
     wr(mid - 1, y + TS * 0.15, 2, 3, petalCol);
     // Bottom
@@ -1400,7 +1465,7 @@ export function drawFlower(
     wr(mid + 1, y + TS * 0.6, 2, 1.5, stemCol);
     wr(mid - 3, y + TS * 0.65, 2, 1.5, stemCol);
     // Outer petal layer
-    const roseOuter = season === "autumn" ? "#c83838" : col;
+    const roseOuter = col;
     we(mid, y + TS * 0.3, 4.5, 4, roseOuter);
     // Middle petal ring
     const roseMid = lighten(roseOuter, -15);
@@ -1419,7 +1484,7 @@ export function drawFlower(
     wr(mid + 2, y + TS * 0.58, 2, 1.5, stemDark);
     wr(mid - 4, y + TS * 0.65, 3, 2, stemCol);
     // Yellow petals (radiating rects)
-    const sunCol = season === "autumn" ? "#d8a020" : "#f0c020";
+    const sunCol = "#f0c020";
     // Top/bottom
     wr(mid - 1.5, y + TS * 0.06, 3, 3.5, sunCol);
     wr(mid - 1.5, y + TS * 0.38, 3, 3.5, sunCol);
@@ -1463,6 +1528,11 @@ export function drawFlower(
     }
     // Small leaf at base
     wr(mid - 1.5, y + TS * 0.6, 2, 1.5, stemCol);
+  }
+
+  // Restore ctx transform for summer scale
+  if (season === "summer") {
+    helpers.ctx.restore();
   }
 }
 
@@ -1656,7 +1726,36 @@ export function drawGrassDetail(
   const v = fv(tx, ty);
   const v2 = ((v * 1000) | 0) % 100;
 
-  if (season === "winter") return; // snow covers detail
+  // Winter: enhanced snow patches on grass tiles
+  if (season === "winter") {
+    if (v > 0.5 && tx >= OFFICE_COLS + 1) {
+      // Larger snow patches in winter
+      wr(x + ((v * 12) % 14), y + ((v * 10) % 14), 4, 1.5, "#e8f0f0");
+      if (v > 0.75) {
+        wr(x + ((v * 5) % 11), y + ((v * 8) % 12), 3, 1, "#f0f8f8");
+      }
+    }
+    return;
+  }
+
+  // Autumn: fallen leaves on grass tiles (seeded, deterministic)
+  if (season === "autumn") {
+    const leafSeed = (v2 * 3 + v * 97) | 0;
+    if (leafSeed % 5 === 0 && tx >= OFFICE_COLS + 1) {
+      const lfRng = seededRng(`fallen-leaf-${tx}-${ty}`);
+      const leafCols = ["#c05820", "#e07830", "#d0a020", "#a04010"];
+      const lx2 = x + lfRng() * (TS - 3);
+      const ly2 = y + lfRng() * (TS - 2);
+      wr(lx2, ly2, 2, 1.5, leafCols[Math.floor(lfRng() * leafCols.length)]);
+      if (lfRng() > 0.5) {
+        wr(lx2 + 5, ly2 + 3, 1.5, 1, leafCols[Math.floor(lfRng() * leafCols.length)]);
+      }
+    }
+    if (leafSeed % 7 === 1 && tx >= OFFICE_COLS + 1) {
+      const lfRng2 = seededRng(`fallen-leaf2-${tx}-${ty}`);
+      wr(x + lfRng2() * (TS - 2), y + lfRng2() * (TS - 2), 1.5, 1, "#b04010");
+    }
+  }
 
   // Grass tufts (2-3 blades) — ~30% of outdoor tiles
   if (v2 < 30 && tx >= OFFICE_COLS + 1) {

@@ -409,6 +409,9 @@ export class IsleRenderer {
     // Sky (now full width!)
     drawSky(ctx, tod, season, this.zoom, this.panX, this.panY, this.moonImgs, this.moonPhase);
 
+    // Sky-layer particles (meteors, birds) — drawn right after sky, before any world elements
+    this.particles.draw(ctx, this.zoom, this.panX, this.panY, Date.now() / 1000, "sky", season);
+
     // Tiles (land rows only — river is drawn separately)
     for (let ty = 0; ty < RIVER_START_ROW; ty++) {
       for (let tx = 0; tx < WORLD_COLS; tx++) {
@@ -531,8 +534,8 @@ export class IsleRenderer {
     ds.sort((a, b) => a.y - b.y);
     for (const d of ds) d.draw();
 
-    // Particles (fireflies, leaves, blossoms, snow, dust)
-    this.particles.draw(ctx, this.zoom, this.panX, this.panY, Date.now() / 1000);
+    // Ground-layer particles (fireflies, leaves, blossoms, snow, dust)
+    this.particles.draw(ctx, this.zoom, this.panX, this.panY, Date.now() / 1000, "ground", season);
 
     // TOD overlay
     const overlay = getWorldOverlay(tod);

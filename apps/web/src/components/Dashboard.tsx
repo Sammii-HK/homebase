@@ -18,6 +18,8 @@ import CastQueue from "./CastQueue";
 import QuickActions from "./QuickActions";
 import SocialStats from "./SocialStats";
 import Opportunities from "./Opportunities";
+import WeeklyRhythm from "./WeeklyRhythm";
+import OrbitLog from "./OrbitLog";
 import type { Alert } from "@/app/api/alerts/route";
 import { registerPush } from "@/lib/push";
 import {
@@ -775,6 +777,7 @@ export default function Dashboard() {
                       }}
                     />
                     <KeyNumbers stats={stats} />
+                    <WeeklyRhythm token={token} />
                     <LaunchTracker token={token} />
                   </div>
                   <div className="hb-status-right" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -782,6 +785,7 @@ export default function Dashboard() {
                     <ContentPipeline stats={stats} />
                     <SocialStats token={token} />
                     <DeployStatus token={token} />
+                    <OrbitLog token={token} />
                   </div>
                 </div>
                 {stats && (
