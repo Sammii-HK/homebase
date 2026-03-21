@@ -1,7 +1,7 @@
 "use client";
 
 import { authHeaders } from "@/lib/client-auth";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const PS2P = "'Press Start 2P', monospace";
 
@@ -71,6 +71,11 @@ function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalIt
   const [rejectReason, setRejectReason] = useState("");
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(false);
+
+  // Swipe gesture state
+  const touchStartXRef = useRef<number | null>(null);
+  const [swipeDelta, setSwipeDelta] = useState(0);
+  const [isSnapping, setIsSnapping] = useState(false);
 
   const platformColor = PLATFORM_COLORS[item.platform] ?? PLATFORM_COLORS.unknown;
   const platformIcon = PLATFORM_ICONS[item.platform] ?? PLATFORM_ICONS.unknown;
@@ -160,6 +165,91 @@ function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalIt
     setError("");
   };
 
+  // Swipe gesture helpers
+  const snapBack = () => {
+    setIsSnapping(true);
+    setSwipeDelta(0);
+    setTimeout(() => setIsSnapping(false), 200);
+  };
+
+  const triggerSwipeApprove = async () => {
+    snapBack();
+    // Small delay so the snap-back animation plays before the card disappears
+    await new Promise((r) => setTimeout(r, 150));
+    setState("loading");
+    setError("");
+    try {
+      const res = await fetch(`/api/approval-queue/${item.id}/approve`, {
+        method: "POST",
+        headers: { ...authHeaders(token), "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Approve failed");
+        setState("error");
+        return;
+      }
+      setScheduledDate(data.scheduledDate);
+      setState("done");
+      setTimeout(onComplete, 2000);
+    } catch {
+      setError("Network error");
+      setState("error");
+    }
+  };
+
+  const triggerSwipeReject = async () => {
+    snapBack();
+    await new Promise((r) => setTimeout(r, 150));
+    setState("loading");
+    setError("");
+    try {
+      const res = await fetch(`/api/approval-queue/${item.id}/reject`, {
+        method: "POST",
+        headers: { ...authHeaders(token), "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Reject failed");
+        setState("error");
+        return;
+      }
+      setState("done");
+      setTimeout(onComplete, 1500);
+    } catch {
+      setError("Network error");
+      setState("error");
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (state !== "idle" && state !== "error") return;
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartXRef.current === null) return;
+    const delta = e.touches[0].clientX - touchStartXRef.current;
+    // Clamp to ±120px
+    const clamped = Math.max(-120, Math.min(120, delta));
+    setSwipeDelta(clamped);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartXRef.current === null) return;
+    touchStartXRef.current = null;
+
+    if (swipeDelta > 60) {
+      void triggerSwipeApprove();
+    } else if (swipeDelta < -60) {
+      void triggerSwipeReject();
+    } else {
+      snapBack();
+    }
+  };
+
   const handleDismissOrbit = async () => {
     setState("loading");
     setError("");
@@ -195,14 +285,79 @@ function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalIt
     );
   }
 
+  // Swipe overlay visibility
+  const showApproveOverlay = swipeDelta > 30;
+  const showRejectOverlay = swipeDelta < -30;
+
   return (
-    <div style={{
-      padding: "14px 16px",
-      background: "rgba(255,255,255,0.03)",
-      border: "1px solid rgba(255,255,255,0.1)",
-      borderRadius: 6,
-      borderLeft: `3px solid ${platformColor}`,
-    }}>
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        position: "relative",
+        padding: "16px 16px",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 6,
+        borderLeft: `3px solid ${platformColor}`,
+        transform: `translateX(${swipeDelta}px)`,
+        transition: isSnapping ? "transform 0.2s ease-out" : "none",
+        touchAction: "pan-y",
+        userSelect: "none",
+        overflow: "hidden",
+      }}
+    >
+      {/* Swipe-right approve overlay */}
+      {showApproveOverlay && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: `${Math.min(swipeDelta * 1.5, 80)}px`,
+          background: `rgba(74,222,128,${Math.min((swipeDelta - 30) / 90, 0.35)})`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          paddingRight: 12,
+          borderRadius: "0 6px 6px 0",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}>
+          <span style={{
+            fontFamily: PS2P,
+            fontSize: 14,
+            color: "#4ade80",
+            opacity: Math.min((swipeDelta - 30) / 60, 1),
+          }}>✓</span>
+        </div>
+      )}
+      {/* Swipe-left reject overlay */}
+      {showRejectOverlay && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: `${Math.min(-swipeDelta * 1.5, 80)}px`,
+          background: `rgba(239,68,68,${Math.min((-swipeDelta - 30) / 90, 0.35)})`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          paddingLeft: 12,
+          borderRadius: "6px 0 0 6px",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}>
+          <span style={{
+            fontFamily: PS2P,
+            fontSize: 14,
+            color: "#f87171",
+            opacity: Math.min((-swipeDelta - 30) / 60, 1),
+          }}>✗</span>
+        </div>
+      )}
       {/* Header: platform + account + time */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <span style={{
@@ -260,10 +415,10 @@ function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalIt
 
       {/* Content preview */}
       <div style={{
-        fontFamily: PS2P,
-        fontSize: 8,
-        color: "rgba(255,255,255,0.65)",
-        lineHeight: 1.5,
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        fontSize: 14,
+        color: "rgba(255,255,255,0.8)",
+        lineHeight: 1.6,
         marginBottom: 14,
         wordBreak: "break-word",
       }}>
@@ -297,7 +452,7 @@ function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalIt
 
       {/* Thread slides indicator */}
       {item.threadSlides && item.threadSlides.length > 0 && (
-        <div style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.3)", marginTop: 4, marginBottom: 10 }}>
+        <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4, marginBottom: 10 }}>
           +{item.threadSlides.length} thread slides
         </div>
       )}
