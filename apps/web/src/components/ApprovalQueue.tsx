@@ -1,7 +1,7 @@
 "use client";
 
 import { authHeaders } from "@/lib/client-auth";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from "react";
 
 const PS2P = "'Press Start 2P', monospace";
 
@@ -65,7 +65,23 @@ function formatScheduleTime(dateStr: string): string {
   return `${day} ${time} UTC (${et} ET)`;
 }
 
-function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalItem; token: string; onComplete: () => void; onDismiss?: (id: string) => void }) {
+export interface ApprovalCardHandle {
+  triggerApprove: () => void;
+  triggerReject: () => void;
+}
+
+interface ApprovalCardProps {
+  item: ApprovalItem;
+  token: string;
+  onComplete: () => void;
+  onDismiss?: (id: string) => void;
+  isSelected?: boolean;
+}
+
+const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function ApprovalCard(
+  { item, token, onComplete, onDismiss, isSelected },
+  ref
+) {
   const [state, setState] = useState<ActionState>("idle");
   const [scheduledDate, setScheduledDate] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -264,6 +280,20 @@ function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalIt
     onDismiss?.(item.id);
   };
 
+  // Expose imperative approve/reject for keyboard shortcut use
+  useImperativeHandle(ref, () => ({
+    triggerApprove: () => {
+      if (state === "idle" || state === "error") {
+        void handleApproveClick();
+      }
+    },
+    triggerReject: () => {
+      if (state === "idle" || state === "error") {
+        void triggerSwipeReject();
+      }
+    },
+  }));
+
   if (state === "done") {
     return (
       <div style={{
@@ -289,6 +319,14 @@ function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalIt
   const showApproveOverlay = swipeDelta > 30;
   const showRejectOverlay = swipeDelta < -30;
 
+  // Selection highlight: override left border when selected
+  const borderLeftStyle = isSelected
+    ? "3px solid rgba(167,139,250,0.6)"
+    : `3px solid ${platformColor}`;
+  const backgroundStyle = isSelected
+    ? "rgba(167,139,250,0.07)"
+    : "rgba(255,255,255,0.03)";
+
   return (
     <div
       onTouchStart={handleTouchStart}
@@ -297,10 +335,10 @@ function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalIt
       style={{
         position: "relative",
         padding: "16px 16px",
-        background: "rgba(255,255,255,0.03)",
+        background: backgroundStyle,
         border: "1px solid rgba(255,255,255,0.1)",
         borderRadius: 6,
-        borderLeft: `3px solid ${platformColor}`,
+        borderLeft: borderLeftStyle,
         transform: `translateX(${swipeDelta}px)`,
         transition: isSnapping ? "transform 0.2s ease-out" : "none",
         touchAction: "pan-y",
@@ -598,7 +636,7 @@ function ApprovalCard({ item, token, onComplete, onDismiss }: { item: ApprovalIt
       </div>
     </div>
   );
-}
+});
 
 interface Props {
   token?: string;
@@ -624,6 +662,25 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
   const [autoApproveSummary, setAutoApproveSummary] = useState<string | null>(null);
   const [clearOrbitState, setClearOrbitState] = useState<ClearOrbitState>("idle");
 
+  // Keyboard navigation state
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isHoverDevice, setIsHoverDevice] = useState(false);
+  const cardRefs = useRef<(ApprovalCardHandle | null)[]>([]);
+
+  // Detect hover-capable device once on mount
+  useEffect(() => {
+    setIsHoverDevice(window.matchMedia("(hover: hover)").matches);
+  }, []);
+
+  // Initialise selectedIndex to 0 when items first load
+  useEffect(() => {
+    if (items.length > 0 && selectedIndex === null) {
+      setSelectedIndex(0);
+    } else if (items.length === 0) {
+      setSelectedIndex(null);
+    }
+  }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const fetchQueue = useCallback(async () => {
     try {
       const res = await fetch("/api/approval-queue", {
@@ -647,6 +704,66 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
     const id = setInterval(fetchQueue, 120_000);
     return () => clearInterval(id);
   }, [fetchQueue]);
+
+  // Keyboard shortcut handler
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Skip when focus is on a text input
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      const count = items.length;
+      if (count === 0) return;
+
+      const current = selectedIndex ?? 0;
+
+      switch (e.key) {
+        case "ArrowDown":
+        case "j":
+        case "J":
+          e.preventDefault();
+          setSelectedIndex(Math.min(current + 1, count - 1));
+          break;
+        case "ArrowUp":
+        case "k":
+        case "K":
+          e.preventDefault();
+          setSelectedIndex(Math.max(current - 1, 0));
+          break;
+        case "Escape":
+          setSelectedIndex(null);
+          break;
+        case "ArrowRight":
+        case "a":
+        case "A": {
+          e.preventDefault();
+          const cardRef = cardRefs.current[current];
+          if (cardRef) {
+            cardRef.triggerApprove();
+            // Auto-advance: move to next post after action, or stay at last
+            const next = current < count - 1 ? current + 1 : count - 1;
+            setTimeout(() => setSelectedIndex(next), 300);
+          }
+          break;
+        }
+        case "ArrowLeft":
+        case "r":
+        case "R": {
+          e.preventDefault();
+          const cardRef = cardRefs.current[current];
+          if (cardRef) {
+            cardRef.triggerReject();
+            const next = current < count - 1 ? current + 1 : count - 1;
+            setTimeout(() => setSelectedIndex(next), 300);
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [items.length, selectedIndex]);
 
   const handleComplete = () => {
     // Refresh the queue after an action
@@ -788,6 +905,20 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
   // Full view (for Orbit HQ room)
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {/* Keyboard hint bar — only on hover-capable (non-touch) devices */}
+      {isHoverDevice && !loading && count > 0 && (
+        <div style={{
+          fontFamily: "monospace",
+          fontSize: 10,
+          color: "rgba(255,255,255,0.2)",
+          textAlign: "center",
+          letterSpacing: "0.04em",
+          padding: "4px 0 2px",
+        }}>
+          ← reject · → approve · ↓↑ navigate
+        </div>
+      )}
+
       {loading && (
         <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)", textAlign: "center", padding: 20 }}>
           Loading queue...
@@ -994,13 +1125,15 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
         </button>
       )}
 
-      {items.map((item) => (
+      {items.map((item, index) => (
         <ApprovalCard
           key={item.id}
+          ref={(el) => { cardRefs.current[index] = el; }}
           item={item}
           token={token}
           onComplete={handleComplete}
           onDismiss={item.source === "orbit" ? handleDismissOrbitItem : undefined}
+          isSelected={selectedIndex === index}
         />
       ))}
     </div>
