@@ -66,6 +66,30 @@ export interface DashboardStats {
   updatedAt: string;
 }
 
+// ── Social stats types (used by /api/stats/social) ──
+
+export interface SocialAccountRow {
+  platform: string;
+  handle: string;
+  displayName?: string;
+  followerCount: number;
+  postsThisWeek: number;
+  postsThisMonth: number;
+  /** Change in followers over the last 7 days. Null if historical data unavailable. */
+  followersChange7d?: number | null;
+  /** Number of posts published in the last 7 days. */
+  postsLast7d?: number;
+  /** Total likes + comments + shares on posts in the last 7 days. */
+  engagementLast7d?: number | null;
+  /** Highest reach/impressions of any post in the last 7 days. */
+  bestPostReach?: number | null;
+}
+
+export interface SocialPersonaGroup {
+  persona: string;
+  accounts: SocialAccountRow[];
+}
+
 // ── Deep room data types (lazy-loaded via /api/stats/[room]) ──
 
 export interface SpellcastDeepData {

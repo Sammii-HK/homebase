@@ -7,9 +7,14 @@ import { useState, useEffect } from "react";
 interface AccountRow {
   platform: string;
   handle: string;
+  displayName?: string;
   followerCount: number;
   postsThisWeek: number;
   postsThisMonth: number;
+  followersChange7d?: number | null;
+  postsLast7d?: number;
+  engagementLast7d?: number | null;
+  bestPostReach?: number | null;
 }
 
 interface PersonaGroup {
@@ -68,32 +73,107 @@ function fmtFollowers(n: number): string {
 
 // ── Sub-components ────────────────────────────────────────────────────
 
-function AccountRowItem({ account }: { account: AccountRow }) {
+function FollowerTrend({ change }: { change: number | null | undefined }) {
+  if (change === null || change === undefined) {
+    return (
+      <span
+        className="text-[10px] text-white/20"
+        style={{ fontFamily: "system-ui, sans-serif" }}
+        title="7d follower change unavailable"
+      >
+        —
+      </span>
+    );
+  }
+  if (change === 0) {
+    return (
+      <span
+        className="text-[10px] text-white/30"
+        style={{ fontFamily: "system-ui, sans-serif" }}
+        title="No follower change in last 7 days"
+      >
+        ±0
+      </span>
+    );
+  }
+  const positive = change > 0;
   return (
-    <div className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-white/5 transition-colors">
-      <PlatformBadge platform={account.platform} />
-      <span
-        className="flex-1 text-[11px] text-white/60 truncate"
-        style={{ fontFamily: "system-ui, sans-serif" }}
-      >
-        {account.handle}
-      </span>
-      <span
-        className="text-[11px] text-white/40 w-10 text-right flex-shrink-0"
-        style={{ fontFamily: "system-ui, sans-serif" }}
-        title="Followers"
-      >
-        {fmtFollowers(account.followerCount)}
-      </span>
-      <span
-        className={`text-[11px] w-8 text-right flex-shrink-0 ${
-          account.postsThisWeek > 0 ? "text-cyan-400" : "text-white/20"
-        }`}
-        style={{ fontFamily: "system-ui, sans-serif" }}
-        title="Posts this week"
-      >
-        {account.postsThisWeek > 0 ? `+${account.postsThisWeek}` : "--"}
-      </span>
+    <span
+      className={`text-[10px] ${positive ? "text-emerald-400" : "text-red-400"}`}
+      style={{ fontFamily: "system-ui, sans-serif" }}
+      title={`Follower change over last 7 days`}
+    >
+      {positive ? "+" : ""}{change}
+    </span>
+  );
+}
+
+function AccountRowItem({ account }: { account: AccountRow }) {
+  const hasWeeklyStats =
+    (account.postsLast7d !== undefined && account.postsLast7d > 0) ||
+    (account.engagementLast7d !== null && account.engagementLast7d !== undefined && account.engagementLast7d > 0);
+
+  return (
+    <div className="py-1 px-2 rounded hover:bg-white/5 transition-colors">
+      {/* Main row */}
+      <div className="flex items-center gap-2">
+        <PlatformBadge platform={account.platform} />
+        <span
+          className="flex-1 text-[11px] text-white/60 truncate"
+          style={{ fontFamily: "system-ui, sans-serif" }}
+        >
+          {account.handle}
+        </span>
+        {/* Followers + 7d trend */}
+        <span
+          className="text-[11px] text-white/40 text-right flex-shrink-0"
+          style={{ fontFamily: "system-ui, sans-serif" }}
+          title="Followers"
+        >
+          {fmtFollowers(account.followerCount)}
+        </span>
+        <span className="flex-shrink-0 w-10 text-right">
+          <FollowerTrend change={account.followersChange7d} />
+        </span>
+        {/* Posts this week */}
+        <span
+          className={`text-[11px] w-8 text-right flex-shrink-0 ${
+            account.postsThisWeek > 0 ? "text-cyan-400" : "text-white/20"
+          }`}
+          style={{ fontFamily: "system-ui, sans-serif" }}
+          title="Posts this week"
+        >
+          {account.postsThisWeek > 0 ? `+${account.postsThisWeek}` : "--"}
+        </span>
+      </div>
+      {/* Weekly stats sub-row */}
+      {hasWeeklyStats && (
+        <div
+          className="flex items-center gap-1 mt-0.5 ml-9 text-[9px] text-white/30"
+          style={{ fontFamily: "system-ui, sans-serif" }}
+        >
+          {account.postsLast7d !== undefined && account.postsLast7d > 0 && (
+            <span title="Posts published this week">{account.postsLast7d} posts</span>
+          )}
+          {account.postsLast7d !== undefined && account.postsLast7d > 0 &&
+           account.engagementLast7d !== null && account.engagementLast7d !== undefined && account.engagementLast7d > 0 && (
+            <span className="text-white/15">·</span>
+          )}
+          {account.engagementLast7d !== null && account.engagementLast7d !== undefined && account.engagementLast7d > 0 && (
+            <span title="Total engagements (likes + comments + shares) this week">
+              {account.engagementLast7d.toLocaleString()} eng
+            </span>
+          )}
+          {account.bestPostReach !== null && account.bestPostReach !== undefined && account.bestPostReach > 0 && (
+            <>
+              <span className="text-white/15">·</span>
+              <span title="Best post reach this week">
+                {fmtFollowers(account.bestPostReach)} reach
+              </span>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -210,14 +290,22 @@ export default function SocialStats({ token }: Props) {
           Handle
         </span>
         <span
-          className="text-[9px] text-white/25 uppercase tracking-wider w-10 text-right flex-shrink-0"
+          className="text-[9px] text-white/25 uppercase tracking-wider text-right flex-shrink-0"
           style={{ fontFamily: "system-ui, sans-serif" }}
         >
-          Flw
+          Fol
+        </span>
+        <span
+          className="text-[9px] text-white/25 uppercase tracking-wider w-10 text-right flex-shrink-0"
+          style={{ fontFamily: "system-ui, sans-serif" }}
+          title="7-day follower change"
+        >
+          +/-
         </span>
         <span
           className="text-[9px] text-white/25 uppercase tracking-wider w-8 text-right flex-shrink-0"
           style={{ fontFamily: "system-ui, sans-serif" }}
+          title="Posts this week"
         >
           7d
         </span>
