@@ -20,6 +20,7 @@ import SocialStats from "./SocialStats";
 import Opportunities from "./Opportunities";
 import WeeklyRhythm from "./WeeklyRhythm";
 import OrbitLog from "./OrbitLog";
+import DigestCard from "./DigestCard";
 import type { Alert } from "@/app/api/alerts/route";
 import { registerPush } from "@/lib/push";
 import {
@@ -756,6 +757,7 @@ export default function Dashboard() {
                   margin: "0 auto",
                 }}
               >
+                <DigestCard stats={stats} heartbeat={heartbeat} />
                 <AlertStrip
                   alerts={alerts}
                   onTabChange={setActiveTab}
