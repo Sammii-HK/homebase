@@ -5,6 +5,8 @@
 HOMEBASE_URL="${HOMEBASE_URL:-https://homebase.sammii.dev}"
 HOMEBASE_SECRET="${HOMEBASE_SECRET:-}"
 LIVE_METRICS="${LIVE_METRICS:-/Users/sammii/.claude/projects/-Users-sammii-development/memory/live-metrics.md}"
+SPELLCAST_API_URL="${SPELLCAST_API_URL:-https://api.spellcast.sammii.dev}"
+SPELLCAST_CRON_SECRET="${SPELLCAST_CRON_SECRET:-}"
 
 check() {
   local name=$1 url=$2
@@ -102,4 +104,17 @@ if [ "$current_hour" = "07" ] && [ "$current_min" -lt 10 ]; then
   else
     echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) [briefing-push] failed: ${briefing_result}" >> /tmp/briefing-push.log
   fi
+fi
+
+# --- Engagement opportunity push ---
+# Runs every heartbeat — pushes when high-relevance (>0.7) unread engagement arrives
+curl -sf "${HOMEBASE_URL}/api/push/engagement" \
+  -H "Authorization: Bearer ${HOMEBASE_SECRET}" > /dev/null 2>&1
+
+# --- Meta follower snapshot (daily at 06:00 UTC) ---
+# Snapshots Instagram follower counts into Spellcast DB for +7d trend display
+SPELLCAST_URL="${SPELLCAST_API_URL:-https://api.spellcast.sammii.dev}"
+if [ "$current_hour" = "06" ] && [ "$current_min" -lt 10 ]; then
+  curl -sf -X POST "${SPELLCAST_URL}/api/meta/sync" \
+    -H "Authorization: Bearer ${SPELLCAST_CRON_SECRET:-}" > /dev/null 2>&1
 fi

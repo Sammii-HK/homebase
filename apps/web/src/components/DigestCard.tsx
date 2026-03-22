@@ -60,12 +60,10 @@ export default function DigestCard({ stats }: DigestCardProps) {
   const systemsDown = countDownServices(stats.health);
 
   const chips: DigestChip[] = [
-    {
-      icon: "📅",
-      count: stats.content.scheduledToday,
-      label: "posts today",
-      colour: "#888",
-    },
+    // Only show "posts today" if there are actually posts scheduled today
+    ...(stats.content.scheduledToday > 0
+      ? [{ icon: "📅", count: stats.content.scheduledToday, label: "posts today", colour: "#888" }]
+      : []),
     ...(stats.content.pendingReview > 0
       ? [
           {
