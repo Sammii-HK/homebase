@@ -285,7 +285,7 @@ async function getSEO(): Promise<SEOResult> {
       const token = await getGoogleAccessToken(saJson);
       if (token) {
         const end = new Date(); end.setDate(end.getDate() - 1); // GSC lags 1-2 days
-        const start = new Date(end); start.setDate(start.getDate() - 13); // 14 days for trend comparison
+        const start = new Date(end); start.setDate(start.getDate() - 15); // 16 days — GSC lag means ~14 complete rows
 
         const gscRes = await fetch(
           `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
@@ -299,7 +299,7 @@ async function getSEO(): Promise<SEOResult> {
               startDate: start.toISOString().split("T")[0],
               endDate: end.toISOString().split("T")[0],
               dimensions: ["date"],
-              rowLimit: 14,
+              rowLimit: 16,
             }),
           }
         );
