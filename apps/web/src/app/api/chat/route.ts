@@ -71,10 +71,7 @@ export async function POST(req: NextRequest) {
   let chatUrl: string;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
 
-  if (
-    process.env.NODE_ENV === "development" &&
-    (await isLocalServerAvailable())
-  ) {
+  if (await isLocalServerAvailable()) {
     chatUrl = LOCAL_CHAT_URL;
   } else {
     chatUrl =
