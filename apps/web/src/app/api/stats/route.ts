@@ -225,16 +225,20 @@ interface SEOResult {
   clicks: number;
   ctr: number;
   position: number;
+  dailyAvg: number; // impressions per day for the 7d window
+  prev?: { impressions: number; clicks: number; ctr: number; position: number };
   trend: {
     impressions: { delta: number; pct: number };
     clicks: { delta: number; pct: number };
+    ctr: { delta: number; pct: number };
+    position: { delta: number; pct: number } | null;
   } | null;
 }
 
 async function getSEO(): Promise<SEOResult> {
   const key = process.env.LUNARY_ADMIN_API_KEY;
   const url = process.env.LUNARY_URL ?? "https://lunary.app";
-  const empty: SEOResult = { impressions: 0, clicks: 0, ctr: 0, position: 0, trend: null };
+  const empty: SEOResult = { impressions: 0, clicks: 0, ctr: 0, position: 0, dailyAvg: 0, trend: null };
   if (!key) return empty;
 
   try {
@@ -245,26 +249,58 @@ async function getSEO(): Promise<SEOResult> {
     if (!res.ok) return empty;
     const raw = await res.json();
     const perf = raw?.data?.performance ?? raw?.performance ?? raw;
-    const metrics: { date: string; clicks: number; impressions: number }[] = perf.metrics ?? [];
+    const metrics: { date: string; clicks: number; impressions: number; position?: number }[] = perf.metrics ?? [];
 
-    // Compute 7d vs previous 7d from daily data
+    // Require at least 7 days of daily data to show meaningful 7d numbers.
+    // Never fall back to the API aggregate total (which is 28d) — that would be misleading.
+    if (metrics.length < 7) {
+      return empty;
+    }
+
+    const recent7 = metrics.slice(-7);
+    const rImp = sum(recent7, "impressions");
+    const rClk = sum(recent7, "clicks");
+    const ctr7d = rImp > 0 ? rClk / rImp : 0;
+
+    // Position: average of last 7 days (only if per-day position available)
+    let position7d = perf.averagePosition ?? perf.position ?? 0;
+    const posEntries = recent7.filter((d) => d.position != null && d.position > 0);
+    if (posEntries.length > 0) {
+      position7d = posEntries.reduce((a, d) => a + (d.position ?? 0), 0) / posEntries.length;
+    }
+
     let trend: SEOResult["trend"] = null;
+    let prev: SEOResult["prev"] | undefined;
+
     if (metrics.length >= 14) {
-      const recent7 = metrics.slice(-7);
       const prev7 = metrics.slice(-14, -7);
-      const r = { imp: sum(recent7, "impressions"), clk: sum(recent7, "clicks") };
-      const p = { imp: sum(prev7, "impressions"), clk: sum(prev7, "clicks") };
+      const pImp = sum(prev7, "impressions");
+      const pClk = sum(prev7, "clicks");
+      const pCtr = pImp > 0 ? pClk / pImp : 0;
+      const prevPosEntries = prev7.filter((d) => d.position != null && d.position > 0);
+      const pPos = prevPosEntries.length > 0
+        ? prevPosEntries.reduce((a, d) => a + (d.position ?? 0), 0) / prevPosEntries.length
+        : null;
+
+      prev = { impressions: pImp, clicks: pClk, ctr: pCtr, position: pPos ?? position7d };
+
       trend = {
-        impressions: { delta: r.imp - p.imp, pct: p.imp ? ((r.imp - p.imp) / p.imp) * 100 : 0 },
-        clicks: { delta: r.clk - p.clk, pct: p.clk ? ((r.clk - p.clk) / p.clk) * 100 : 0 },
+        impressions: { delta: rImp - pImp, pct: pImp ? ((rImp - pImp) / pImp) * 100 : 0 },
+        clicks: { delta: rClk - pClk, pct: pClk ? ((rClk - pClk) / pClk) * 100 : 0 },
+        ctr: { delta: ctr7d - pCtr, pct: pCtr ? ((ctr7d - pCtr) / pCtr) * 100 : 0 },
+        position: pPos != null
+          ? { delta: position7d - pPos, pct: pPos ? ((position7d - pPos) / pPos) * 100 : 0 }
+          : null,
       };
     }
 
     return {
-      impressions: perf.totalImpressions ?? perf.impressions ?? 0,
-      clicks: perf.totalClicks ?? perf.clicks ?? 0,
-      ctr: perf.averageCtr ?? perf.ctr ?? 0,
-      position: perf.averagePosition ?? perf.position ?? 0,
+      impressions: rImp,
+      clicks: rClk,
+      ctr: ctr7d,
+      position: position7d,
+      dailyAvg: Math.round(rImp / 7),
+      prev,
       trend,
     };
   } catch {

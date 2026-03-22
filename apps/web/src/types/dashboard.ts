@@ -11,6 +11,8 @@ export interface Trend {
 export interface SEOTrend {
   impressions: { delta: number; pct: number };
   clicks: { delta: number; pct: number };
+  ctr: { delta: number; pct: number };
+  position: { delta: number; pct: number } | null;
 }
 
 export interface FailedPost {
@@ -55,10 +57,15 @@ export interface DashboardStats {
   engagement: { unread: number; total: number; byPlatform: Record<string, number> };
   orbit: { online: boolean; agentCount: number; runningAgents: number; errorAgents: number; pipelineRunning: boolean; authStatus: string | null };
   seo: {
+    /** 7-day totals computed from daily data */
     impressions: number;
     clicks: number;
     ctr: number;
     position: number;
+    dailyAvg: number;
+    /** Previous 7-day totals for comparison */
+    prev?: { impressions: number; clicks: number; ctr: number; position: number };
+    /** Week-over-week deltas */
     trend: SEOTrend | null;
   };
   opportunities: Opportunity[];

@@ -23,6 +23,9 @@ import OrbitLog from "./OrbitLog";
 import DigestCard from "./DigestCard";
 import QuickComposer from "./QuickComposer";
 import TasksWidget from "./TasksWidget";
+import SEOSnapshot from "./SEOSnapshot";
+import RevenueFunnel from "./RevenueFunnel";
+import RevenueAction from "./RevenueAction";
 import type { Alert } from "@/app/api/alerts/route";
 import { registerPush } from "@/lib/push";
 import {
@@ -33,7 +36,7 @@ import {
 const PS2P = "'Press Start 2P', monospace";
 const POLL_MS = 60_000;
 
-type TabId = "status" | "queue" | "cast" | "chat";
+type TabId = "status" | "queue" | "money" | "cast" | "chat";
 type ViewMode = "list" | "pixel";
 
 // "cookie" means authenticated via hb_session cookie (no Bearer header needed)
@@ -275,13 +278,21 @@ export default function Dashboard() {
           break;
         case "3":
           e.preventDefault();
-          setActiveTab("cast");
+          setActiveTab("money");
           if (viewMode === "pixel") {
             setViewMode("list");
             localStorage.setItem("homebase_view", "list");
           }
           break;
         case "4":
+          e.preventDefault();
+          setActiveTab("cast");
+          if (viewMode === "pixel") {
+            setViewMode("list");
+            localStorage.setItem("homebase_view", "list");
+          }
+          break;
+        case "5":
           e.preventDefault();
           setActiveTab("chat");
           if (viewMode === "pixel") {
@@ -495,6 +506,7 @@ export default function Dashboard() {
   const TABS: { id: TabId; label: string; icon: string }[] = [
     { id: "status", label: "STATUS", icon: "📊" },
     { id: "queue", label: "QUEUE", icon: "✅" },
+    { id: "money", label: "MONEY", icon: "💰" },
     { id: "cast", label: "CAST", icon: "💼" },
     { id: "chat", label: "CHAT", icon: "💬" },
   ];
@@ -899,6 +911,7 @@ export default function Dashboard() {
                   </div>
                   <div className="hb-status-right" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     <ServiceHealth stats={stats} heartbeat={heartbeat} />
+                    <SEOSnapshot stats={stats} />
                     <ContentPipeline stats={stats} />
                     <SocialStats token={token} />
                     <DeployStatus token={token} />
@@ -977,6 +990,37 @@ export default function Dashboard() {
                     </div>
                     <Opportunities opportunities={stats?.opportunities ?? null} token={token} />
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* MONEY TAB */}
+            {activeTab === "money" && (
+              <div
+                className="hb-content-area"
+                style={{
+                  padding: "16px 12px",
+                  maxWidth: 720,
+                  margin: "0 auto",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: PS2P,
+                    fontSize: 10,
+                    color: "#34d399",
+                    letterSpacing: 1,
+                    marginBottom: 12,
+                  }}
+                >
+                  REVENUE COMMAND
+                </div>
+                <div className="hb-queue-grid" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <RevenueAction token={token} />
+                  <RevenueFunnel stats={stats} />
+                  <LaunchTracker token={token} />
+                  <SEOSnapshot stats={stats} />
+                  <KeyNumbers stats={stats} />
                 </div>
               </div>
             )}

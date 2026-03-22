@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>dev.sammii.homebase-mrr-watch</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>curl -sf -X POST https://homebase.sammii.dev/api/cron/mrr-watch -H "Authorization: Bearer ${HOMEBASE_SECRET}" &gt;&gt; /tmp/homebase-mrr-watch.log 2&gt;&amp;1</string>
+    </array>
+    <!-- Run every hour -->
+    <key>StartInterval</key>
+    <integer>3600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/homebase-mrr-watch.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/homebase-mrr-watch.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOMEBASE_SECRET</key>
+        <string>b99d56bbc8b825384fef6266a6a12aa6c4b5cedc910d055c8db90c7e2aa6ad13</string>
+    </dict>
+</dict>
+</plist>

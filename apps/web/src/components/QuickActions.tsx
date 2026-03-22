@@ -15,7 +15,7 @@ interface QuickAction {
 
 const ACTIONS: QuickAction[] = [
   { id: "approve-all", label: "APPROVE ALL", title: "Approve pending posts with score ≥75" },
-  { id: "run-briefing", label: "RUN BRIEFING", title: "Trigger Orbit briefing refresh" },
+  { id: "fill-gaps", label: "FILL GAPS", title: "Auto-generate content for days with no scheduled posts" },
   { id: "generate-content", label: "GEN CONTENT", title: "Trigger overnight content pipeline on demand" },
   { id: "sync", label: "SYNC", title: "Refresh all stats" },
 ];

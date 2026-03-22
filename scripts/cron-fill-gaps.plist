@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>dev.sammii.homebase-fill-gaps</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>curl -sf -X POST https://homebase.sammii.dev/api/cron/fill-gaps -H "Authorization: Bearer ${HOMEBASE_SECRET}" &gt;&gt; /tmp/homebase-fill-gaps.log 2&gt;&amp;1</string>
+    </array>
+    <!-- Run daily at 06:05 UTC (2:05 AM ET) -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>5</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/tmp/homebase-fill-gaps.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/homebase-fill-gaps.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOMEBASE_SECRET</key>
+        <string>b99d56bbc8b825384fef6266a6a12aa6c4b5cedc910d055c8db90c7e2aa6ad13</string>
+    </dict>
+</dict>
+</plist>

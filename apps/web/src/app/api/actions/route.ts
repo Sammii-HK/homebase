@@ -212,6 +212,30 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true, message: "Content pipeline triggered" });
       }
 
+      case "fill-gaps": {
+        // Trigger Orbit pipeline for gap fill, fall back to Spellcast autopilot
+        let triggered = false;
+        try {
+          const orbitRes = await fetch(`${orbitUrl}/api/pipeline/trigger`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason: "gap-fill" }),
+            signal: AbortSignal.timeout(5000),
+          });
+          if (orbitRes.ok) triggered = true;
+        } catch { /* try fallback */ }
+
+        if (!triggered && cronSecret) {
+          fetch(`${url}/api/cron/autopilot`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${cronSecret}`, "Content-Type": "application/json" },
+          }).catch(() => {});
+          triggered = true;
+        }
+
+        return NextResponse.json({ ok: true, message: triggered ? "Gap fill triggered" : "Generation triggered (best effort)" });
+      }
+
       case "sync": {
         // Client re-fetches all stats — nothing to do server-side
         return NextResponse.json({ ok: true, message: "Sync acknowledged" });
