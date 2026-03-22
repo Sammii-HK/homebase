@@ -10,6 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Stamp version into service worker
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          SHORT="${SHA::8}"
+          sed -i "s|// Service worker.*|// Service worker — v${SHORT}|" apps/web/public/sw.js
+
       - name: Build Docker image
         run: docker build -t homebase:linux apps/web/
 
