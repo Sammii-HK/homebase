@@ -13,6 +13,7 @@ interface CastJob {
   fitScore: number | null;
   interviewDate: string | null;
   notionUrl: string;
+  bookingLink?: string | null;
   coverLetterPreview?: string;
   cvHeadline?: string;
 }
@@ -108,6 +109,7 @@ function JobRow({ job }: { job: CastJob }) {
   const bg = STATUS_BG[job.status] ?? "var(--hb-03)";
   const border = STATUS_BORDER[job.status] ?? "var(--hb-08)";
   const hasPreview = !!(job.coverLetterPreview || job.cvHeadline);
+  const needsBooking = job.status === "Interview 💬" && !!job.bookingLink;
 
   return (
     <div
@@ -213,6 +215,29 @@ function JobRow({ job }: { job: CastJob }) {
               {job.role}
             </span>
             <StatusBadge status={job.status} />
+            {needsBooking && (
+              <a
+                href={job.bookingLink!}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  fontFamily: PS2P,
+                  fontSize: 6,
+                  color: "var(--hb-success)",
+                  background: "rgba(133,173,146,0.15)",
+                  border: "1px solid rgba(133,173,146,0.4)",
+                  borderRadius: 3,
+                  padding: "3px 7px",
+                  textDecoration: "none",
+                  flexShrink: 0,
+                  letterSpacing: 0.3,
+                  animation: "pulse 2s ease-in-out infinite",
+                }}
+              >
+                BOOK NOW
+              </a>
+            )}
             {hasPreview && (
               <span
                 style={{
@@ -294,25 +319,48 @@ function JobRow({ job }: { job: CastJob }) {
             </div>
           )}
 
-          <a
-            href={job.notionUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "inline-block",
-              fontFamily: PS2P,
-              fontSize: 7,
-              color: color,
-              background: `${color}12`,
-              border: `1px solid ${color}30`,
-              borderRadius: 4,
-              padding: "5px 10px",
-              textDecoration: "none",
-              letterSpacing: 0.5,
-            }}
-          >
-            OPEN IN NOTION
-          </a>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {needsBooking && (
+              <a
+                href={job.bookingLink!}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-block",
+                  fontFamily: PS2P,
+                  fontSize: 7,
+                  color: "var(--hb-success)",
+                  background: "rgba(133,173,146,0.15)",
+                  border: "1px solid rgba(133,173,146,0.4)",
+                  borderRadius: 4,
+                  padding: "5px 10px",
+                  textDecoration: "none",
+                  letterSpacing: 0.5,
+                }}
+              >
+                BOOK INTERVIEW →
+              </a>
+            )}
+            <a
+              href={job.notionUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-block",
+                fontFamily: PS2P,
+                fontSize: 7,
+                color: color,
+                background: `${color}12`,
+                border: `1px solid ${color}30`,
+                borderRadius: 4,
+                padding: "5px 10px",
+                textDecoration: "none",
+                letterSpacing: 0.5,
+              }}
+            >
+              OPEN IN NOTION
+            </a>
+          </div>
         </div>
       )}
     </div>

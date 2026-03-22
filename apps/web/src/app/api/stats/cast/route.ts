@@ -45,6 +45,7 @@ export interface CastJob {
   fitScore: number | null;
   interviewDate: string | null;
   notionUrl: string;
+  bookingLink?: string | null;
   coverLetterPreview?: string;
   cvHeadline?: string;
 }
@@ -122,6 +123,50 @@ function extractNumber(prop: NotionProperty | undefined): number | null {
 function extractDate(prop: NotionProperty | undefined): string | null {
   if (!prop || prop.type !== "date") return null;
   return (prop as NotionDateProp).date?.start ?? null;
+}
+
+const INTERVIEW_PREP_DB = "ae882a6161644c15af6f4c7fbf4ea0b8";
+
+/** Returns a map of application page ID → booking link from the Interview Prep DB */
+async function getBookingLinks(): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!NOTION_TOKEN) return map;
+
+  try {
+    const res = await fetch(
+      `https://api.notion.com/v1/databases/${INTERVIEW_PREP_DB}/query`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${NOTION_TOKEN}`,
+          "Content-Type": "application/json",
+          "Notion-Version": "2022-06-28",
+        },
+        body: JSON.stringify({ page_size: 100 }),
+        signal: AbortSignal.timeout(8000),
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) return map;
+
+    const data = await res.json();
+    for (const page of data.results ?? []) {
+      const props = page.properties ?? {};
+      const link = props["Interview Link"]?.url as string | null;
+      const relations: { id: string }[] = props["Linked Application"]?.relation ?? [];
+      if (link && relations.length > 0) {
+        for (const rel of relations) {
+          // Prefer latest booking link — last write wins if multiple prep cards
+          map.set(rel.id.replace(/-/g, ""), link);
+        }
+      }
+    }
+  } catch {
+    // Non-fatal — Homebase still works without booking links
+  }
+
+  return map;
 }
 
 async function queryApplications(): Promise<CastJob[]> {
@@ -202,19 +247,28 @@ export async function GET(req: NextRequest) {
   const denied = await checkAuth(req);
   if (denied) return denied;
 
-  const jobs = await queryApplications();
+  const [jobs, bookingLinks] = await Promise.all([
+    queryApplications(),
+    getBookingLinks(),
+  ]);
 
-  const pending = jobs.filter((j) =>
+  // Attach booking links — normalize IDs to match (Notion returns with/without dashes)
+  const jobsWithLinks = jobs.map((j) => ({
+    ...j,
+    bookingLink: bookingLinks.get(j.id.replace(/-/g, "")) ?? null,
+  }));
+
+  const pending = jobsWithLinks.filter((j) =>
     j.status === "Pending ⏳" || j.status === "To apply"
   );
-  const interviews = jobs.filter((j) => j.status === "Interview 💬");
-  const assignments = jobs.filter((j) => j.status === "Assignment given 📑");
+  const interviews = jobsWithLinks.filter((j) => j.status === "Interview 💬");
+  const assignments = jobsWithLinks.filter((j) => j.status === "Assignment given 📑");
 
   return NextResponse.json({
     pending,
     interviews,
     assignments,
-    total: jobs.length,
+    total: jobsWithLinks.length,
     updatedAt: new Date().toISOString(),
   });
 }
