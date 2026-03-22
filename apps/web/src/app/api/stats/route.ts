@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execFileSync } from "child_process";
+import crypto from "crypto";
 import { checkAuth } from "@/lib/auth";
 import { readMetricsSnapshot } from "@/lib/metrics-snapshot";
 
@@ -235,91 +236,156 @@ interface SEOResult {
   } | null;
 }
 
-async function getSEO(): Promise<SEOResult> {
-  const key = process.env.LUNARY_ADMIN_API_KEY;
-  const url = process.env.LUNARY_URL ?? "https://lunary.app";
-  const empty: SEOResult = { impressions: 0, clicks: 0, ctr: 0, position: 0, dailyAvg: 0, trend: null };
-  if (!key) return empty;
-
+/** Sign a JWT with RS256 for Google service account OAuth2 */
+async function getGoogleAccessToken(serviceAccountJson: string): Promise<string | null> {
   try {
-    const res = await fetch(`${url}/api/admin/analytics/search-console`, {
-      headers: { Authorization: `Bearer ${key}` },
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) {
-      // Cloudflare blocks Hetzner server — fall back to snapshot pushed from Mac heartbeat
-      const snap = readMetricsSnapshot();
-      if (snap?.seoImpressions7d) {
-        return {
-          impressions: snap.seoImpressions7d,
-          clicks: snap.seoClicks7d ?? 0,
-          ctr: snap.seoCtr7d ?? 0,
-          position: snap.seoPosition7d ?? 0,
-          dailyAvg: snap.seoDailyAvg ?? Math.round(snap.seoImpressions7d / 7),
-          trend: null,
-        };
-      }
-      return empty;
-    }
-    const raw = await res.json();
-    const perf = raw?.data?.performance ?? raw?.performance ?? raw;
-    const metrics: { date: string; clicks: number; impressions: number; position?: number }[] = perf.metrics ?? [];
-
-    // Require at least 7 days of daily data to show meaningful 7d numbers.
-    // Never fall back to the API aggregate total (which is 28d) — that would be misleading.
-    if (metrics.length < 7) {
-      return empty;
-    }
-
-    const recent7 = metrics.slice(-7);
-    const rImp = sum(recent7, "impressions");
-    const rClk = sum(recent7, "clicks");
-    const ctr7d = rImp > 0 ? rClk / rImp : 0;
-
-    // Position: average of last 7 days (only if per-day position available)
-    let position7d = perf.averagePosition ?? perf.position ?? 0;
-    const posEntries = recent7.filter((d) => d.position != null && d.position > 0);
-    if (posEntries.length > 0) {
-      position7d = posEntries.reduce((a, d) => a + (d.position ?? 0), 0) / posEntries.length;
-    }
-
-    let trend: SEOResult["trend"] = null;
-    let prev: SEOResult["prev"] | undefined;
-
-    if (metrics.length >= 14) {
-      const prev7 = metrics.slice(-14, -7);
-      const pImp = sum(prev7, "impressions");
-      const pClk = sum(prev7, "clicks");
-      const pCtr = pImp > 0 ? pClk / pImp : 0;
-      const prevPosEntries = prev7.filter((d) => d.position != null && d.position > 0);
-      const pPos = prevPosEntries.length > 0
-        ? prevPosEntries.reduce((a, d) => a + (d.position ?? 0), 0) / prevPosEntries.length
-        : null;
-
-      prev = { impressions: pImp, clicks: pClk, ctr: pCtr, position: pPos ?? position7d };
-
-      trend = {
-        impressions: { delta: rImp - pImp, pct: pImp ? ((rImp - pImp) / pImp) * 100 : 0 },
-        clicks: { delta: rClk - pClk, pct: pClk ? ((rClk - pClk) / pClk) * 100 : 0 },
-        ctr: { delta: ctr7d - pCtr, pct: pCtr ? ((ctr7d - pCtr) / pCtr) * 100 : 0 },
-        position: pPos != null
-          ? { delta: position7d - pPos, pct: pPos ? ((position7d - pPos) / pPos) * 100 : 0 }
-          : null,
-      };
-    }
-
-    return {
-      impressions: rImp,
-      clicks: rClk,
-      ctr: ctr7d,
-      position: position7d,
-      dailyAvg: Math.round(rImp / 7),
-      prev,
-      trend,
+    const sa = JSON.parse(serviceAccountJson) as {
+      client_email: string; private_key: string;
     };
+    const now = Math.floor(Date.now() / 1000);
+    const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
+    const payload = Buffer.from(JSON.stringify({
+      iss: sa.client_email,
+      scope: "https://www.googleapis.com/auth/webmasters.readonly",
+      aud: "https://oauth2.googleapis.com/token",
+      exp: now + 3600,
+      iat: now,
+    })).toString("base64url");
+
+    const signingInput = `${header}.${payload}`;
+    const privateKey = crypto.createPrivateKey(sa.private_key);
+    const sig = crypto.sign("sha256", Buffer.from(signingInput), privateKey).toString("base64url");
+    const jwt = `${signingInput}.${sig}`;
+
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion: jwt,
+      }),
+    });
+    if (!tokenRes.ok) return null;
+    const { access_token } = await tokenRes.json() as { access_token: string };
+    return access_token;
   } catch {
-    return empty;
+    return null;
   }
+}
+
+async function getSEO(): Promise<SEOResult> {
+  const empty: SEOResult = { impressions: 0, clicks: 0, ctr: 0, position: 0, dailyAvg: 0, trend: null };
+
+  // Try Google Search Console API directly (no Cloudflare, works from Hetzner)
+  const saJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  const siteUrl = process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL ?? "sc-domain:lunary.app";
+
+  if (saJson) {
+    try {
+      const token = await getGoogleAccessToken(saJson);
+      if (token) {
+        const end = new Date(); end.setDate(end.getDate() - 1); // GSC lags 1-2 days
+        const start = new Date(end); start.setDate(start.getDate() - 13); // 14 days for trend comparison
+
+        const gscRes = await fetch(
+          `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              startDate: start.toISOString().split("T")[0],
+              endDate: end.toISOString().split("T")[0],
+              dimensions: ["date"],
+              rowLimit: 14,
+            }),
+          }
+        );
+
+        if (gscRes.ok) {
+          const gscData = await gscRes.json() as { rows?: { keys: string[]; clicks: number; impressions: number; ctr: number; position: number }[] };
+          const rows = gscData.rows ?? [];
+          const metrics = rows.map((r) => ({
+            date: r.keys[0],
+            clicks: r.clicks,
+            impressions: r.impressions,
+            ctr: r.ctr,
+            position: r.position,
+          })).sort((a, b) => a.date.localeCompare(b.date));
+
+          if (metrics.length >= 7) {
+            // Process metrics through the standard path below
+            return computeSEOResult(metrics);
+          }
+        }
+      }
+    } catch { /* fall through to snapshot */ }
+  }
+
+  // Fall back to snapshot pushed from Mac heartbeat (Cloudflare blocks Hetzner→Lunary)
+  const snap = readMetricsSnapshot();
+  if (snap?.seoImpressions7d) {
+    return {
+      impressions: snap.seoImpressions7d,
+      clicks: snap.seoClicks7d ?? 0,
+      ctr: snap.seoCtr7d ?? 0,
+      position: snap.seoPosition7d ?? 0,
+      dailyAvg: snap.seoDailyAvg ?? Math.round(snap.seoImpressions7d / 7),
+      trend: null,
+    };
+  }
+  return empty;
+}
+
+function computeSEOResult(metrics: { date: string; clicks: number; impressions: number; ctr?: number; position?: number }[]): SEOResult {
+  const empty: SEOResult = { impressions: 0, clicks: 0, ctr: 0, position: 0, dailyAvg: 0, trend: null };
+  if (metrics.length < 7) return empty;
+
+  const recent7 = metrics.slice(-7);
+  const rImp = sum(recent7, "impressions");
+  const rClk = sum(recent7, "clicks");
+  const ctr7d = rImp > 0 ? rClk / rImp : 0;
+
+  const posEntries = recent7.filter((d) => d.position != null && d.position > 0);
+  const position7d = posEntries.length > 0
+    ? posEntries.reduce((a, d) => a + (d.position ?? 0), 0) / posEntries.length
+    : 0;
+
+  let trend: SEOResult["trend"] = null;
+  let prev: SEOResult["prev"] | undefined;
+
+  if (metrics.length >= 14) {
+    const prev7 = metrics.slice(-14, -7);
+    const pImp = sum(prev7, "impressions");
+    const pClk = sum(prev7, "clicks");
+    const pCtr = pImp > 0 ? pClk / pImp : 0;
+    const prevPosEntries = prev7.filter((d) => d.position != null && d.position > 0);
+    const pPos = prevPosEntries.length > 0
+      ? prevPosEntries.reduce((a, d) => a + (d.position ?? 0), 0) / prevPosEntries.length
+      : null;
+
+    prev = { impressions: pImp, clicks: pClk, ctr: pCtr, position: pPos ?? position7d };
+    trend = {
+      impressions: { delta: rImp - pImp, pct: pImp ? ((rImp - pImp) / pImp) * 100 : 0 },
+      clicks: { delta: rClk - pClk, pct: pClk ? ((rClk - pClk) / pClk) * 100 : 0 },
+      ctr: { delta: ctr7d - pCtr, pct: pCtr ? ((ctr7d - pCtr) / pCtr) * 100 : 0 },
+      position: pPos != null
+        ? { delta: position7d - pPos, pct: pPos ? ((position7d - pPos) / pPos) * 100 : 0 }
+        : null,
+    };
+  }
+
+  return {
+    impressions: rImp,
+    clicks: rClk,
+    ctr: ctr7d,
+    position: position7d,
+    dailyAvg: Math.round(rImp / 7),
+    prev,
+    trend,
+  };
 }
 
 function sum(arr: Record<string, unknown>[], key: string): number {

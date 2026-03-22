@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { checkAuth } from "@/lib/auth";
 import { writeMetricsSnapshot, readMetricsSnapshot } from "@/lib/metrics-snapshot";
+
+const HEARTBEAT_PATH = path.join("/app/data", "heartbeat.json");
 
 interface HeartbeatPayload {
   ts: string;
@@ -25,6 +29,28 @@ interface HeartbeatPayload {
 
 const g = global as typeof globalThis & { _heartbeat?: HeartbeatPayload };
 
+function persistHeartbeat(body: HeartbeatPayload) {
+  try {
+    const dir = path.dirname(HEARTBEAT_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(HEARTBEAT_PATH, JSON.stringify(body), "utf8");
+  } catch { /* best effort */ }
+}
+
+function loadPersistedHeartbeat(): HeartbeatPayload | null {
+  try {
+    if (!fs.existsSync(HEARTBEAT_PATH)) return null;
+    return JSON.parse(fs.readFileSync(HEARTBEAT_PATH, "utf8")) as HeartbeatPayload;
+  } catch { return null; }
+}
+
+function getHeartbeat(): HeartbeatPayload | null {
+  if (g._heartbeat) return g._heartbeat;
+  const persisted = loadPersistedHeartbeat();
+  if (persisted) { g._heartbeat = persisted; }
+  return persisted;
+}
+
 export async function POST(req: NextRequest) {
   const denied = await checkAuth(req);
   if (denied) return denied;
@@ -35,6 +61,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "missing ts or services" }, { status: 400 });
     }
     g._heartbeat = body;
+    persistHeartbeat(body);
 
     // Persist metrics to disk if present
     if (body.metrics) {
@@ -51,7 +78,7 @@ export async function GET(req: NextRequest) {
   const denied = await checkAuth(req);
   if (denied) return denied;
 
-  const hb = g._heartbeat;
+  const hb = getHeartbeat();
   if (!hb) {
     return NextResponse.json({ status: "no-data", ageMinutes: 0, heartbeat: null });
   }
