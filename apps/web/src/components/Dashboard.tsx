@@ -22,6 +22,7 @@ import WeeklyRhythm from "./WeeklyRhythm";
 import OrbitLog from "./OrbitLog";
 import DigestCard from "./DigestCard";
 import QuickComposer from "./QuickComposer";
+import TasksWidget from "./TasksWidget";
 import type { Alert } from "@/app/api/alerts/route";
 import { registerPush } from "@/lib/push";
 import {
@@ -857,6 +858,7 @@ export default function Dashboard() {
                       onOpenApprovalQueue={() => setActiveTab("queue")}
                       inline
                     />
+                    <TasksWidget tasks={heartbeat?.heartbeat?.tasks} />
                     <QuickActions
                       token={token}
                       onAction={(action) => {

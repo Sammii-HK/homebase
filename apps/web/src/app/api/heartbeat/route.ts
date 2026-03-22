@@ -14,6 +14,8 @@ interface HeartbeatPayload {
     mrr?: number;
     signups7d?: number;
   };
+  disk?: { pct: number; used: string; avail: string };
+  tasks?: Array<{ id: string; title: string; status: string; project: string }>;
 }
 
 const g = global as typeof globalThis & { _heartbeat?: HeartbeatPayload };

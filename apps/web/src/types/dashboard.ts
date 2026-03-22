@@ -197,6 +197,13 @@ export interface Opportunity {
   platformUrl: string;
 }
 
+export interface HeartbeatTask {
+  id: string;
+  title: string;
+  status: string;
+  project: string;
+}
+
 export interface HeartbeatResponse {
   status: "online" | "offline" | "no-data";
   ageMinutes: number;
@@ -205,5 +212,7 @@ export interface HeartbeatResponse {
     services: Record<string, { status: string; [key: string]: unknown }>;
     docker?: string;
     launchAgents?: string;
+    disk?: { pct: number; used: string; avail: string };
+    tasks?: HeartbeatTask[];
   } | null;
 }

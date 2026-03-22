@@ -50,7 +50,41 @@ if [ -f "$LIVE_METRICS" ]; then
   fi
 fi
 
-payload="{\"ts\":\"${ts}\",\"services\":{${n8n},${brandApi},${whisper}},\"docker\":\"${docker_status}\",\"launchAgents\":\"${agents}\"${metrics_field}}"
+# Disk usage (Mac system disk)
+disk_pct=$(df / | awk 'NR==2 {gsub(/%/,"",$5); print $5}' 2>/dev/null)
+disk_used=$(df -h / | awk 'NR==2 {print $3}' 2>/dev/null)
+disk_avail=$(df -h / | awk 'NR==2 {print $4}' 2>/dev/null)
+disk_field=""
+if [ -n "$disk_pct" ]; then
+  disk_field=",\"disk\":{\"pct\":${disk_pct},\"used\":\"${disk_used}\",\"avail\":\"${disk_avail}\"}"
+fi
+
+# Open tasks from Claude memory (top 8 non-done)
+TASKS_FILE="/Users/sammii/.claude/projects/-Users-sammii-development/memory/tasks.json"
+tasks_field=""
+if command -v python3 > /dev/null 2>&1 && [ -f "$TASKS_FILE" ]; then
+  tasks_json=$(python3 - "$TASKS_FILE" <<'PYEOF'
+import sys, json
+try:
+    with open(sys.argv[1]) as f:
+        d = json.load(f)
+    tasks = d.get("tasks", [])
+    open_tasks = [
+        {"id": t.get("id",""), "title": t.get("title","")[:80], "status": t.get("status","ready"), "project": t.get("project","")}
+        for t in tasks
+        if isinstance(t, dict) and t.get("status") not in ("done","completed","cancelled")
+    ][:8]
+    print(json.dumps(open_tasks))
+except Exception:
+    print("[]")
+PYEOF
+)
+  if [ -n "$tasks_json" ] && [ "$tasks_json" != "[]" ] && [ "$tasks_json" != "null" ]; then
+    tasks_field=",\"tasks\":${tasks_json}"
+  fi
+fi
+
+payload="{\"ts\":\"${ts}\",\"services\":{${n8n},${brandApi},${whisper}},\"docker\":\"${docker_status}\",\"launchAgents\":\"${agents}\"${metrics_field}${disk_field}${tasks_field}}"
 
 curl -sf -X POST "${HOMEBASE_URL}/api/heartbeat" \
   -H "Content-Type: application/json" \
