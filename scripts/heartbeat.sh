@@ -118,3 +118,11 @@ if [ "$current_hour" = "06" ] && [ "$current_min" -lt 10 ]; then
   curl -sf -X POST "${SPELLCAST_URL}/api/meta/sync" \
     -H "Authorization: Bearer ${SPELLCAST_CRON_SECRET:-}" > /dev/null 2>&1
 fi
+
+# --- Smart Docker prune (when disk > 85%) ---
+# Only prunes unused images, never touches running containers or volumes
+disk_pct=$(df / | awk 'NR==2 {gsub(/%/,"",$5); print $5}' 2>/dev/null)
+if [ -n "$disk_pct" ] && [ "$disk_pct" -gt 85 ]; then
+  docker image prune -af >> /tmp/docker-prune.log 2>&1
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) [disk-prune] triggered at ${disk_pct}%" >> /tmp/docker-prune.log
+fi
