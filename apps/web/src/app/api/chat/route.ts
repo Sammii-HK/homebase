@@ -67,33 +67,44 @@ export async function POST(req: NextRequest) {
     history,
   };
 
-  // In dev, try local server first; fall back to Hetzner
+  // Try local claude --print server first, then optional remote fallback
   let chatUrl: string;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
 
-  if (
-    process.env.NODE_ENV === "development" &&
-    (await isLocalServerAvailable())
-  ) {
+  if (await isLocalServerAvailable()) {
     chatUrl = LOCAL_CHAT_URL;
-  } else {
-    chatUrl =
-      process.env.CLAWD_CHAT_URL ?? "https://claw.sammii.dev/api/chat";
+  } else if (process.env.CLAWD_CHAT_URL) {
+    chatUrl = process.env.CLAWD_CHAT_URL;
     const token = process.env.CLAWD_GATEWAY_TOKEN ?? "";
     if (token) headers["Authorization"] = `Bearer ${token}`;
+  } else {
+    return new Response(
+      JSON.stringify({ error: "Chat server not running — start local-chat-server.js" }),
+      { status: 503 }
+    );
   }
 
-  const upstream = await fetch(chatUrl, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(chatPayload),
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(chatUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(chatPayload),
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "unknown error";
+    return new Response(
+      JSON.stringify({ error: `Chat backend unreachable: ${msg}` }),
+      { status: 502 }
+    );
+  }
 
   if (!upstream.ok) {
     const err = await upstream.text();
-    return new Response(JSON.stringify({ error: err }), {
-      status: upstream.status,
-    });
+    return new Response(
+      JSON.stringify({ error: `Chat backend error (${upstream.status}): ${err}` }),
+      { status: upstream.status }
+    );
   }
 
   // Pipe the AI SDK data stream directly through
