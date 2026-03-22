@@ -169,76 +169,75 @@ async function getBookingLinks(): Promise<Map<string, string>> {
   return map;
 }
 
+async function queryByStatuses(statuses: string[], pageSize = 50): Promise<NotionPage[]> {
+  if (!NOTION_TOKEN) return [];
+  const res = await fetch(
+    `https://api.notion.com/v1/databases/${APPLICATIONS_DB}/query`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${NOTION_TOKEN}`,
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+      },
+      body: JSON.stringify({
+        filter: { or: statuses.map((s) => ({ property: "Status", status: { equals: s } })) },
+        sorts: [{ timestamp: "last_edited_time", direction: "descending" }],
+        page_size: pageSize,
+      }),
+      signal: AbortSignal.timeout(8000),
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) {
+    console.error("[cast] Notion query failed:", res.status, "for statuses:", statuses);
+    return [];
+  }
+  const data = await res.json();
+  return data.results ?? [];
+}
+
+function pageToJob(page: NotionPage): CastJob {
+  const props = page.properties;
+  const company =
+    extractText(props["Company"] ?? props["company"] ?? props["Employer"] ?? props["Organisation"]) ||
+    "Unknown company";
+  const role =
+    extractText(props["Role"] ?? props["role"] ?? props["Job Title"] ?? props["Position"] ?? props["Title"]) ||
+    "Unknown role";
+  // Status is a Notion "status" property type, not "select"
+  const statusProp = props["Status"] ?? props["status"];
+  const status =
+    (statusProp as { type: string; status?: { name: string } } | undefined)?.status?.name ??
+    extractText(statusProp) ??
+    "Unknown";
+  const fitScore = extractNumber(props["Fit Score"] ?? props["fit_score"] ?? props["Score"]);
+  const interviewDate = extractDate(props["Interview Date"] ?? props["Interview"] ?? props["Date"]);
+  return {
+    id: page.id,
+    company,
+    role,
+    status,
+    fitScore,
+    interviewDate,
+    notionUrl: page.url,
+    ...readGeneratedPreview(company),
+  };
+}
+
 async function queryApplications(): Promise<CastJob[]> {
   if (!NOTION_TOKEN) return [];
-
   try {
-    const res = await fetch(
-      `https://api.notion.com/v1/databases/${APPLICATIONS_DB}/query`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${NOTION_TOKEN}`,
-          "Content-Type": "application/json",
-          "Notion-Version": "2022-06-28",
-        },
-        body: JSON.stringify({
-          filter: {
-            or: Array.from(SHOW_STATUSES).map((status) => ({
-              property: "Status",
-              status: { equals: status },
-            })),
-          },
-          sorts: [{ property: "Status", direction: "ascending" }],
-          page_size: 100,
-        }),
-        signal: AbortSignal.timeout(8000),
-        cache: "no-store",
-      }
-    );
-
-    if (!res.ok) {
-      console.error("[cast] Notion query failed:", res.status);
-      return [];
-    }
-
-    const data = await res.json();
-    const pages: NotionPage[] = data.results ?? [];
-
-    return pages.map((page) => {
-      const props = page.properties;
-
-      // Try common property name variants
-      const company =
-        extractText(props["Company"] ?? props["company"] ?? props["Employer"] ?? props["Organisation"]) ||
-        "Unknown company";
-
-      const role =
-        extractText(props["Role"] ?? props["role"] ?? props["Job Title"] ?? props["Position"] ?? props["Title"]) ||
-        "Unknown role";
-
-      // Status is a Notion "status" property type, not "select"
-      const statusProp = props["Status"] ?? props["status"];
-      const status = (statusProp as { type: string; status?: { name: string } } | undefined)
-        ?.status?.name ?? extractText(statusProp) ?? "Unknown";
-
-      const fitScore = extractNumber(props["Fit Score"] ?? props["fit_score"] ?? props["Score"]);
-
-      const interviewDate = extractDate(props["Interview Date"] ?? props["Interview"] ?? props["Date"]);
-
-      const preview = readGeneratedPreview(company);
-
-      return {
-        id: page.id,
-        company,
-        role,
-        status,
-        fitScore,
-        interviewDate,
-        notionUrl: page.url,
-        ...preview,
-      };
-    });
+    // Query urgent and non-urgent statuses separately so interviews are
+    // never squeezed out by page_size when there are 100+ applications
+    const [urgentPages, pendingPages] = await Promise.all([
+      queryByStatuses(["Interview 💬", "Assignment given 📑"], 50),
+      queryByStatuses(["Pending ⏳", "To apply"], 50),
+    ]);
+    const seen = new Set<string>();
+    return [...urgentPages, ...pendingPages]
+      .filter((p) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; })
+      .map(pageToJob);
   } catch (e) {
     console.error("[cast] Notion fetch error:", e);
     return [];
