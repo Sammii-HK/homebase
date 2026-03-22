@@ -36,25 +36,29 @@ function writeCache(data: RevenueActionCache) {
   } catch { /* best effort */ }
 }
 
-/** Collect an AI SDK v1 data stream into a plain text string */
+/** Collect an AI SDK v1 data stream (`0:"chunk"\n` lines) into plain text */
 async function collectStream(body: ReadableStream<Uint8Array>): Promise<string> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
+  let lineBuf = "";
   let text = "";
+
+  function parseLine(line: string) {
+    if (!line.startsWith("0:")) return;
+    try { text += JSON.parse(line.slice(2)); } catch { /* skip */ }
+  }
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    // AI SDK data stream lines: `0:"chunk"` or `e:{...}` (finish) etc.
-    for (const line of chunk.split("\n")) {
-      if (line.startsWith('0:"') || line.startsWith("0:'")) {
-        try {
-          text += JSON.parse(line.slice(2));
-        } catch { /* skip malformed */ }
-      }
-    }
+    lineBuf += decoder.decode(value, { stream: true });
+    const lines = lineBuf.split("\n");
+    lineBuf = lines.pop() ?? ""; // hold incomplete trailing line
+    for (const line of lines) parseLine(line);
   }
+
+  // flush any remaining
+  if (lineBuf) parseLine(lineBuf);
 
   return text.trim();
 }
