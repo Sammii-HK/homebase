@@ -33,14 +33,35 @@ function writeCache(data: RevenueActionCache) {
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(CACHE_FILE, JSON.stringify(data, null, 2));
-  } catch {
-    // best effort
+  } catch { /* best effort */ }
+}
+
+/** Collect an AI SDK v1 data stream into a plain text string */
+async function collectStream(body: ReadableStream<Uint8Array>): Promise<string> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let text = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    // AI SDK data stream lines: `0:"chunk"` or `e:{...}` (finish) etc.
+    for (const line of chunk.split("\n")) {
+      if (line.startsWith('0:"') || line.startsWith("0:'")) {
+        try {
+          text += JSON.parse(line.slice(2));
+        } catch { /* skip malformed */ }
+      }
+    }
   }
+
+  return text.trim();
 }
 
 async function generateRecommendation(): Promise<RevenueActionCache | null> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
+  const clawdUrl = process.env.CLAWD_CHAT_URL ?? "https://claw.sammii.dev/api/chat";
+  const clawdToken = process.env.CLAWD_GATEWAY_TOKEN ?? "";
 
   const snapshot = readMetricsSnapshot();
   const mau = snapshot?.mau ?? 0;
@@ -48,79 +69,50 @@ async function generateRecommendation(): Promise<RevenueActionCache | null> {
   const mrr = snapshot?.mrr ?? 0;
   const signups7d = snapshot?.signups7d ?? 0;
 
-  const lunaryUrl = process.env.LUNARY_URL ?? "https://lunary.app";
-  const lunaryKey = process.env.LUNARY_ADMIN_API_KEY;
+  const prompt = `You are Sammii's business advisor. Based on the data below, return ONE specific action to take today to generate revenue. Reply ONLY with valid JSON, no markdown.
 
-  // Fetch launch tracker state for context
-  let launchContext = "";
-  if (lunaryKey) {
-    try {
-      const res = await fetch(`${lunaryUrl}/api/internal/homebase-stats`, {
-        headers: { Authorization: `Bearer ${lunaryKey}` },
-        signal: AbortSignal.timeout(4000),
-      });
-      if (res.ok) {
-        const d = await res.json();
-        mau || d.mau;
-      }
-    } catch { /* silent */ }
-  }
+Today (${new Date().toISOString().split("T")[0]}):
+- MRR: £${mrr.toFixed(2)} (beta — free coupons intentional, first paid revenue not yet achieved)
+- MAU: ${mau} | DAU: ${dau} | New signups 7d: ${signups7d}
+- SEO: ~26k impressions/day, 0.7% CTR, avg position 11.6 (rapid expansion phase)
 
-  const businessContext = `
-You are the AI advisor for Sammii, an indie developer in London. Give ONE specific, actionable revenue recommendation.
+Revenue streams:
+- Lunary astrology app: LIVE, 150 MAU, Stripe installed, £0 MRR (beta coupons)
+- iOS Apps: 7 apps built (Daily Tarot, Crystal of Day, Rune of Day, Aeris + 3 more). App Store assets done. NOT submitted yet.
+- Notion Templates: tarot journal template built. Gumroad listing NOT created (~30 min of work).
+- Dev Tools: Tailwind Colour Creator + Kern typography tool built. No auth or Stripe yet.
+- Framer Templates: not started.
+- Prism Components: pipeline running daily. No gallery or npm package yet.
+- Lunary API: endpoints + tiered pricing exist. No docs or SEO yet.
 
-Current state (today, ${new Date().toISOString().split("T")[0]}):
-- MRR: £${mrr.toFixed(2)} (beta users have free coupons intentionally — first paid revenue not yet achieved)
-- Monthly Active Users: ${mau}
-- Daily Active Users: ${dau}
-- New signups (7d): ${signups7d}
+Goal: first £1 as fast as possible, then scale.
 
-Revenue streams and status:
-- Lunary astrology app: LIVE. 150 MAU. £0 MRR (beta). Stripe installed, paid tier exists, just no paying users yet.
-- iOS Apps: 7 apps BUILT (Daily Tarot, Crystal of Day, Rune of Day, Aeris + 3 more). App Store assets done. NOT YET SUBMITTED.
-- Notion Templates: tarot journal template BUILT. Gumroad listing NOT CREATED yet. ~30 mins of work.
-- Dev Tools: Tailwind Colour Creator + Kern typography tool BUILT. No auth or Stripe yet.
-- Framer Templates: NOT STARTED.
-- Prism Component Library: pipeline running daily. No gallery site or npm package yet.
-- Lunary API: endpoints exist with tiered pricing. No documentation or SEO yet.
-
-SEO: 596,000 monthly impressions, 0.5% CTR, average position 11.6. Huge gap between impressions and clicks.
-
-Income goal: first £1 of revenue as fast as possible, then scale.
-
-Respond in this exact JSON format (no markdown):
-{
-  "recommendation": "One specific sentence: exactly what to do today",
-  "rationale": "One sentence: why this over everything else",
-  "estimatedImpact": "One phrase: e.g. '£20-50/mo within 2 weeks'"
-}
-`.trim();
+Respond with this exact JSON:
+{"recommendation":"one specific sentence — exactly what to do today","rationale":"one sentence why this over everything else","estimatedImpact":"e.g. first sales within 48h"}`;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch(clawdUrl, {
       method: "POST",
       headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
+        "Content-Type": "application/json",
+        ...(clawdToken ? { Authorization: `Bearer ${clawdToken}` } : {}),
       },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 256,
-        messages: [{ role: "user", content: businessContext }],
-      }),
-      signal: AbortSignal.timeout(15000),
+      body: JSON.stringify({ message: prompt, history: [] }),
+      signal: AbortSignal.timeout(30000),
     });
 
-    if (!res.ok) return null;
-    const data = await res.json() as { content?: { text?: string }[] };
-    const text = data.content?.[0]?.text ?? "";
+    if (!res.ok || !res.body) return null;
+
+    const raw = await collectStream(res.body);
 
     // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
-    const parsed = JSON.parse(jsonMatch[0]) as { recommendation?: string; rationale?: string; estimatedImpact?: string };
-
+    const parsed = JSON.parse(jsonMatch[0]) as {
+      recommendation?: string;
+      rationale?: string;
+      estimatedImpact?: string;
+    };
     if (!parsed.recommendation) return null;
 
     const result: RevenueActionCache = {
@@ -147,11 +139,6 @@ export async function GET(req: NextRequest) {
   if (!forceRefresh) {
     const cached = readCache();
     if (cached) return NextResponse.json({ ...cached, cached: true });
-  }
-
-  // No ANTHROPIC_API_KEY — return null so UI can hide the widget
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 503 });
   }
 
   const result = await generateRecommendation();

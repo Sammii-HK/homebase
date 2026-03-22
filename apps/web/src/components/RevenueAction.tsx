@@ -19,16 +19,11 @@ export default function RevenueAction({ token }: Props) {
   const [data, setData] = useState<ActionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [unavailable, setUnavailable] = useState(false);
 
   const fetchAction = useCallback(async (force = false) => {
     try {
       const url = force ? "/api/revenue-action?refresh=1" : "/api/revenue-action";
       const res = await fetch(url, { headers: authHeaders(token ?? "") });
-      if (res.status === 503) {
-        setUnavailable(true);
-        return;
-      }
       if (!res.ok) return;
       const d = await res.json() as ActionData;
       setData(d);
@@ -48,9 +43,6 @@ export default function RevenueAction({ token }: Props) {
     setRefreshing(true);
     await fetchAction(true);
   };
-
-  // Hide if API key not configured
-  if (unavailable) return null;
 
   if (loading) {
     return (
