@@ -99,6 +99,7 @@ export default function ChatPanel({ token }: { token: string }) {
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
+        credentials: "include",
         headers: authHeaders(token ?? ""),
       }),
     [token]
