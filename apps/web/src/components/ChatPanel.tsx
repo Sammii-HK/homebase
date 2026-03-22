@@ -78,6 +78,20 @@ function getSpeechRecognition(): (new () => SpeechRecognitionInstance) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+const CHAT_STORAGE_KEY = "hb_chat_history";
+const MAX_STORED_MESSAGES = 40;
+
+function loadStoredMessages() {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!raw) return undefined;
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+}
+
 export default function ChatPanel({ token }: { token: string }) {
   const [input, setInput] = useState("");
   const [ttsEnabled, setTtsEnabled] = useState(true);
@@ -104,12 +118,22 @@ export default function ChatPanel({ token }: { token: string }) {
     [token]
   );
 
-  const { messages, sendMessage, status, error } = useChat({ transport });
+  const { messages, sendMessage, status, error } = useChat({
+    transport,
+    initialMessages: loadStoredMessages(),
+  });
 
   const isLoading = status === "streaming" || status === "submitted";
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Persist last N messages to survive refresh
+    if (messages.length > 0) {
+      try {
+        const toStore = messages.slice(-MAX_STORED_MESSAGES);
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(toStore));
+      } catch {}
+    }
   }, [messages, isLoading]);
 
   // Speak last assistant message via Kokoro TTS
@@ -233,6 +257,25 @@ export default function ChatPanel({ token }: { token: string }) {
           gap: 6,
         }}
       >
+        <button
+          onClick={() => {
+            localStorage.removeItem(CHAT_STORAGE_KEY);
+            window.location.reload();
+          }}
+          title="Clear chat history"
+          style={{
+            fontFamily: PS2P,
+            fontSize: 7,
+            padding: "4px 8px",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 4,
+            color: "rgba(255,255,255,0.3)",
+            cursor: "pointer",
+          }}
+        >
+          CLEAR
+        </button>
         <button
           onClick={toggleTts}
           title={ttsEnabled ? "Mute voice" : "Unmute voice"}
