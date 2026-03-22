@@ -12,6 +12,7 @@ interface ApprovalItem {
   accountName: string;
   createdAt: string;
   source: "spellcast" | "orbit";
+  score?: number;
   threadSlides?: string[];
 }
 
@@ -409,6 +410,18 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
         }}>
           {platformIcon}
         </span>
+        {typeof item.score === "number" && (
+          <span style={{
+            fontFamily: PS2P,
+            fontSize: 7,
+            color: item.score >= 82 ? "var(--hb-success)" : item.score >= 70 ? "var(--hb-warn)" : "var(--hb-error-soft)",
+            background: item.score >= 82 ? "rgba(133,173,146,0.12)" : item.score >= 70 ? "rgba(250,204,21,0.1)" : "rgba(232,74,125,0.1)",
+            padding: "2px 5px",
+            borderRadius: 3,
+          }}>
+            {item.score}
+          </span>
+        )}
         {item.accountName && (
           <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>
             {item.accountName}

@@ -37,3 +37,27 @@ jobs:
                --env-file /opt/homebase/.env \
                -v /opt/homebase/data:/app/data \
                homebase:linux"
+
+      - name: Install cron jobs on server
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no root@95.217.179.111 'bash -s' << 'ENDSSH'
+            cat > /opt/homebase/cron.sh << 'SCRIPT'
+#!/bin/bash
+TOKEN=$(grep HOMEBASE_SECRET /opt/homebase/.env | cut -d= -f2)
+BASE="https://homebase.sammii.dev/api/cron"
+curl -sf -X POST "$BASE/$1" -H "Authorization: Bearer $TOKEN" || true
+SCRIPT
+            chmod +x /opt/homebase/cron.sh
+
+            cat > /etc/cron.d/homebase << 'CRON'
+0  7 * * *     root  /opt/homebase/cron.sh briefing
+0  9 * * *     root  /opt/homebase/cron.sh auto-approve
+0 15 * * *     root  /opt/homebase/cron.sh auto-approve
+0  8 * * *     root  /opt/homebase/cron.sh retry-failed
+*/30 * * * *   root  /opt/homebase/cron.sh push-alerts
+0 20 * * *     root  /opt/homebase/cron.sh queue-check
+0  9 * * *     root  /opt/homebase/cron.sh events
+CRON
+          ENDSSH

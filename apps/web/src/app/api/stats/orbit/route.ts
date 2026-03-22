@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
       model: String(a.model ?? ""),
       lastRun: a.lastRun ? String(a.lastRun) : null,
       detail: a.detail ? String(a.detail) : null,
+      lastError: a.lastError ? String(a.lastError) : (a.error ? String(a.error) : null),
       cost: a.cost ? Number(a.cost) : null,
     }));
 

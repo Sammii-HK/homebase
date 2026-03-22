@@ -57,7 +57,7 @@ export function useRoomData(roomId: string | null): RoomDataState {
     }
 
     // Only fetch for rooms with deep endpoints
-    if (["spellcast", "lunary", "infra", "orbit", "engagement"].includes(roomId)) {
+    if (["spellcast", "lunary", "infra", "orbit", "engagement", "events"].includes(roomId)) {
       fetchRoom(roomId === "dev" ? "infra" : roomId);
     }
 

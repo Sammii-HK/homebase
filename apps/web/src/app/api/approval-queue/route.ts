@@ -64,6 +64,7 @@ export interface ApprovalItem {
   accountName: string;
   createdAt: string;
   source: "spellcast" | "orbit";
+  score?: number;
   threadSlides?: string[];
 }
 
@@ -183,6 +184,7 @@ export async function GET(req: NextRequest) {
                 accountName: String(p.socialAccount?.name ?? ""),
                 createdAt: String(p.createdAt ?? p.created_at ?? new Date().toISOString()),
                 source: "spellcast",
+                score: typeof score === "number" ? score : undefined,
               });
             }
             continue;
@@ -195,6 +197,7 @@ export async function GET(req: NextRequest) {
             accountName: String(p.socialAccount?.name ?? ""),
             createdAt: String(p.createdAt ?? p.created_at ?? new Date().toISOString()),
             source: "spellcast",
+            score: typeof score === "number" ? score : undefined,
           });
         }
       }

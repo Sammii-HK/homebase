@@ -122,7 +122,7 @@ export interface InfraDeepData {
 
 export interface OrbitDeepData {
   online: boolean;
-  agents: { name: string; status: string; model: string; lastRun: string | null; detail: string | null; cost: number | null }[];
+  agents: { name: string; status: string; model: string; lastRun: string | null; detail: string | null; lastError: string | null; cost: number | null }[];
   approvedContent: { title: string; platform: string; score: number; persona: string }[];
   trendingTopics: { topic: string; heat: string; angle: string }[];
   scoutTargets: { platform: string; author: string; content: string; score: number; draftReply: string }[];
@@ -150,7 +150,28 @@ export interface EngagementDeepData {
   abTests: { id: string; status: string; metric: string; originalContent: string; winnerMetrics: Record<string, unknown> | null; evaluatedAt: string | null }[];
 }
 
-export type RoomDeepData = SpellcastDeepData | LunaryDeepData | InfraDeepData | OrbitDeepData | EngagementDeepData;
+export interface LondonEvent {
+  id: string;
+  title: string;
+  startAt: string;
+  endAt?: string;
+  url: string;
+  venue?: string;
+  source: "luma" | "eventbrite";
+  tags: string[];
+  description?: string;
+}
+
+export interface EventsDeepData {
+  events: LondonEvent[];
+  upcoming48h: number;
+  thisWeek: number;
+  sources: { luma: number; eventbrite: number };
+  hasEventbriteKey: boolean;
+  updatedAt: string;
+}
+
+export type RoomDeepData = SpellcastDeepData | LunaryDeepData | InfraDeepData | OrbitDeepData | EngagementDeepData | EventsDeepData;
 
 // ── Launch Tracker types ──
 

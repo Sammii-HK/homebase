@@ -10,6 +10,8 @@ import type {
   InfraDeepData,
   OrbitDeepData,
   EngagementDeepData,
+  EventsDeepData,
+  LondonEvent,
 } from "@/types/dashboard";
 import { useRoomData } from "@/hooks/useRoomData";
 import Opportunities from "./Opportunities";
@@ -560,15 +562,132 @@ function DevDetail({ stats, heartbeat, deepData, loading }: {
 
 // ── Meta detail (tabbed) ──
 
-const META_TABS = ["SEO", "OPPORTUNITIES"];
+const META_TABS = ["EVENTS", "SEO", "OPPORTUNITIES"];
 
-function MetaDetail({ stats }: { stats: DashboardStats }) {
-  const [tab, setTab] = useState("SEO");
+function formatEventDate(iso: string): { relative: string; absolute: string } {
+  const d = new Date(iso);
+  const diffMs = d.getTime() - Date.now();
+  const diffH = diffMs / 3_600_000;
+  const diffD = diffMs / 86_400_000;
+
+  let relative: string;
+  if (diffH < 1) relative = "in <1h";
+  else if (diffH < 24) relative = `in ${Math.round(diffH)}h`;
+  else if (diffD < 2) relative = "tomorrow";
+  else relative = `in ${Math.floor(diffD)}d`;
+
+  const absolute = d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })
+    + " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return { relative, absolute };
+}
+
+function EventCard({ event }: { event: LondonEvent }) {
+  const { relative, absolute } = formatEventDate(event.startAt);
+  const isSoon = new Date(event.startAt).getTime() - Date.now() < 48 * 3_600_000;
+  const sourceColor = event.source === "luma" ? "#c084fc" : "#fb923c";
+  const sourceName = event.source === "luma" ? "LUMA" : "EVENTBRITE";
+
+  return (
+    <a
+      href={event.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{
+        display: "block", textDecoration: "none",
+        padding: "10px 12px",
+        background: isSoon ? "rgba(192,132,252,0.07)" : "var(--hb-03)",
+        border: `1px solid ${isSoon ? "rgba(192,132,252,0.25)" : "var(--hb-08)"}`,
+        borderRadius: 5,
+        borderLeft: isSoon ? "3px solid rgba(192,132,252,0.6)" : "1px solid var(--hb-08)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 5 }}>
+        <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-80)", lineHeight: 1.4, flex: 1 }}>
+          {event.title.slice(0, 60)}{event.title.length > 60 ? "…" : ""}
+        </span>
+        <span style={{
+          fontFamily: PS2P, fontSize: 6,
+          color: sourceColor, background: `${sourceColor}15`,
+          padding: "2px 5px", borderRadius: 3, flexShrink: 0,
+        }}>
+          {sourceName}
+        </span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{
+          fontFamily: PS2P, fontSize: 7,
+          color: isSoon ? "#c084fc" : "var(--hb-warn)",
+        }}>
+          {relative}
+        </span>
+        <span style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-40)" }}>{absolute}</span>
+      </div>
+      {event.venue && (
+        <div style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-50)", marginTop: 4 }}>
+          {event.venue.slice(0, 50)}
+        </div>
+      )}
+      {event.tags.length > 0 && (
+        <div style={{ marginTop: 4, display: "flex", gap: 4, flexWrap: "wrap" }}>
+          {event.tags.slice(0, 3).map((tag) => (
+            <span key={tag} style={{
+              fontFamily: PS2P, fontSize: 5, color: "var(--hb-40)",
+              background: "var(--hb-06)", padding: "2px 4px", borderRadius: 2,
+            }}>{tag}</span>
+          ))}
+        </div>
+      )}
+    </a>
+  );
+}
+
+function MetaDetail({ stats, deepData, loading }: { stats: DashboardStats; deepData: EventsDeepData | null; loading: boolean }) {
+  const [tab, setTab] = useState("EVENTS");
   const seoTrend = stats.seo.trend;
 
   return (
     <div>
       <RoomTabs tabs={META_TABS} active={tab} accent="#f472b6" onChange={setTab} />
+
+      {tab === "EVENTS" && (
+        <div>
+          {/* Summary strip */}
+          {deepData && (
+            <div style={{ display: "flex", gap: 12, marginBottom: 10 }}>
+              <span style={{ fontFamily: PS2P, fontSize: 8, color: deepData.upcoming48h > 0 ? "#c084fc" : "var(--hb-60)" }}>
+                {deepData.upcoming48h > 0 ? `${deepData.upcoming48h} IN 48H` : "NONE IN 48H"}
+              </span>
+              <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-40)" }}>
+                {deepData.thisWeek} THIS WEEK
+              </span>
+              {!deepData.hasEventbriteKey && (
+                <span style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-30)", marginLeft: "auto" }}>
+                  + EVENTBRITE_API_KEY for more
+                </span>
+              )}
+            </div>
+          )}
+
+          {loading && <LoadingState />}
+
+          {deepData?.events && deepData.events.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {deepData.events.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          ) : !loading ? (
+            <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)", marginBottom: 8 }}>
+                NO EVENTS FOUND
+              </div>
+              <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-40)", lineHeight: 1.6 }}>
+                Add EVENTBRITE_API_KEY to .env for guaranteed results
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {tab === "SEO" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -625,22 +744,38 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
               PIPELINE RUNNING
             </div>
           )}
-          {deepData.agents.map((a) => (
-            <div key={a.name} style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "8px 10px", background: "var(--hb-03)",
-              border: "1px solid var(--hb-08)", borderRadius: 4,
-            }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: 2,
-                background: AGENT_STATUS_COLORS[a.status] ?? "#71717a",
-                boxShadow: a.status === "running" ? `0 0 6px ${AGENT_STATUS_COLORS[a.status]}` : "none",
-              }} />
-              <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-70)", flex: 1 }}>{a.name}</span>
-              <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>{a.model}</span>
-              <span style={{ fontFamily: PS2P, fontSize: 7, color: AGENT_STATUS_COLORS[a.status] ?? "#71717a" }}>{a.status}</span>
-            </div>
-          ))}
+          {deepData.agents.map((a) => {
+            const isError = a.status === "error" || a.status === "failed";
+            const errorMsg = isError ? (a.lastError ?? a.detail) : null;
+            const lastRunStr = a.lastRun
+              ? new Date(a.lastRun).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              : null;
+            return (
+              <div key={a.name} style={{
+                padding: "8px 10px", background: isError ? "rgba(232,74,125,0.05)" : "var(--hb-03)",
+                border: `1px solid ${isError ? "rgba(232,74,125,0.2)" : "var(--hb-08)"}`, borderRadius: 4,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{
+                    width: 8, height: 8, borderRadius: 2,
+                    background: AGENT_STATUS_COLORS[a.status] ?? "#71717a",
+                    boxShadow: a.status === "running" ? `0 0 6px ${AGENT_STATUS_COLORS[a.status]}` : "none",
+                    flexShrink: 0,
+                  }} />
+                  <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-70)", flex: 1 }}>{a.name}</span>
+                  {lastRunStr && (
+                    <span style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-40)" }}>{lastRunStr}</span>
+                  )}
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: AGENT_STATUS_COLORS[a.status] ?? "#71717a" }}>{a.status}</span>
+                </div>
+                {errorMsg && (
+                  <div style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-error-soft)", marginTop: 5, paddingLeft: 16, lineHeight: 1.4, wordBreak: "break-word" }}>
+                    {errorMsg.slice(0, 120)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {loading && <LoadingState />}
         </div>
       )}
@@ -926,7 +1061,7 @@ const ROOM_TITLES: Record<RoomId, { title: string; accent: string }> = {
 
 export default function RoomDetail({ roomId, stats, heartbeat, token, onClose }: Props) {
   const { title, accent } = ROOM_TITLES[roomId];
-  const deepRoomId = roomId === "dev" ? "infra" : roomId === "meta" ? null : roomId === "orbit" ? "orbit" : roomId === "engagement" ? "engagement" : roomId;
+  const deepRoomId = roomId === "dev" ? "infra" : roomId === "meta" ? "events" : roomId === "orbit" ? "orbit" : roomId === "engagement" ? "engagement" : roomId;
   const { data: deepData, loading } = useRoomData(deepRoomId);
 
   return (
@@ -973,7 +1108,7 @@ export default function RoomDetail({ roomId, stats, heartbeat, token, onClose }:
         {roomId === "lunary" && <LunaryDetail stats={stats} deepData={deepData as LunaryDeepData | null} loading={loading} />}
         {roomId === "spellcast" && <SpellcastDetail stats={stats} deepData={deepData as SpellcastDeepData | null} loading={loading} />}
         {roomId === "dev" && <DevDetail stats={stats} heartbeat={heartbeat} deepData={deepData as InfraDeepData | null} loading={loading} />}
-        {roomId === "meta" && <MetaDetail stats={stats} />}
+        {roomId === "meta" && <MetaDetail stats={stats} deepData={deepData as EventsDeepData | null} loading={loading} />}
         {roomId === "orbit" && <OrbitDetail deepData={deepData as OrbitDeepData | null} loading={loading} token={token} />}
         {roomId === "engagement" && <EngagementDetail deepData={deepData as EngagementDeepData | null} loading={loading} token={token} />}
 

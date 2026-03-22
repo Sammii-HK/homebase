@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAuth } from "@/lib/auth";
+import fs from "fs";
+import path from "path";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +109,24 @@ async function getFromOrbit(): Promise<OrbitLogEntry[]> {
   return entries;
 }
 
+const CRON_LOG_FILE = path.join(process.cwd(), "..", "..", "app", "data", "cron-log.json");
+
+function getFromCronLog(): OrbitLogEntry[] {
+  try {
+    if (!fs.existsSync(CRON_LOG_FILE)) return [];
+    const raw = JSON.parse(fs.readFileSync(CRON_LOG_FILE, "utf-8"));
+    if (!Array.isArray(raw)) return [];
+    return raw.map((e: Record<string, unknown>) => ({
+      ts: String(e.ts ?? ""),
+      type: (e.type ?? "info") as OrbitLogEntryType,
+      summary: String(e.summary ?? ""),
+      count: e.count ? Number(e.count) : undefined,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 async function getFromN8n(): Promise<OrbitLogEntry[]> {
   const n8nKey = process.env.N8N_API_KEY;
   if (!n8nKey) return [];
@@ -165,6 +185,12 @@ export async function GET(req: NextRequest) {
     } catch {
       // n8n also unavailable
     }
+  }
+
+  // Always merge cron-log entries (homebase autonomous actions)
+  const cronEntries = getFromCronLog();
+  if (cronEntries.length > 0) {
+    entries = [...cronEntries, ...entries];
   }
 
   // Filter to last 24h and sort newest first

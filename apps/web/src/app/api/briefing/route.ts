@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get("authorization") ?? "";
     const cookieHeader = req.headers.get("cookie") ?? "";
 
-    const [statsRes, orbitBriefingRes] = await Promise.all([
+    const [statsRes, orbitBriefingRes, eventsRes] = await Promise.all([
       fetch(`http://localhost:${process.env.PORT ?? 3005}/api/stats`, {
         headers: {
           ...(authHeader ? { authorization: authHeader } : {}),
@@ -57,11 +57,22 @@ export async function GET(req: NextRequest) {
         signal: AbortSignal.timeout(3000),
         cache: "no-store",
       }).catch(() => null),
+      fetch(`http://localhost:${process.env.PORT ?? 3005}/api/stats/events`, {
+        headers: {
+          ...(authHeader ? { authorization: authHeader } : {}),
+          ...(cookieHeader ? { cookie: cookieHeader } : {}),
+        },
+        signal: AbortSignal.timeout(8000),
+        cache: "no-store",
+      }).catch(() => null),
     ]);
 
     const stats = statsRes?.ok ? await statsRes.json() : null;
     const orbitBriefing: Record<string, unknown> | null =
       orbitBriefingRes?.ok ? await orbitBriefingRes.json() : null;
+    const eventsData = eventsRes?.ok ? await eventsRes.json() : null;
+    const upcoming48h: number = eventsData?.upcoming48h ?? 0;
+    const thisWeek: number = eventsData?.thisWeek ?? 0;
 
     // Pull values from stats (already correct Spellcast data)
     const pendingReview: number = stats?.content?.pendingReview ?? 0;
@@ -230,6 +241,25 @@ export async function GET(req: NextRequest) {
           action: "orbit",
         });
       }
+    }
+
+    // Tech events in London
+    if (upcoming48h > 0) {
+      items.push({
+        priority: "today",
+        label: `${upcoming48h} TECH EVENT${upcoming48h !== 1 ? "S" : ""} IN 48H`,
+        detail: `${thisWeek} event${thisWeek !== 1 ? "s" : ""} this week — check Meta room`,
+        action: "meta",
+        count: upcoming48h,
+      });
+    } else if (thisWeek > 0) {
+      items.push({
+        priority: "info",
+        label: `${thisWeek} TECH EVENT${thisWeek !== 1 ? "S" : ""} THIS WEEK`,
+        detail: "Open Meta room to see full list",
+        action: "meta",
+        count: thisWeek,
+      });
     }
 
     // Mark all-clear if no urgent/today items
