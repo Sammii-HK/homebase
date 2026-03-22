@@ -78,25 +78,13 @@ function getSpeechRecognition(): (new () => SpeechRecognitionInstance) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-const CHAT_STORAGE_KEY = "hb_chat_history";
-const MAX_STORED_MESSAGES = 40;
-
-function loadStoredMessages() {
-  if (typeof window === "undefined") return undefined;
-  try {
-    const raw = localStorage.getItem(CHAT_STORAGE_KEY);
-    if (!raw) return undefined;
-    return JSON.parse(raw);
-  } catch {
-    return undefined;
-  }
-}
-
 export default function ChatPanel({ token }: { token: string }) {
   const [input, setInput] = useState("");
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [initialMessages, setInitialMessages] = useState<unknown[] | undefined>(undefined);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -104,10 +92,17 @@ export default function ChatPanel({ token }: { token: string }) {
 
   useEffect(() => {
     setSpeechSupported(!!getSpeechRecognition());
-    // Load TTS preference
     const saved = localStorage.getItem("hb_tts");
     if (saved === "false") setTtsEnabled(false);
-  }, []);
+    // Load history from server
+    fetch("/api/chat/history", { headers: authHeaders(token) })
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setInitialMessages(data);
+      })
+      .catch(() => {})
+      .finally(() => setHistoryLoaded(true));
+  }, [token]);
 
   const transport = useMemo(
     () =>
@@ -120,21 +115,23 @@ export default function ChatPanel({ token }: { token: string }) {
 
   const { messages, sendMessage, status, error } = useChat({
     transport,
-    initialMessages: loadStoredMessages(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    initialMessages: initialMessages as any,
   });
 
   const isLoading = status === "streaming" || status === "submitted";
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    // Persist last N messages to survive refresh
-    if (messages.length > 0) {
-      try {
-        const toStore = messages.slice(-MAX_STORED_MESSAGES);
-        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(toStore));
-      } catch {}
+    // Persist to server after streaming completes
+    if (messages.length > 0 && !isLoading) {
+      fetch("/api/chat/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders(token) },
+        body: JSON.stringify(messages),
+      }).catch(() => {});
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, token]);
 
   // Speak last assistant message via Kokoro TTS
   const speak = useCallback(
@@ -259,8 +256,11 @@ export default function ChatPanel({ token }: { token: string }) {
       >
         <button
           onClick={() => {
-            localStorage.removeItem(CHAT_STORAGE_KEY);
-            window.location.reload();
+            fetch("/api/chat/history", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", ...authHeaders(token) },
+              body: JSON.stringify([]),
+            }).finally(() => window.location.reload());
           }}
           title="Clear chat history"
           style={{
@@ -307,7 +307,7 @@ export default function ChatPanel({ token }: { token: string }) {
           gap: 10,
         }}
       >
-        {messages.length === 0 && !isLoading && (
+        {messages.length === 0 && !isLoading && historyLoaded && (
           <div style={{ paddingTop: 20 }}>
             <div
               style={{
