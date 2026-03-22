@@ -13,6 +13,11 @@ interface HeartbeatPayload {
     wau?: number;
     mrr?: number;
     signups7d?: number;
+    seoImpressions7d?: number;
+    seoClicks7d?: number;
+    seoCtr7d?: number;
+    seoPosition7d?: number;
+    seoDailyAvg?: number;
   };
   disk?: { pct: number; used: string; avail: string };
   tasks?: Array<{ id: string; title: string; status: string; project: string }>;

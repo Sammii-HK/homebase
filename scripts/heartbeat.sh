@@ -46,7 +46,20 @@ if [ -f "$LIVE_METRICS" ]; then
     wau="${wau:-0}"
     mrr="${mrr:-0}"
     signups7d="${signups7d:-0}"
-    metrics_field=",\"metrics\":{\"dau\":${dau},\"mau\":${mau},\"wau\":${wau},\"mrr\":${mrr},\"signups7d\":${signups7d}}"
+
+    # SEO 7d metrics from live-metrics.md (avoids Cloudflare blocking Hetzner server)
+    seo_impressions=$(grep -o 'Total impressions: \*\*[0-9,]*\*\*' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9,]*' | tr -d ',')
+    seo_clicks=$(grep -o 'Total clicks: \*\*[0-9,]*\*\*' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9,]*' | tr -d ',')
+    seo_position=$(grep -o 'Average position: \*\*[0-9.]*\*\*' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9.]*')
+    seo_daily_avg=$(grep -o '[0-9,]* impressions/day' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9,]*' | tr -d ',')
+    seo_ctr_raw=$(grep -o 'Average CTR: \*\*[0-9.]*%\*\*' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9.]*')
+    seo_ctr=$(echo "${seo_ctr_raw:-0} / 100" | bc -l 2>/dev/null || echo "0")
+    seo_impressions="${seo_impressions:-0}"
+    seo_clicks="${seo_clicks:-0}"
+    seo_position="${seo_position:-0}"
+    seo_daily_avg="${seo_daily_avg:-0}"
+
+    metrics_field=",\"metrics\":{\"dau\":${dau},\"mau\":${mau},\"wau\":${wau},\"mrr\":${mrr},\"signups7d\":${signups7d},\"seoImpressions7d\":${seo_impressions},\"seoClicks7d\":${seo_clicks},\"seoCtr7d\":${seo_ctr},\"seoPosition7d\":${seo_position},\"seoDailyAvg\":${seo_daily_avg}}"
   fi
 fi
 

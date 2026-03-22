@@ -246,7 +246,21 @@ async function getSEO(): Promise<SEOResult> {
       headers: { Authorization: `Bearer ${key}` },
       next: { revalidate: 300 },
     });
-    if (!res.ok) return empty;
+    if (!res.ok) {
+      // Cloudflare blocks Hetzner server — fall back to snapshot pushed from Mac heartbeat
+      const snap = readMetricsSnapshot();
+      if (snap?.seoImpressions7d) {
+        return {
+          impressions: snap.seoImpressions7d,
+          clicks: snap.seoClicks7d ?? 0,
+          ctr: snap.seoCtr7d ?? 0,
+          position: snap.seoPosition7d ?? 0,
+          dailyAvg: snap.seoDailyAvg ?? Math.round(snap.seoImpressions7d / 7),
+          trend: null,
+        };
+      }
+      return empty;
+    }
     const raw = await res.json();
     const perf = raw?.data?.performance ?? raw?.performance ?? raw;
     const metrics: { date: string; clicks: number; impressions: number; position?: number }[] = perf.metrics ?? [];

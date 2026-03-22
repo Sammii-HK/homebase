@@ -8,6 +8,12 @@ export interface MetricsSnapshot {
   mrr: number;
   signups7d: number;
   updatedAt: string;
+  // SEO (7d totals, pushed from Mac heartbeat where Cloudflare doesn't block)
+  seoImpressions7d?: number;
+  seoClicks7d?: number;
+  seoCtr7d?: number;
+  seoPosition7d?: number;
+  seoDailyAvg?: number;
 }
 
 export const SNAPSHOT_PATH = path.join("/app/data", "metrics-snapshot.json");
@@ -28,6 +34,11 @@ export function writeMetricsSnapshot(
       mrr: Number(metrics.mrr ?? 0),
       signups7d: Number(metrics.signups7d ?? 0),
       updatedAt: ts,
+      ...(metrics.seoImpressions7d != null ? { seoImpressions7d: Number(metrics.seoImpressions7d) } : {}),
+      ...(metrics.seoClicks7d != null ? { seoClicks7d: Number(metrics.seoClicks7d) } : {}),
+      ...(metrics.seoCtr7d != null ? { seoCtr7d: Number(metrics.seoCtr7d) } : {}),
+      ...(metrics.seoPosition7d != null ? { seoPosition7d: Number(metrics.seoPosition7d) } : {}),
+      ...(metrics.seoDailyAvg != null ? { seoDailyAvg: Number(metrics.seoDailyAvg) } : {}),
     };
     fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(snapshot, null, 2), "utf8");
   } catch {
