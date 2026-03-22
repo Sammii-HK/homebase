@@ -33,7 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
   "Interview 💬": "#4ade80",
   "Assignment given 📑": "#f59e0b",
   "Pending ⏳": "#60a5fa",
-  "To apply": "var(--hb-40)",
+  "To apply": "var(--hb-60)",
 };
 
 const STATUS_BG: Record<string, string> = {
@@ -62,7 +62,7 @@ function formatDate(isoDate: string): string {
 function FitScore({ score }: { score: number | null }) {
   if (score === null) return null;
   const color =
-    score >= 80 ? "#4ade80" : score >= 60 ? "#f59e0b" : "var(--hb-35)";
+    score >= 80 ? "#4ade80" : score >= 60 ? "#f59e0b" : "var(--hb-60)";
   return (
     <span
       style={{
@@ -82,7 +82,7 @@ function FitScore({ score }: { score: number | null }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const color = STATUS_COLORS[status] ?? "var(--hb-40)";
+  const color = STATUS_COLORS[status] ?? "var(--hb-60)";
   return (
     <span
       style={{
@@ -104,7 +104,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function JobRow({ job }: { job: CastJob }) {
   const [expanded, setExpanded] = useState(false);
-  const color = STATUS_COLORS[job.status] ?? "var(--hb-40)";
+  const color = STATUS_COLORS[job.status] ?? "var(--hb-60)";
   const bg = STATUS_BG[job.status] ?? "var(--hb-03)";
   const border = STATUS_BORDER[job.status] ?? "var(--hb-08)";
   const hasPreview = !!(job.coverLetterPreview || job.cvHeadline);
@@ -203,7 +203,7 @@ function JobRow({ job }: { job: CastJob }) {
             <span
               style={{
                 fontSize: 11,
-                color: "var(--hb-55)",
+                color: "var(--hb-60)",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -218,7 +218,7 @@ function JobRow({ job }: { job: CastJob }) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 6,
-                  color: "var(--hb-30)",
+                  color: "var(--hb-60)",
                   flexShrink: 0,
                   userSelect: "none",
                 }}
@@ -245,7 +245,7 @@ function JobRow({ job }: { job: CastJob }) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 6,
-                  color: "var(--hb-30)",
+                  color: "var(--hb-60)",
                   letterSpacing: 1,
                   marginBottom: 4,
                 }}
@@ -270,7 +270,7 @@ function JobRow({ job }: { job: CastJob }) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 6,
-                  color: "var(--hb-30)",
+                  color: "var(--hb-60)",
                   letterSpacing: 1,
                   marginBottom: 4,
                 }}
@@ -362,7 +362,7 @@ function SectionBlock({
           style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "var(--hb-25)",
+            color: "var(--hb-60)",
             marginLeft: 2,
           }}
         >
@@ -486,7 +486,7 @@ export default function CastQueue({ token }: Props) {
               : "rgba(167,139,250,0.12)",
             border: `1px solid ${showForm ? "var(--hb-12)" : "rgba(167,139,250,0.3)"}`,
             borderRadius: 5,
-            color: showForm ? "var(--hb-40)" : "var(--hb-accent)",
+            color: showForm ? "var(--hb-60)" : "var(--hb-accent)",
             cursor: "pointer",
             letterSpacing: 0.5,
           }}
@@ -646,7 +646,7 @@ export default function CastQueue({ token }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "var(--hb-30)",
+              color: "var(--hb-60)",
             }}
           >
             Loading jobs...
@@ -698,7 +698,7 @@ export default function CastQueue({ token }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "var(--hb-30)",
+              color: "var(--hb-60)",
             }}
           >
             No active applications
@@ -725,7 +725,7 @@ export default function CastQueue({ token }: Props) {
           { label: "INTERVIEWS", value: data.interviews.length, color: "#4ade80" },
           { label: "ASSIGNMENTS", value: data.assignments.length, color: "#f59e0b" },
           { label: "PENDING", value: data.pending.filter(j => j.status === "Pending ⏳").length, color: "#60a5fa" },
-          { label: "TO APPLY", value: data.pending.filter(j => j.status === "To apply").length, color: "var(--hb-40)" },
+          { label: "TO APPLY", value: data.pending.filter(j => j.status === "To apply").length, color: "var(--hb-60)" },
         ].map(({ label, value, color }) => (
           <div
             key={label}
@@ -752,7 +752,7 @@ export default function CastQueue({ token }: Props) {
               style={{
                 fontFamily: PS2P,
                 fontSize: 6,
-                color: "var(--hb-30)",
+                color: "var(--hb-60)",
                 letterSpacing: 0.5,
               }}
             >
@@ -780,7 +780,7 @@ export default function CastQueue({ token }: Props) {
       />
       <SectionBlock
         label="TO APPLY"
-        color="var(--hb-40)"
+        color="var(--hb-60)"
         jobs={data.pending.filter(j => j.status === "To apply")}
       />
 

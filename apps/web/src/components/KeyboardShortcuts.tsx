@@ -49,7 +49,7 @@ export default function KeyboardShortcuts() {
           borderRadius: 6,
           background: "var(--hb-06)",
           border: "1px solid var(--hb-15)",
-          color: "var(--hb-35)",
+          color: "var(--hb-60)",
           fontFamily: PS2P,
           fontSize: 11,
           cursor: "pointer",
@@ -91,7 +91,7 @@ export default function KeyboardShortcuts() {
               style={{
                 fontFamily: PS2P,
                 fontSize: 7,
-                color: "var(--hb-30)",
+                color: "var(--hb-60)",
                 letterSpacing: 1,
                 marginBottom: 10,
               }}
@@ -113,7 +113,7 @@ export default function KeyboardShortcuts() {
                   style={{
                     fontFamily: PS2P,
                     fontSize: 8,
-                    color: "var(--hb-50)",
+                    color: "var(--hb-60)",
                   }}
                 >
                   {s.description}

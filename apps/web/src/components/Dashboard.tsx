@@ -331,7 +331,7 @@ export default function Dashboard() {
               style={{
                 fontFamily: PS2P,
                 fontSize: 7,
-                color: "var(--hb-30)",
+                color: "var(--hb-60)",
                 letterSpacing: 1,
               }}
             >
@@ -346,7 +346,7 @@ export default function Dashboard() {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 7,
-                  color: "var(--hb-40)",
+                  color: "var(--hb-60)",
                   textAlign: "center",
                   lineHeight: 1.8,
                 }}
@@ -695,7 +695,7 @@ export default function Dashboard() {
             style={{
               fontFamily: PS2P,
               fontSize: 6,
-              color: viewMode === "pixel" ? "var(--hb-accent)" : "var(--hb-35)",
+              color: viewMode === "pixel" ? "var(--hb-accent)" : "var(--hb-60)",
               background: viewMode === "pixel" ? "rgba(167,139,250,0.1)" : "none",
               border: `1px solid ${viewMode === "pixel" ? "rgba(167,139,250,0.4)" : "var(--hb-10)"}`,
               borderRadius: 3,
@@ -716,7 +716,7 @@ export default function Dashboard() {
             style={{
               fontFamily: PS2P,
               fontSize: 6,
-              color: "var(--hb-35)",
+              color: "var(--hb-60)",
               background: "none",
               border: "1px solid var(--hb-10)",
               borderRadius: 3,
@@ -751,7 +751,7 @@ export default function Dashboard() {
             padding: "16px 12px 8px",
             fontFamily: PS2P,
             fontSize: 7,
-            color: "var(--hb-25)",
+            color: "var(--hb-60)",
             letterSpacing: 1.5,
             borderBottom: "1px solid var(--hb-06)",
             marginBottom: 4,
@@ -793,7 +793,7 @@ export default function Dashboard() {
                   fontFamily: PS2P,
                   fontSize: 8,
                   letterSpacing: 0.5,
-                  color: isActive ? "var(--hb-accent)" : "var(--hb-40)",
+                  color: isActive ? "var(--hb-accent)" : "var(--hb-60)",
                   transition: "color 0.15s",
                 }}
               >
@@ -1070,7 +1070,7 @@ export default function Dashboard() {
                   fontFamily: PS2P,
                   fontSize: 6,
                   letterSpacing: 0.5,
-                  color: isActive ? "var(--hb-accent)" : "var(--hb-30)",
+                  color: isActive ? "var(--hb-accent)" : "var(--hb-60)",
                   transition: "color 0.15s",
                 }}
               >

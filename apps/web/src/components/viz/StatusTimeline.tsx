@@ -18,7 +18,7 @@ export default function StatusTimeline({ segments, service }: Props) {
       <div style={{
         fontFamily: "'Press Start 2P', monospace",
         fontSize: 8,
-        color: "var(--hb-40)",
+        color: "var(--hb-60)",
         marginBottom: 4,
       }}>
         24H HEALTH
@@ -49,8 +49,8 @@ export default function StatusTimeline({ segments, service }: Props) {
         justifyContent: "space-between",
         marginTop: 2,
       }}>
-        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: "var(--hb-25)" }}>24h ago</span>
-        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: "var(--hb-25)" }}>now</span>
+        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: "var(--hb-60)" }}>24h ago</span>
+        <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, color: "var(--hb-60)" }}>now</span>
       </div>
     </div>
   );

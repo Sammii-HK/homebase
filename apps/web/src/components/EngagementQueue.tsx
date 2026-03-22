@@ -185,7 +185,7 @@ function EngagementCard({
           textAlign: "center",
         }}
       >
-        <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>
+        <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>
           DISMISSED
         </div>
       </div>
@@ -232,7 +232,7 @@ function EngagementCard({
           style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "var(--hb-35)",
+            color: "var(--hb-60)",
             background: "var(--hb-05)",
             padding: "2px 5px",
             borderRadius: 3,
@@ -255,7 +255,7 @@ function EngagementCard({
             style={{
               fontFamily: PS2P,
               fontSize: 6,
-              color: "var(--hb-30)",
+              color: "var(--hb-60)",
             }}
           >
             @{item.authorHandle.replace(/^@/, "")}
@@ -293,7 +293,7 @@ function EngagementCard({
           style={{
             fontFamily: "system-ui, -apple-system, sans-serif",
             fontSize: 12,
-            color: "var(--hb-40)",
+            color: "var(--hb-60)",
             lineHeight: 1.5,
             marginBottom: 12,
             padding: "8px 10px",
@@ -320,7 +320,7 @@ function EngagementCard({
             style={{
               fontFamily: PS2P,
               fontSize: 6,
-              color: "var(--hb-25)",
+              color: "var(--hb-60)",
               textDecoration: "underline",
             }}
           >
@@ -469,8 +469,8 @@ function EngagementCard({
             borderRadius: 4,
             color:
               state === "skipping"
-                ? "var(--hb-30)"
-                : "var(--hb-50)",
+                ? "var(--hb-60)"
+                : "var(--hb-60)",
             cursor: state === "skipping" ? "wait" : "pointer",
             minHeight: 44,
           }}
@@ -546,7 +546,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "var(--hb-40)",
+              color: "var(--hb-60)",
               textTransform: "uppercase",
               letterSpacing: 1,
             }}
@@ -575,7 +575,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "var(--hb-30)",
+              color: "var(--hb-60)",
             }}
           >
             Loading...
@@ -589,7 +589,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "var(--hb-30)",
+              color: "var(--hb-60)",
             }}
           >
             No unread engagement
@@ -609,7 +609,7 @@ export default function EngagementQueue({ token, compact }: Props) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 7,
-                  color: "var(--hb-25)",
+                  color: "var(--hb-60)",
                   textAlign: "center",
                 }}
               >
@@ -630,7 +630,7 @@ export default function EngagementQueue({ token, compact }: Props) {
           style={{
             fontFamily: PS2P,
             fontSize: 9,
-            color: "var(--hb-30)",
+            color: "var(--hb-60)",
             textAlign: "center",
             padding: 20,
           }}
@@ -661,7 +661,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 10,
-              color: "var(--hb-50)",
+              color: "var(--hb-60)",
               marginBottom: 8,
             }}
           >
@@ -671,7 +671,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 7,
-              color: "var(--hb-25)",
+              color: "var(--hb-60)",
             }}
           >
             All caught up

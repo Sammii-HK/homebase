@@ -44,7 +44,7 @@ function formatContent(text: string): React.ReactNode {
             style={{
               position: "absolute",
               left: 0,
-              color: "var(--hb-40)",
+              color: "var(--hb-60)",
             }}
           >
             {">"}
@@ -269,7 +269,7 @@ export default function ChatPanel({ token }: { token: string }) {
             background: "var(--hb-04)",
             border: "1px solid var(--hb-08)",
             borderRadius: 4,
-            color: "var(--hb-30)",
+            color: "var(--hb-60)",
             cursor: "pointer",
           }}
         >
@@ -287,7 +287,7 @@ export default function ChatPanel({ token }: { token: string }) {
               : "var(--hb-04)",
             border: `1px solid ${ttsEnabled ? "rgba(167,139,250,0.2)" : "var(--hb-08)"}`,
             borderRadius: 4,
-            color: ttsEnabled ? "var(--hb-accent)" : "var(--hb-30)",
+            color: ttsEnabled ? "var(--hb-accent)" : "var(--hb-60)",
             cursor: "pointer",
           }}
         >
@@ -312,7 +312,7 @@ export default function ChatPanel({ token }: { token: string }) {
               style={{
                 fontFamily: PS2P,
                 fontSize: 9,
-                color: "var(--hb-25)",
+                color: "var(--hb-60)",
                 textAlign: "center",
                 marginBottom: 20,
               }}
@@ -331,7 +331,7 @@ export default function ChatPanel({ token }: { token: string }) {
                     background: "rgba(167,139,250,0.06)",
                     border: "1px solid rgba(167,139,250,0.15)",
                     borderRadius: 6,
-                    color: "var(--hb-50)",
+                    color: "var(--hb-60)",
                     cursor: "pointer",
                     textAlign: "left",
                     lineHeight: 1.6,
@@ -462,7 +462,7 @@ export default function ChatPanel({ token }: { token: string }) {
                 : "var(--hb-04)",
               border: `1px solid ${isListening ? "rgba(239,68,68,0.4)" : "var(--hb-10)"}`,
               borderRadius: 6,
-              color: isListening ? "#f87171" : "var(--hb-40)",
+              color: isListening ? "#f87171" : "var(--hb-60)",
               cursor: "pointer",
               minHeight: 38,
               animation: isListening ? "micPulse 1s ease-in-out infinite" : "none",

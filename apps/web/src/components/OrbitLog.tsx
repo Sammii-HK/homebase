@@ -51,7 +51,7 @@ const TYPE_CONFIG: Record<
     label: "ERROR",
   },
   info: {
-    color: "var(--hb-40)",
+    color: "var(--hb-60)",
     bg: "var(--hb-05)",
     icon: "·",
     label: "INFO",
@@ -111,7 +111,7 @@ export default function OrbitLog({ token }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "var(--hb-50)",
+              color: "var(--hb-60)",
               letterSpacing: 1,
             }}
           >
@@ -228,7 +228,7 @@ function OfflineState() {
         style={{
           fontFamily: PS2P,
           fontSize: 7,
-          color: "var(--hb-25)",
+          color: "var(--hb-60)",
           letterSpacing: 0.5,
         }}
       >
@@ -262,7 +262,7 @@ function QuietState({ lastActive }: { lastActive: string | null }) {
         style={{
           fontFamily: PS2P,
           fontSize: 8,
-          color: "var(--hb-30)",
+          color: "var(--hb-60)",
         }}
       >
         Orbit has been quiet

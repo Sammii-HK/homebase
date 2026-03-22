@@ -261,7 +261,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
               alignSelf: "flex-end",
               fontFamily: "system-ui, sans-serif",
               fontSize: 10,
-              color: "var(--hb-30)",
+              color: "var(--hb-60)",
               background: "none",
               border: "none",
               cursor: "pointer",

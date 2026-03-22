@@ -22,7 +22,7 @@ export default function RoomTabs({ tabs, active, accent, onChange }: Props) {
           style={{
             fontFamily: "'Press Start 2P', monospace",
             fontSize: 8,
-            color: tab === active ? accent : "var(--hb-35)",
+            color: tab === active ? accent : "var(--hb-60)",
             background: "none",
             border: "none",
             borderBottom: tab === active ? `2px solid ${accent}` : "2px solid transparent",

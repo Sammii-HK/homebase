@@ -153,7 +153,7 @@ export default function WeeklyRhythm({ token }: Props) {
           style={{
             fontFamily: PS2P,
             fontSize: 8,
-            color: "var(--hb-50)",
+            color: "var(--hb-60)",
             letterSpacing: 1,
           }}
         >
@@ -197,7 +197,7 @@ export default function WeeklyRhythm({ token }: Props) {
               background: "none",
               border: "1px solid var(--hb-12)",
               borderRadius: 3,
-              color: "var(--hb-40)",
+              color: "var(--hb-60)",
               cursor: "pointer",
               fontFamily: PS2P,
               fontSize: 7,
@@ -298,7 +298,7 @@ export default function WeeklyRhythm({ token }: Props) {
               style={{
                 fontFamily: PS2P,
                 fontSize: 5,
-                color: "var(--hb-25)",
+                color: "var(--hb-60)",
                 letterSpacing: 0.5,
               }}
             >
@@ -324,7 +324,7 @@ export default function WeeklyRhythm({ token }: Props) {
               style={{
                 fontFamily: "monospace",
                 fontSize: 11,
-                color: "var(--hb-25)",
+                color: "var(--hb-60)",
                 margin: 0,
                 textAlign: "center",
                 padding: "12px 0",
@@ -351,7 +351,7 @@ export default function WeeklyRhythm({ token }: Props) {
                       style={{
                         fontFamily: "monospace",
                         fontSize: 9,
-                        color: "var(--hb-30)",
+                        color: "var(--hb-60)",
                         letterSpacing: 0.5,
                         marginBottom: 4,
                         textTransform: "uppercase",
@@ -393,7 +393,7 @@ function PostRow({ post }: { post: WeekAheadPost }) {
         style={{
           fontFamily: "monospace",
           fontSize: 10,
-          color: "var(--hb-40)",
+          color: "var(--hb-60)",
           flexShrink: 0,
           minWidth: 36,
           paddingTop: 1,
@@ -696,7 +696,7 @@ function TooltipRow({
         style={{
           fontFamily: PS2P,
           fontSize: 6,
-          color: "var(--hb-50)",
+          color: "var(--hb-60)",
         }}
       >
         {value} {label}

@@ -44,7 +44,7 @@ export default function MiniCalendar({ days }: Props) {
             <div style={{
               fontFamily: "'Press Start 2P', monospace",
               fontSize: 7,
-              color: isToday ? "var(--hb-70)" : "var(--hb-35)",
+              color: isToday ? "var(--hb-70)" : "var(--hb-60)",
               marginBottom: 4,
             }}>
               {abbr}
@@ -60,7 +60,7 @@ export default function MiniCalendar({ days }: Props) {
             <div style={{
               fontFamily: "'Press Start 2P', monospace",
               fontSize: 7,
-              color: "var(--hb-50)",
+              color: "var(--hb-60)",
             }}>
               {day.count}
             </div>

@@ -69,14 +69,14 @@ function HealthDot({ status, label }: { status: string; label: string }) {
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div style={{ width: 10, height: 10, borderRadius: 2, background: color, border: "1px solid var(--hb-panel-50)", boxShadow: `0 0 8px ${color}` }} />
       <span style={{ fontFamily: PS2P, fontSize: 11, color: "var(--hb-70)" }}>{label}</span>
-      <span style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-35)" }}>{status}</span>
+      <span style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>{status}</span>
     </div>
   );
 }
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <div style={{ fontFamily: PS2P, fontSize: 10, color: "var(--hb-40)", marginBottom: 8, letterSpacing: 1 }}>
+    <div style={{ fontFamily: PS2P, fontSize: 10, color: "var(--hb-60)", marginBottom: 8, letterSpacing: 1 }}>
       {children}
     </div>
   );
@@ -98,7 +98,7 @@ function SystemLink({ label, url, status }: { label: string; url: string; status
     >
       <div style={{ width: 8, height: 8, borderRadius: 2, background: dotColor, boxShadow: `0 0 6px ${dotColor}` }} />
       <span style={{ fontFamily: PS2P, fontSize: 10, color: "var(--hb-70)", flex: 1 }}>{label}</span>
-      <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-25)" }}>{url.replace(/^https?:\/\//, "")}</span>
+      <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)" }}>{url.replace(/^https?:\/\//, "")}</span>
     </a>
   );
 }
@@ -106,7 +106,7 @@ function SystemLink({ label, url, status }: { label: string; url: string; status
 function LoadingState() {
   return (
     <div style={{ textAlign: "center", padding: 20 }}>
-      <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>LOADING...</div>
+      <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>LOADING...</div>
     </div>
   );
 }
@@ -115,7 +115,7 @@ function LoadingState() {
 
 function FailedPostsList({ posts, spellcastUrl }: { posts: FailedPost[]; spellcastUrl?: string }) {
   if (posts.length === 0) {
-    return <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No failed posts</div>;
+    return <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No failed posts</div>;
   }
 
   const PLATFORM_COLORS: Record<string, string> = {
@@ -139,12 +139,12 @@ function FailedPostsList({ posts, spellcastUrl }: { posts: FailedPost[]; spellca
               {post.platform}
             </span>
             {post.scheduledFor && (
-              <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-25)" }}>
+              <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>
                 {new Date(post.scheduledFor).toLocaleDateString()}
               </span>
             )}
           </div>
-          <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-50)", marginBottom: 4, lineHeight: 1.4 }}>
+          <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)", marginBottom: 4, lineHeight: 1.4 }}>
             {post.content || "No content preview"}
           </div>
           <div style={{ fontFamily: PS2P, fontSize: 7, color: "#f87171" }}>
@@ -198,7 +198,7 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
           )}
           <HealthDot status={stats.health.lunary.status} label="LUNARY" />
           {stats.health.lunary.latencyMs > 0 && (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-25)", marginLeft: 18 }}>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)", marginLeft: 18 }}>
               {stats.health.lunary.latencyMs}ms latency
             </div>
           )}
@@ -214,7 +214,7 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
               <ProgressBar key={step.step} label={step.step} value={step.count} max={deepData.conversions[0].count} color="#c084fc" />
             ))
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No funnel data available</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No funnel data available</div>
           ) : null}
         </div>
       )}
@@ -227,7 +227,7 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
               <ProgressBar key={f.feature} label={f.feature} value={f.users} max={stats.lunary.mau || 1} color="#c084fc" />
             ))
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No feature data available</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No feature data available</div>
           ) : null}
         </div>
       )}
@@ -248,7 +248,7 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
               </div>
             ))
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No revenue data available</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No revenue data available</div>
           ) : null}
           {deepData?.aiCosts && (
             <div style={{ marginTop: 8 }}>
@@ -278,7 +278,7 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
               <Stat label="AVG DURATION" value={`${deepData.subscriptionLifecycle.avgDurationDays.toFixed(0)} days`} />
             </>
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No subscription data</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No subscription data</div>
           ) : null}
           {deepData?.activation && (
             <div style={{ marginTop: 4 }}>
@@ -326,7 +326,7 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
               );
             })
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No A/B tests running</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No A/B tests running</div>
           ) : null}
         </div>
       )}
@@ -342,7 +342,7 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
               ))}
             </>
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No attribution data</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No attribution data</div>
           ) : null}
         </div>
       )}
@@ -396,7 +396,7 @@ function SpellcastDetail({ stats, deepData, loading }: { stats: DashboardStats; 
           {deepData?.calendar ? (
             <MiniCalendar days={deepData.calendar} />
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No calendar data available</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No calendar data available</div>
           ) : null}
           {deepData?.queueByDay && deepData.queueByDay.length > 0 && (
             <div>
@@ -416,7 +416,7 @@ function SpellcastDetail({ stats, deepData, loading }: { stats: DashboardStats; 
               <Sparkline data={deepData.velocity.map(d => d.count)} color="#22d3ee" width={200} height={50} />
             </div>
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No velocity data available</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No velocity data available</div>
           ) : null}
           {deepData?.autopilot && (
             <div style={{ marginTop: 12 }}>
@@ -431,7 +431,7 @@ function SpellcastDetail({ stats, deepData, loading }: { stats: DashboardStats; 
                   {deepData.autopilot.enabled ? "ACTIVE" : "OFF"}
                 </span>
                 {deepData.autopilot.lastRun && (
-                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-25)" }}>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>
                     Last: {new Date(deepData.autopilot.lastRun).toLocaleString()}
                   </span>
                 )}
@@ -488,11 +488,11 @@ function DevDetail({ stats, heartbeat, deepData, loading }: {
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <HealthDot status={stats.health.lunary.status} label="LUNARY" />
               {stats.health.lunary.latencyMs > 0 && (
-                <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-25)", marginLeft: 18 }}>{stats.health.lunary.latencyMs}ms</div>
+                <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)", marginLeft: 18 }}>{stats.health.lunary.latencyMs}ms</div>
               )}
               <HealthDot status={stats.health.spellcast.status} label="SPELLCAST" />
               {stats.health.spellcast.latencyMs > 0 && (
-                <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-25)", marginLeft: 18 }}>{stats.health.spellcast.latencyMs}ms</div>
+                <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)", marginLeft: 18 }}>{stats.health.spellcast.latencyMs}ms</div>
               )}
               <HealthDot status={stats.health.contentCreator.status} label="CONTENT CREATOR" />
             </div>
@@ -505,7 +505,7 @@ function DevDetail({ stats, heartbeat, deepData, loading }: {
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 10, height: 10, borderRadius: 2, background: macColor, border: "1px solid var(--hb-panel-50)", boxShadow: `0 0 8px ${macColor}` }} />
               <span style={{ fontFamily: PS2P, fontSize: 11, color: "var(--hb-70)" }}>MAC</span>
-              <span style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-35)" }}>{macStatus}</span>
+              <span style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>{macStatus}</span>
             </div>
           </div>
           <div>
@@ -534,14 +534,14 @@ function DevDetail({ stats, heartbeat, deepData, loading }: {
                 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 2, background: statusColor, boxShadow: `0 0 4px ${statusColor}` }} />
                   <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-70)", flex: 1 }}>{wf.name}</span>
-                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-25)" }}>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>
                     {wf.startedAt ? new Date(wf.startedAt).toLocaleTimeString() : ""}
                   </span>
                 </div>
               );
             })
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No recent workflows</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No recent workflows</div>
           ) : null}
         </div>
       )}
@@ -584,7 +584,7 @@ function MetaDetail({ stats }: { stats: DashboardStats }) {
           {stats.opportunities.length > 0 ? (
             <Opportunities stats={stats} />
           ) : (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No new opportunities</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No new opportunities</div>
           )}
         </div>
       )}
@@ -610,7 +610,7 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
       {!deepData?.online && !loading && (
         <div style={{ textAlign: "center", padding: 20 }}>
           <div style={{ fontFamily: PS2P, fontSize: 10, color: "#f87171", marginBottom: 8 }}>ORBIT OFFLINE</div>
-          <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-30)" }}>Start Orbit on port 3001</div>
+          <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)" }}>Start Orbit on port 3001</div>
         </div>
       )}
 
@@ -637,7 +637,7 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
                 boxShadow: a.status === "running" ? `0 0 6px ${AGENT_STATUS_COLORS[a.status]}` : "none",
               }} />
               <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-70)", flex: 1 }}>{a.name}</span>
-              <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-30)" }}>{a.model}</span>
+              <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>{a.model}</span>
               <span style={{ fontFamily: PS2P, fontSize: 7, color: AGENT_STATUS_COLORS[a.status] ?? "#71717a" }}>{a.status}</span>
             </div>
           ))}
@@ -661,11 +661,11 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
                   </span>
                 </div>
                 <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)", lineHeight: 1.4 }}>{c.title}</div>
-                <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-25)", marginTop: 4 }}>{c.platform}</div>
+                <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)", marginTop: 4 }}>{c.platform}</div>
               </div>
             ))
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No approved content in queue</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No approved content in queue</div>
           ) : null}
         </div>
       )}
@@ -686,13 +686,13 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
                     <span style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-70)" }}>{t.topic}</span>
                   </div>
                   {t.angle && (
-                    <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-35)", lineHeight: 1.3 }}>{t.angle}</div>
+                    <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)", lineHeight: 1.3 }}>{t.angle}</div>
                   )}
                 </div>
               );
             })
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No trending topics</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No trending topics</div>
           ) : null}
         </div>
       )}
@@ -712,16 +712,16 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
                     {(t.score * 100).toFixed(0)}%
                   </span>
                 </div>
-                <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-50)", lineHeight: 1.3, marginBottom: 6 }}>{t.content}</div>
+                <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)", lineHeight: 1.3, marginBottom: 6 }}>{t.content}</div>
                 {t.draftReply && (
-                  <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-30)", lineHeight: 1.3, borderLeft: "2px solid rgba(245,158,11,0.3)", paddingLeft: 8 }}>
+                  <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)", lineHeight: 1.3, borderLeft: "2px solid rgba(245,158,11,0.3)", paddingLeft: 8 }}>
                     {t.draftReply}
                   </div>
                 )}
               </div>
             ))
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No scout targets</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No scout targets</div>
           ) : null}
         </div>
       )}
@@ -736,11 +736,11 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
                   {a.timestamp ? new Date(a.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
                 </span>
                 <span style={{ fontFamily: PS2P, fontSize: 7, color: "#f59e0b", minWidth: 60 }}>{a.agent}</span>
-                <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-50)" }}>{a.detail || a.action}</span>
+                <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>{a.detail || a.action}</span>
               </div>
             ))
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No recent activity</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No recent activity</div>
           ) : null}
         </div>
       )}
@@ -806,7 +806,7 @@ function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDe
                   <span style={{ fontFamily: PS2P, fontSize: 7, color: PLATFORM_COLORS[item.platform] ?? "#999", textTransform: "uppercase" }}>
                     {item.platform}
                   </span>
-                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-35)" }}>{item.type}</span>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>{item.type}</span>
                   <span style={{ fontFamily: PS2P, fontSize: 7, color: "#10b981" }}>@{item.authorHandle}</span>
                 </div>
                 <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)", lineHeight: 1.4 }}>{item.content}</div>
@@ -818,7 +818,7 @@ function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDe
               </a>
             ))
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>Inbox clear</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>Inbox clear</div>
           ) : null}
         </div>
       )}
@@ -839,11 +839,11 @@ function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDe
                     {(d.score * 100).toFixed(0)}%
                   </span>
                 </div>
-                <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-50)", lineHeight: 1.3 }}>{d.content}</div>
+                <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)", lineHeight: 1.3 }}>{d.content}</div>
               </a>
             ))
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No new discoveries</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No new discoveries</div>
           ) : null}
         </div>
       )}
@@ -861,7 +861,7 @@ function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDe
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                     <span style={{ fontFamily: PS2P, fontSize: 7, color: statusColor, textTransform: "uppercase" }}>{t.status}</span>
-                    <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-30)" }}>optimising: {t.metric}</span>
+                    <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>optimising: {t.metric}</span>
                   </div>
                   <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)", lineHeight: 1.3, marginBottom: 4 }}>
                     {t.originalContent}
@@ -884,7 +884,7 @@ function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDe
               );
             })
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No A/B tests</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No A/B tests</div>
           ) : null}
         </div>
       )}
@@ -901,11 +901,11 @@ function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDe
               }}>
                 <span style={{ fontFamily: PS2P, fontSize: 7, color: PLATFORM_COLORS[c.platform] ?? "#999", textTransform: "uppercase" }}>{c.platform}</span>
                 <span style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-70)", flex: 1 }}>{c.name}</span>
-                <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-40)" }}>@{c.handle}</span>
+                <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)" }}>@{c.handle}</span>
               </div>
             ))
           ) : !loading ? (
-            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>No competitors tracked</div>
+            <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>No competitors tracked</div>
           ) : null}
         </div>
       )}
@@ -960,7 +960,7 @@ export default function RoomDetail({ roomId, stats, heartbeat, token, onClose }:
             onClick={onClose}
             style={{
               fontFamily: PS2P, fontSize: 12,
-              color: "var(--hb-50)", background: "none",
+              color: "var(--hb-60)", background: "none",
               border: "1px solid var(--hb-20)",
               padding: "6px 12px", borderRadius: 4, cursor: "pointer",
             }}

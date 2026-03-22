@@ -128,7 +128,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
   return (
     <div style={{ background: "#0d0d14", border: "1px solid #1a1a2e", borderRadius: 8, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
       {/* Header */}
-      <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: "var(--hb-35)", letterSpacing: 1 }}>
+      <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: "var(--hb-60)", letterSpacing: 1 }}>
         QUICK DRAFT
       </div>
 
@@ -150,7 +150,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
                   transition: "all 0.15s",
                   background: isSelected ? "rgba(167,139,250,0.2)" : "var(--hb-04)",
                   border: isSelected ? "1px solid rgba(167,139,250,0.5)" : "1px solid var(--hb-10)",
-                  color: isSelected ? "var(--hb-accent)" : "var(--hb-35)",
+                  color: isSelected ? "var(--hb-accent)" : "var(--hb-60)",
                 }}
               >
                 {set.name}
@@ -172,7 +172,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
         disabled={busy}
         style={{
           width: "100%", background: "var(--hb-03)", border: "1px solid var(--hb-08)",
-          borderRadius: 6, color: busy ? "var(--hb-40)" : "var(--hb-85)",
+          borderRadius: 6, color: busy ? "var(--hb-60)" : "var(--hb-85)",
           fontFamily: "monospace", fontSize: 12, lineHeight: 1.6, padding: "8px 10px",
           resize: "vertical", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s, color 0.15s",
         }}
@@ -197,7 +197,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
             <button
               onClick={() => { setState("idle"); setGenerated(""); }}
-              style={{ fontFamily: "monospace", fontSize: 11, padding: "4px 10px", borderRadius: 4, border: "1px solid var(--hb-10)", background: "transparent", color: "var(--hb-40)", cursor: "pointer" }}
+              style={{ fontFamily: "monospace", fontSize: 11, padding: "4px 10px", borderRadius: 4, border: "1px solid var(--hb-10)", background: "transparent", color: "var(--hb-60)", cursor: "pointer" }}
             >
               Discard
             </button>

@@ -58,7 +58,7 @@ export default function TasksWidget({ tasks }: Props) {
           style={{
             fontFamily: "'Press Start 2P', monospace",
             fontSize: 7,
-            color: "var(--hb-40)",
+            color: "var(--hb-60)",
             letterSpacing: 1,
             textTransform: "uppercase",
           }}
@@ -69,7 +69,7 @@ export default function TasksWidget({ tasks }: Props) {
           style={{
             fontFamily: "system-ui, sans-serif",
             fontSize: 10,
-            color: "var(--hb-25)",
+            color: "var(--hb-60)",
           }}
         >
           {tasks.length} open

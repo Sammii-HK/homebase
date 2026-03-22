@@ -204,7 +204,7 @@ export default function AlertStrip({
               style={{
                 fontFamily: PS2P,
                 fontSize: 7,
-                color: "var(--hb-30)",
+                color: "var(--hb-60)",
                 background: "none",
                 border: "none",
                 padding: "2px 4px",

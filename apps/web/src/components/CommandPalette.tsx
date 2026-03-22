@@ -277,7 +277,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
             <div key={cat}>
               <div style={{
                 fontFamily: PS2P, fontSize: 7,
-                color: "var(--hb-25)",
+                color: "var(--hb-60)",
                 padding: "8px 14px 4px",
                 letterSpacing: 1,
               }}>
@@ -310,7 +310,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
                       {cmd.description && (
                         <span style={{
                           fontFamily: PS2P, fontSize: 7,
-                          color: isAlert ? "#f87171" : "var(--hb-25)",
+                          color: isAlert ? "#f87171" : "var(--hb-60)",
                           marginLeft: 8,
                         }}>
                           {cmd.description}
@@ -337,7 +337,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
           {flatList.length === 0 && (
             <div style={{
               fontFamily: PS2P, fontSize: 9,
-              color: "var(--hb-25)",
+              color: "var(--hb-60)",
               textAlign: "center", padding: 20,
             }}>
               No matching commands

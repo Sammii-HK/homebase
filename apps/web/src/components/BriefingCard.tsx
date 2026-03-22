@@ -117,7 +117,7 @@ function ActionItem({
         style={{
           fontFamily: PS2P,
           fontSize: 6,
-          color: "var(--hb-25)",
+          color: "var(--hb-60)",
           flexShrink: 0,
           paddingTop: 1,
           minWidth: 10,
@@ -149,7 +149,7 @@ function ActionItem({
           style={{
             fontFamily: "system-ui, -apple-system, sans-serif",
             fontSize: 11,
-            color: "var(--hb-50)",
+            color: "var(--hb-60)",
             marginTop: 2,
             lineHeight: 1.4,
           }}
@@ -415,7 +415,7 @@ export default function BriefingCard({
                 style={{
                   fontFamily: PS2P,
                   fontSize: 6,
-                  color: "var(--hb-25)",
+                  color: "var(--hb-60)",
                 }}
               >
                 {timestamp}
@@ -426,7 +426,7 @@ export default function BriefingCard({
               style={{
                 fontFamily: PS2P,
                 fontSize: 7,
-                color: "var(--hb-35)",
+                color: "var(--hb-60)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
