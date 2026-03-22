@@ -321,7 +321,7 @@ export default function Dashboard() {
               style={{
                 fontFamily: PS2P,
                 fontSize: 11,
-                color: "rgba(255,255,255,0.85)",
+                color: "var(--hb-85)",
                 letterSpacing: 2,
               }}
             >
@@ -331,7 +331,7 @@ export default function Dashboard() {
               style={{
                 fontFamily: PS2P,
                 fontSize: 7,
-                color: "rgba(255,255,255,0.3)",
+                color: "var(--hb-30)",
                 letterSpacing: 1,
               }}
             >
@@ -346,7 +346,7 @@ export default function Dashboard() {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 7,
-                  color: "rgba(255,255,255,0.4)",
+                  color: "var(--hb-40)",
                   textAlign: "center",
                   lineHeight: 1.8,
                 }}
@@ -361,8 +361,8 @@ export default function Dashboard() {
                 onKeyDown={(e) => e.key === "Enter" && handleRegister()}
                 style={{
                   width: "100%",
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.15)",
+                  background: "var(--hb-05)",
+                  border: "1px solid var(--hb-15)",
                   borderRadius: 6,
                   padding: "12px 14px",
                   color: "#fff",
@@ -576,7 +576,7 @@ export default function Dashboard() {
           right: 0,
           height: headerHeight,
           background: "rgba(0,0,0,0.95)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid var(--hb-06)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -591,7 +591,7 @@ export default function Dashboard() {
             style={{
               fontFamily: PS2P,
               fontSize: 9,
-              color: "rgba(255,255,255,0.85)",
+              color: "var(--hb-85)",
               letterSpacing: 2,
             }}
           >
@@ -695,9 +695,9 @@ export default function Dashboard() {
             style={{
               fontFamily: PS2P,
               fontSize: 6,
-              color: viewMode === "pixel" ? "#a78bfa" : "rgba(255,255,255,0.35)",
+              color: viewMode === "pixel" ? "#a78bfa" : "var(--hb-35)",
               background: viewMode === "pixel" ? "rgba(167,139,250,0.1)" : "none",
-              border: `1px solid ${viewMode === "pixel" ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.1)"}`,
+              border: `1px solid ${viewMode === "pixel" ? "rgba(167,139,250,0.4)" : "var(--hb-10)"}`,
               borderRadius: 3,
               padding: "4px 8px",
               cursor: "pointer",
@@ -716,9 +716,9 @@ export default function Dashboard() {
             style={{
               fontFamily: PS2P,
               fontSize: 6,
-              color: "rgba(255,255,255,0.35)",
+              color: "var(--hb-35)",
               background: "none",
-              border: "1px solid rgba(255,255,255,0.1)",
+              border: "1px solid var(--hb-10)",
               borderRadius: 3,
               padding: "4px 8px",
               cursor: "pointer",
@@ -741,7 +741,7 @@ export default function Dashboard() {
           bottom: 0,
           width: sidebarWidth,
           background: "rgba(0,0,0,0.95)",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
+          borderRight: "1px solid var(--hb-06)",
           flexDirection: "column",
           zIndex: 30,
         }}
@@ -751,9 +751,9 @@ export default function Dashboard() {
             padding: "16px 12px 8px",
             fontFamily: PS2P,
             fontSize: 7,
-            color: "rgba(255,255,255,0.25)",
+            color: "var(--hb-25)",
             letterSpacing: 1.5,
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            borderBottom: "1px solid var(--hb-06)",
             marginBottom: 4,
           }}
         >
@@ -793,7 +793,7 @@ export default function Dashboard() {
                   fontFamily: PS2P,
                   fontSize: 8,
                   letterSpacing: 0.5,
-                  color: isActive ? "#a78bfa" : "rgba(255,255,255,0.4)",
+                  color: isActive ? "#a78bfa" : "var(--hb-40)",
                   transition: "color 0.15s",
                 }}
               >
@@ -910,7 +910,7 @@ export default function Dashboard() {
                     style={{
                       fontFamily: PS2P,
                       fontSize: 6,
-                      color: "rgba(255,255,255,0.2)",
+                      color: "var(--hb-20)",
                       textAlign: "center",
                       paddingTop: 12,
                     }}
@@ -1026,7 +1026,7 @@ export default function Dashboard() {
           right: 0,
           height: 56,
           background: "rgba(0,0,0,0.95)",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
+          borderTop: "1px solid var(--hb-08)",
           display: "flex",
           zIndex: 50,
         }}
@@ -1070,7 +1070,7 @@ export default function Dashboard() {
                   fontFamily: PS2P,
                   fontSize: 6,
                   letterSpacing: 0.5,
-                  color: isActive ? "#a78bfa" : "rgba(255,255,255,0.3)",
+                  color: isActive ? "#a78bfa" : "var(--hb-30)",
                   transition: "color 0.15s",
                 }}
               >

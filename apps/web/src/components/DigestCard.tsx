@@ -69,7 +69,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
               width: w,
               height: 24,
               borderRadius: 12,
-              background: "rgba(255,255,255,0.06)",
+              background: "var(--hb-06)",
               animation: "pulse 1.5s ease-in-out infinite",
             }}
           />
@@ -191,7 +191,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
         <span
           style={{
             fontSize: 10,
-            color: "rgba(255,255,255,0.2)",
+            color: "var(--hb-20)",
             fontFamily: "system-ui, sans-serif",
             whiteSpace: "nowrap",
             flexShrink: 0,
@@ -229,7 +229,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
                 <span style={{ color: STATUS_COLOUR[svc.status], fontSize: 9 }}>
                   {STATUS_DOT[svc.status]}
                 </span>
-                <span style={{ fontFamily: "system-ui, sans-serif", fontSize: 11, color: "rgba(255,255,255,0.7)" }}>
+                <span style={{ fontFamily: "system-ui, sans-serif", fontSize: 11, color: "var(--hb-70)" }}>
                   {SERVICE_LABELS[key] ?? key}
                 </span>
               </div>
@@ -247,7 +247,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
                   {svc.status}
                 </span>
                 {svc.latencyMs > 0 && svc.status !== "down" && (
-                  <span style={{ fontFamily: "system-ui, sans-serif", fontSize: 10, color: "rgba(255,255,255,0.2)" }}>
+                  <span style={{ fontFamily: "system-ui, sans-serif", fontSize: 10, color: "var(--hb-20)" }}>
                     {svc.latencyMs}ms
                   </span>
                 )}
@@ -261,7 +261,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
               alignSelf: "flex-end",
               fontFamily: "system-ui, sans-serif",
               fontSize: 10,
-              color: "rgba(255,255,255,0.3)",
+              color: "var(--hb-30)",
               background: "none",
               border: "none",
               cursor: "pointer",

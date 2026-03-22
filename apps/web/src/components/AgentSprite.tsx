@@ -207,7 +207,7 @@ export default function AgentSprite({
         style={{
           fontFamily: "'Press Start 2P', monospace",
           fontSize: 6,
-          color: "rgba(255,255,255,0.45)",
+          color: "var(--hb-45)",
           textShadow: "1px 1px 0 black",
           whiteSpace: "nowrap",
           marginTop: 2,

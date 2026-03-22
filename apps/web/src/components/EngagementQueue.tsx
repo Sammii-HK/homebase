@@ -179,13 +179,13 @@ function EngagementCard({
       <div
         style={{
           padding: 16,
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.1)",
+          background: "var(--hb-04)",
+          border: "1px solid var(--hb-10)",
           borderRadius: 6,
           textAlign: "center",
         }}
       >
-        <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)" }}>
+        <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)" }}>
           DISMISSED
         </div>
       </div>
@@ -196,8 +196,8 @@ function EngagementCard({
     <div
       style={{
         padding: "14px 16px",
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.1)",
+        background: "var(--hb-03)",
+        border: "1px solid var(--hb-10)",
         borderRadius: 6,
         borderLeft: `3px solid ${threadsPlatform ? "#fff" : platformColor}`,
       }}
@@ -218,12 +218,12 @@ function EngagementCard({
             fontSize: 8,
             color: threadsPlatform ? "#fff" : platformColor,
             background: threadsPlatform
-              ? "rgba(255,255,255,0.1)"
+              ? "var(--hb-10)"
               : `${platformColor}15`,
             padding: "3px 6px",
             borderRadius: 3,
             letterSpacing: 1,
-            border: threadsPlatform ? "1px solid rgba(255,255,255,0.2)" : "none",
+            border: threadsPlatform ? "1px solid var(--hb-20)" : "none",
           }}
         >
           {platformIcon}
@@ -232,8 +232,8 @@ function EngagementCard({
           style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "rgba(255,255,255,0.35)",
-            background: "rgba(255,255,255,0.05)",
+            color: "var(--hb-35)",
+            background: "var(--hb-05)",
             padding: "2px 5px",
             borderRadius: 3,
             textTransform: "uppercase",
@@ -245,7 +245,7 @@ function EngagementCard({
           style={{
             fontFamily: PS2P,
             fontSize: 7,
-            color: "rgba(255,255,255,0.6)",
+            color: "var(--hb-60)",
           }}
         >
           {item.authorName || item.authorHandle}
@@ -255,7 +255,7 @@ function EngagementCard({
             style={{
               fontFamily: PS2P,
               fontSize: 6,
-              color: "rgba(255,255,255,0.3)",
+              color: "var(--hb-30)",
             }}
           >
             @{item.authorHandle.replace(/^@/, "")}
@@ -265,7 +265,7 @@ function EngagementCard({
           style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "rgba(255,255,255,0.2)",
+            color: "var(--hb-20)",
             marginLeft: "auto",
           }}
         >
@@ -278,7 +278,7 @@ function EngagementCard({
         style={{
           fontFamily: "system-ui, -apple-system, sans-serif",
           fontSize: 14,
-          color: "rgba(255,255,255,0.85)",
+          color: "var(--hb-85)",
           lineHeight: 1.6,
           marginBottom: 10,
           wordBreak: "break-word",
@@ -293,17 +293,17 @@ function EngagementCard({
           style={{
             fontFamily: "system-ui, -apple-system, sans-serif",
             fontSize: 12,
-            color: "rgba(255,255,255,0.4)",
+            color: "var(--hb-40)",
             lineHeight: 1.5,
             marginBottom: 12,
             padding: "8px 10px",
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.06)",
+            background: "var(--hb-02)",
+            border: "1px solid var(--hb-06)",
             borderRadius: 4,
             wordBreak: "break-word",
           }}
         >
-          <span style={{ color: "rgba(255,255,255,0.15)", marginRight: 6 }}>RE:</span>
+          <span style={{ color: "var(--hb-15)", marginRight: 6 }}>RE:</span>
           {item.postContent.length > 140
             ? item.postContent.slice(0, 140) + "..."
             : item.postContent}
@@ -320,7 +320,7 @@ function EngagementCard({
             style={{
               fontFamily: PS2P,
               fontSize: 6,
-              color: "rgba(255,255,255,0.25)",
+              color: "var(--hb-25)",
               textDecoration: "underline",
             }}
           >
@@ -358,7 +358,7 @@ function EngagementCard({
             padding: "10px 12px",
             paddingRight: 40,
             background: "rgba(0,0,0,0.3)",
-            border: "1px solid rgba(255,255,255,0.12)",
+            border: "1px solid var(--hb-12)",
             borderRadius: 4,
             color: "#fff",
             outline: "none",
@@ -464,13 +464,13 @@ function EngagementCard({
             fontFamily: PS2P,
             fontSize: 8,
             padding: "12px",
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.1)",
+            background: "var(--hb-04)",
+            border: "1px solid var(--hb-10)",
             borderRadius: 4,
             color:
               state === "skipping"
-                ? "rgba(255,255,255,0.3)"
-                : "rgba(255,255,255,0.5)",
+                ? "var(--hb-30)"
+                : "var(--hb-50)",
             cursor: state === "skipping" ? "wait" : "pointer",
             minHeight: 44,
           }}
@@ -528,8 +528,8 @@ export default function EngagementQueue({ token, compact }: Props) {
     return (
       <div
         style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.1)",
+          background: "var(--hb-04)",
+          border: "1px solid var(--hb-10)",
           borderRadius: 8,
           padding: 12,
         }}
@@ -546,7 +546,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "rgba(255,255,255,0.4)",
+              color: "var(--hb-40)",
               textTransform: "uppercase",
               letterSpacing: 1,
             }}
@@ -575,7 +575,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "rgba(255,255,255,0.3)",
+              color: "var(--hb-30)",
             }}
           >
             Loading...
@@ -589,7 +589,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "rgba(255,255,255,0.3)",
+              color: "var(--hb-30)",
             }}
           >
             No unread engagement
@@ -609,7 +609,7 @@ export default function EngagementQueue({ token, compact }: Props) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 7,
-                  color: "rgba(255,255,255,0.25)",
+                  color: "var(--hb-25)",
                   textAlign: "center",
                 }}
               >
@@ -630,7 +630,7 @@ export default function EngagementQueue({ token, compact }: Props) {
           style={{
             fontFamily: PS2P,
             fontSize: 9,
-            color: "rgba(255,255,255,0.3)",
+            color: "var(--hb-30)",
             textAlign: "center",
             padding: 20,
           }}
@@ -661,7 +661,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 10,
-              color: "rgba(255,255,255,0.5)",
+              color: "var(--hb-50)",
               marginBottom: 8,
             }}
           >
@@ -671,7 +671,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 7,
-              color: "rgba(255,255,255,0.25)",
+              color: "var(--hb-25)",
             }}
           >
             All caught up

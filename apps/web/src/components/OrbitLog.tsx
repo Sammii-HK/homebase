@@ -51,8 +51,8 @@ const TYPE_CONFIG: Record<
     label: "ERROR",
   },
   info: {
-    color: "rgba(255,255,255,0.4)",
-    bg: "rgba(255,255,255,0.05)",
+    color: "var(--hb-40)",
+    bg: "var(--hb-05)",
     icon: "·",
     label: "INFO",
   },
@@ -92,7 +92,7 @@ export default function OrbitLog({ token }: Props) {
     <div
       style={{
         background: "#0a0a0a",
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: "1px solid var(--hb-08)",
         borderRadius: 6,
         padding: "12px 14px",
       }}
@@ -111,7 +111,7 @@ export default function OrbitLog({ token }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "rgba(255,255,255,0.5)",
+              color: "var(--hb-50)",
               letterSpacing: 1,
             }}
           >
@@ -125,7 +125,7 @@ export default function OrbitLog({ token }: Props) {
                 height: 5,
                 borderRadius: "50%",
                 background:
-                  isOffline || isQuiet ? "rgba(255,255,255,0.15)" : "#4ade80",
+                  isOffline || isQuiet ? "var(--hb-15)" : "#4ade80",
                 boxShadow:
                   !isOffline && !isQuiet
                     ? "0 0 4px rgba(74,222,128,0.5)"
@@ -178,7 +178,7 @@ export default function OrbitLog({ token }: Props) {
           style={{
             fontFamily: PS2P,
             fontSize: 7,
-            color: "rgba(255,255,255,0.2)",
+            color: "var(--hb-20)",
             textAlign: "center",
             padding: "16px 0",
           }}
@@ -212,14 +212,14 @@ function OfflineState() {
           width: 28,
           height: 28,
           borderRadius: 4,
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--hb-04)",
+          border: "1px solid var(--hb-08)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontFamily: PS2P,
           fontSize: 11,
-          color: "rgba(255,255,255,0.15)",
+          color: "var(--hb-15)",
         }}
       >
         ○
@@ -228,7 +228,7 @@ function OfflineState() {
         style={{
           fontFamily: PS2P,
           fontSize: 7,
-          color: "rgba(255,255,255,0.25)",
+          color: "var(--hb-25)",
           letterSpacing: 0.5,
         }}
       >
@@ -238,7 +238,7 @@ function OfflineState() {
         style={{
           fontFamily: PS2P,
           fontSize: 6,
-          color: "rgba(255,255,255,0.15)",
+          color: "var(--hb-15)",
         }}
       >
         No agent activity detected
@@ -262,7 +262,7 @@ function QuietState({ lastActive }: { lastActive: string | null }) {
         style={{
           fontFamily: PS2P,
           fontSize: 8,
-          color: "rgba(255,255,255,0.3)",
+          color: "var(--hb-30)",
         }}
       >
         Orbit has been quiet
@@ -272,7 +272,7 @@ function QuietState({ lastActive }: { lastActive: string | null }) {
           style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "rgba(255,255,255,0.18)",
+            color: "var(--hb-18)",
           }}
         >
           Last active {formatRelative(lastActive)}
@@ -283,7 +283,7 @@ function QuietState({ lastActive }: { lastActive: string | null }) {
           style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "rgba(255,255,255,0.18)",
+            color: "var(--hb-18)",
           }}
         >
           No recent activity in the last 24h
@@ -353,7 +353,7 @@ function LogFeed({
                 style={{
                   fontFamily: "system-ui, -apple-system, sans-serif",
                   fontSize: 12,
-                  color: "rgba(255,255,255,0.75)",
+                  color: "var(--hb-75)",
                   lineHeight: 1.4,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -382,7 +382,7 @@ function LogFeed({
                 style={{
                   fontFamily: PS2P,
                   fontSize: 5,
-                  color: "rgba(255,255,255,0.2)",
+                  color: "var(--hb-20)",
                   flexShrink: 0,
                   paddingTop: 2,
                   whiteSpace: "nowrap",

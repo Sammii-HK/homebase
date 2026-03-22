@@ -128,7 +128,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
   return (
     <div style={{ background: "#0d0d14", border: "1px solid #1a1a2e", borderRadius: 8, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
       {/* Header */}
-      <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: "rgba(255,255,255,0.35)", letterSpacing: 1 }}>
+      <div style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 7, color: "var(--hb-35)", letterSpacing: 1 }}>
         QUICK DRAFT
       </div>
 
@@ -148,9 +148,9 @@ export default function QuickComposer({ token }: QuickComposerProps) {
                   borderRadius: 20,
                   cursor: "pointer",
                   transition: "all 0.15s",
-                  background: isSelected ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.04)",
-                  border: isSelected ? "1px solid rgba(167,139,250,0.5)" : "1px solid rgba(255,255,255,0.1)",
-                  color: isSelected ? "#a78bfa" : "rgba(255,255,255,0.35)",
+                  background: isSelected ? "rgba(167,139,250,0.2)" : "var(--hb-04)",
+                  border: isSelected ? "1px solid rgba(167,139,250,0.5)" : "1px solid var(--hb-10)",
+                  color: isSelected ? "#a78bfa" : "var(--hb-35)",
                 }}
               >
                 {set.name}
@@ -171,13 +171,13 @@ export default function QuickComposer({ token }: QuickComposerProps) {
         rows={3}
         disabled={busy}
         style={{
-          width: "100%", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 6, color: busy ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.85)",
+          width: "100%", background: "var(--hb-03)", border: "1px solid var(--hb-08)",
+          borderRadius: 6, color: busy ? "var(--hb-40)" : "var(--hb-85)",
           fontFamily: "monospace", fontSize: 12, lineHeight: 1.6, padding: "8px 10px",
           resize: "vertical", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s, color 0.15s",
         }}
         onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(167,139,250,0.4)"; }}
-        onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; }}
+        onBlur={(e) => { e.currentTarget.style.borderColor = "var(--hb-08)"; }}
       />
 
       {/* AI preview panel */}
@@ -189,7 +189,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
             onChange={(e) => setGenerated(e.target.value)}
             rows={4}
             style={{
-              width: "100%", background: "transparent", border: "none", color: "rgba(255,255,255,0.9)",
+              width: "100%", background: "transparent", border: "none", color: "var(--hb-90)",
               fontFamily: "monospace", fontSize: 12, lineHeight: 1.6, resize: "vertical",
               outline: "none", boxSizing: "border-box", padding: 0,
             }}
@@ -197,13 +197,13 @@ export default function QuickComposer({ token }: QuickComposerProps) {
           <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
             <button
               onClick={() => { setState("idle"); setGenerated(""); }}
-              style={{ fontFamily: "monospace", fontSize: 11, padding: "4px 10px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "rgba(255,255,255,0.4)", cursor: "pointer" }}
+              style={{ fontFamily: "monospace", fontSize: 11, padding: "4px 10px", borderRadius: 4, border: "1px solid var(--hb-10)", background: "transparent", color: "var(--hb-40)", cursor: "pointer" }}
             >
               Discard
             </button>
             <button
               onClick={() => save(content)}
-              style={{ fontFamily: "monospace", fontSize: 11, padding: "4px 10px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)", cursor: "pointer" }}
+              style={{ fontFamily: "monospace", fontSize: 11, padding: "4px 10px", borderRadius: 4, border: "1px solid var(--hb-15)", background: "var(--hb-05)", color: "var(--hb-60)", cursor: "pointer" }}
             >
               Save original
             </button>
@@ -225,7 +225,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
           {state === "generating" && <span style={{ color: "#a78bfa" }}>Polishing...</span>}
         </div>
 
-        <div style={{ fontFamily: "monospace", fontSize: 10, color: isOverMax ? "#f87171" : charCount > 280 ? "#fbbf24" : "rgba(255,255,255,0.2)", flexShrink: 0 }}>
+        <div style={{ fontFamily: "monospace", fontSize: 10, color: isOverMax ? "#f87171" : charCount > 280 ? "#fbbf24" : "var(--hb-20)", flexShrink: 0 }}>
           {charCount}/{MAX_CHARS}
         </div>
 

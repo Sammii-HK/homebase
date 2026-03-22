@@ -117,7 +117,7 @@ function ActionItem({
         style={{
           fontFamily: PS2P,
           fontSize: 6,
-          color: "rgba(255,255,255,0.25)",
+          color: "var(--hb-25)",
           flexShrink: 0,
           paddingTop: 1,
           minWidth: 10,
@@ -149,7 +149,7 @@ function ActionItem({
           style={{
             fontFamily: "system-ui, -apple-system, sans-serif",
             fontSize: 11,
-            color: "rgba(255,255,255,0.5)",
+            color: "var(--hb-50)",
             marginTop: 2,
             lineHeight: 1.4,
           }}
@@ -164,7 +164,7 @@ function ActionItem({
           style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "rgba(255,255,255,0.2)",
+            color: "var(--hb-20)",
             flexShrink: 0,
             paddingTop: 2,
           }}
@@ -212,7 +212,7 @@ function AllClearState({ timestamp }: { timestamp: string }) {
           style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "rgba(255,255,255,0.2)",
+            color: "var(--hb-20)",
           }}
         >
           {timestamp}
@@ -415,7 +415,7 @@ export default function BriefingCard({
                 style={{
                   fontFamily: PS2P,
                   fontSize: 6,
-                  color: "rgba(255,255,255,0.25)",
+                  color: "var(--hb-25)",
                 }}
               >
                 {timestamp}
@@ -426,7 +426,7 @@ export default function BriefingCard({
               style={{
                 fontFamily: PS2P,
                 fontSize: 7,
-                color: "rgba(255,255,255,0.35)",
+                color: "var(--hb-35)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",

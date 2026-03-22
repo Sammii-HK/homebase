@@ -446,7 +446,7 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenA
             {criticals.length} CRIT
           </span>
         )}
-        <span style={{ fontFamily: PS2P, fontSize: 8, color: "rgba(255,255,255,0.3)", marginLeft: expanded ? 0 : 4 }}>
+        <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-30)", marginLeft: expanded ? 0 : 4 }}>
           {expanded ? "▼" : "▶"}
         </span>
       </button>
@@ -495,7 +495,7 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenA
                         disabled={runningAction === alert.quickAction.actionId}
                         style={{
                           fontFamily: PS2P, fontSize: 6,
-                          color: runningAction === alert.quickAction.actionId ? "rgba(255,255,255,0.3)" : "#4ade80",
+                          color: runningAction === alert.quickAction.actionId ? "var(--hb-30)" : "#4ade80",
                           background: "rgba(74,222,128,0.08)",
                           border: "1px solid rgba(74,222,128,0.3)",
                           borderRadius: 3, padding: "2px 5px",
@@ -511,8 +511,8 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenA
                         style={{
                           fontFamily: PS2P, fontSize: 6,
                           color: ROOM_ACCENTS[alert.room] ?? "#fff",
-                          background: "rgba(255,255,255,0.05)",
-                          border: `1px solid ${ROOM_ACCENTS[alert.room] ?? "rgba(255,255,255,0.1)"}`,
+                          background: "var(--hb-05)",
+                          border: `1px solid ${ROOM_ACCENTS[alert.room] ?? "var(--hb-10)"}`,
                           borderRadius: 3, padding: "2px 5px",
                           cursor: "pointer", flexShrink: 0,
                         }}
@@ -522,7 +522,7 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenA
                     )}
                   </div>
                   {alert.detail && (
-                    <div style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.3)", marginTop: 3, lineHeight: 1.3 }}>
+                    <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-30)", marginTop: 3, lineHeight: 1.3 }}>
                       {alert.detail}
                     </div>
                   )}
@@ -531,7 +531,7 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenA
                   onClick={() => dismiss(alert.id)}
                   style={{
                     fontFamily: PS2P, fontSize: 7,
-                    color: "rgba(255,255,255,0.2)",
+                    color: "var(--hb-20)",
                     background: "none", border: "none",
                     cursor: "pointer", padding: "0 2px", flexShrink: 0,
                   }}

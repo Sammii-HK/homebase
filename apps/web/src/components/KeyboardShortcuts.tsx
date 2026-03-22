@@ -47,9 +47,9 @@ export default function KeyboardShortcuts() {
           width: 28,
           height: 28,
           borderRadius: 6,
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          color: "rgba(255,255,255,0.35)",
+          background: "var(--hb-06)",
+          border: "1px solid var(--hb-15)",
+          color: "var(--hb-35)",
           fontFamily: PS2P,
           fontSize: 11,
           cursor: "pointer",
@@ -80,7 +80,7 @@ export default function KeyboardShortcuts() {
               right: 12,
               zIndex: 91,
               background: "rgba(12,12,18,0.96)",
-              border: "1px solid rgba(255,255,255,0.12)",
+              border: "1px solid var(--hb-12)",
               borderRadius: 8,
               padding: "12px 16px",
               minWidth: 220,
@@ -91,7 +91,7 @@ export default function KeyboardShortcuts() {
               style={{
                 fontFamily: PS2P,
                 fontSize: 7,
-                color: "rgba(255,255,255,0.3)",
+                color: "var(--hb-30)",
                 letterSpacing: 1,
                 marginBottom: 10,
               }}
@@ -106,14 +106,14 @@ export default function KeyboardShortcuts() {
                   justifyContent: "space-between",
                   alignItems: "center",
                   padding: "5px 0",
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                  borderBottom: "1px solid var(--hb-04)",
                 }}
               >
                 <span
                   style={{
                     fontFamily: PS2P,
                     fontSize: 8,
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--hb-50)",
                   }}
                 >
                   {s.description}
@@ -123,10 +123,10 @@ export default function KeyboardShortcuts() {
                     fontFamily: PS2P,
                     fontSize: 8,
                     color: "#c084fc",
-                    background: "rgba(255,255,255,0.05)",
+                    background: "var(--hb-05)",
                     padding: "2px 6px",
                     borderRadius: 3,
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    border: "1px solid var(--hb-08)",
                     marginLeft: 12,
                   }}
                 >
@@ -138,7 +138,7 @@ export default function KeyboardShortcuts() {
               style={{
                 fontFamily: PS2P,
                 fontSize: 6,
-                color: "rgba(255,255,255,0.15)",
+                color: "var(--hb-15)",
                 marginTop: 8,
                 textAlign: "center",
               }}

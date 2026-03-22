@@ -135,7 +135,7 @@ export default function WeeklyRhythm({ token }: Props) {
     <div
       style={{
         background: "#0a0a0a",
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: "1px solid var(--hb-08)",
         borderRadius: 6,
         padding: "12px 14px",
       }}
@@ -153,7 +153,7 @@ export default function WeeklyRhythm({ token }: Props) {
           style={{
             fontFamily: PS2P,
             fontSize: 8,
-            color: "rgba(255,255,255,0.5)",
+            color: "var(--hb-50)",
             letterSpacing: 1,
           }}
         >
@@ -195,9 +195,9 @@ export default function WeeklyRhythm({ token }: Props) {
             onClick={handleToggle}
             style={{
               background: "none",
-              border: "1px solid rgba(255,255,255,0.12)",
+              border: "1px solid var(--hb-12)",
               borderRadius: 3,
-              color: "rgba(255,255,255,0.4)",
+              color: "var(--hb-40)",
               cursor: "pointer",
               fontFamily: PS2P,
               fontSize: 7,
@@ -221,7 +221,7 @@ export default function WeeklyRhythm({ token }: Props) {
             justifyContent: "center",
             fontFamily: PS2P,
             fontSize: 7,
-            color: "rgba(255,255,255,0.2)",
+            color: "var(--hb-20)",
           }}
         >
           loading...
@@ -235,7 +235,7 @@ export default function WeeklyRhythm({ token }: Props) {
             justifyContent: "center",
             fontFamily: PS2P,
             fontSize: 7,
-            color: "rgba(255,255,255,0.2)",
+            color: "var(--hb-20)",
           }}
         >
           unavailable
@@ -279,7 +279,7 @@ export default function WeeklyRhythm({ token }: Props) {
           { color: "#4ade80", label: "published" },
           { color: "#f59e0b", label: "scheduled" },
           { color: "#ef4444", label: "review" },
-          { color: "rgba(255,255,255,0.12)", label: "gap" },
+          { color: "var(--hb-12)", label: "gap" },
         ].map(({ color, label }) => (
           <div
             key={label}
@@ -298,7 +298,7 @@ export default function WeeklyRhythm({ token }: Props) {
               style={{
                 fontFamily: PS2P,
                 fontSize: 5,
-                color: "rgba(255,255,255,0.25)",
+                color: "var(--hb-25)",
                 letterSpacing: 0.5,
               }}
             >
@@ -313,7 +313,7 @@ export default function WeeklyRhythm({ token }: Props) {
         <div
           style={{
             marginTop: 12,
-            borderTop: "1px solid rgba(255,255,255,0.06)",
+            borderTop: "1px solid var(--hb-06)",
             paddingTop: 10,
           }}
         >
@@ -324,7 +324,7 @@ export default function WeeklyRhythm({ token }: Props) {
               style={{
                 fontFamily: "monospace",
                 fontSize: 11,
-                color: "rgba(255,255,255,0.25)",
+                color: "var(--hb-25)",
                 margin: 0,
                 textAlign: "center",
                 padding: "12px 0",
@@ -351,7 +351,7 @@ export default function WeeklyRhythm({ token }: Props) {
                       style={{
                         fontFamily: "monospace",
                         fontSize: 9,
-                        color: "rgba(255,255,255,0.3)",
+                        color: "var(--hb-30)",
                         letterSpacing: 0.5,
                         marginBottom: 4,
                         textTransform: "uppercase",
@@ -384,7 +384,7 @@ function PostRow({ post }: { post: WeekAheadPost }) {
         alignItems: "flex-start",
         gap: 8,
         padding: "4px 6px",
-        background: "rgba(255,255,255,0.03)",
+        background: "var(--hb-03)",
         borderRadius: 4,
       }}
     >
@@ -393,7 +393,7 @@ function PostRow({ post }: { post: WeekAheadPost }) {
         style={{
           fontFamily: "monospace",
           fontSize: 10,
-          color: "rgba(255,255,255,0.4)",
+          color: "var(--hb-40)",
           flexShrink: 0,
           minWidth: 36,
           paddingTop: 1,
@@ -407,7 +407,7 @@ function PostRow({ post }: { post: WeekAheadPost }) {
         style={{
           fontFamily: "monospace",
           fontSize: 10,
-          color: "rgba(255,255,255,0.65)",
+          color: "var(--hb-65)",
           flex: 1,
           lineHeight: 1.4,
           wordBreak: "break-word",
@@ -421,7 +421,7 @@ function PostRow({ post }: { post: WeekAheadPost }) {
         style={{
           fontFamily: "monospace",
           fontSize: 8,
-          color: "rgba(255,255,255,0.8)",
+          color: "var(--hb-80)",
           background: colour,
           borderRadius: 3,
           padding: "2px 5px",
@@ -445,7 +445,7 @@ function WeekAheadSkeleton() {
           style={{
             height: 20,
             width: `${width}%`,
-            background: "rgba(255,255,255,0.07)",
+            background: "var(--hb-07)",
             borderRadius: 4,
             animation: "pulse 1.5s ease-in-out infinite",
           }}
@@ -504,8 +504,8 @@ function DayCell({
           color: day.isToday
             ? "#a78bfa"
             : isPast
-            ? "rgba(255,255,255,0.2)"
-            : "rgba(255,255,255,0.45)",
+            ? "var(--hb-20)"
+            : "var(--hb-45)",
           letterSpacing: 0.5,
         }}
       >
@@ -531,7 +531,7 @@ function DayCell({
               borderRadius: 1,
               background: day.hasGap
                 ? "rgba(239,68,68,0.3)"
-                : "rgba(255,255,255,0.08)",
+                : "var(--hb-08)",
               border: day.hasGap ? "1px solid rgba(239,68,68,0.4)" : "none",
             }}
           />
@@ -553,7 +553,7 @@ function DayCell({
         style={{
           fontFamily: PS2P,
           fontSize: 5,
-          color: "rgba(255,255,255,0.2)",
+          color: "var(--hb-20)",
         }}
       >
         {day.date.slice(8)}
@@ -621,7 +621,7 @@ function DayTooltip({ tooltip }: { tooltip: { day: WeekDay; x: number } }) {
         left: "50%",
         transform: "translateX(-50%)",
         background: "#1a1a1a",
-        border: "1px solid rgba(255,255,255,0.12)",
+        border: "1px solid var(--hb-12)",
         borderRadius: 5,
         padding: "8px 10px",
         zIndex: 20,
@@ -634,7 +634,7 @@ function DayTooltip({ tooltip }: { tooltip: { day: WeekDay; x: number } }) {
         style={{
           fontFamily: PS2P,
           fontSize: 7,
-          color: "rgba(255,255,255,0.7)",
+          color: "var(--hb-70)",
           marginBottom: 6,
           letterSpacing: 0.5,
         }}
@@ -696,7 +696,7 @@ function TooltipRow({
         style={{
           fontFamily: PS2P,
           fontSize: 6,
-          color: "rgba(255,255,255,0.5)",
+          color: "var(--hb-50)",
         }}
       >
         {value} {label}

@@ -307,7 +307,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
           {scheduledDate ? "APPROVED" : "REJECTED"}
         </div>
         {scheduledDate && (
-          <div style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>
+          <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-40)", marginTop: 6 }}>
             {formatScheduleTime(scheduledDate)}
           </div>
         )}
@@ -325,7 +325,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
     : `3px solid ${platformColor}`;
   const backgroundStyle = isSelected
     ? "rgba(167,139,250,0.07)"
-    : "rgba(255,255,255,0.03)";
+    : "var(--hb-03)";
 
   return (
     <div
@@ -336,7 +336,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
         position: "relative",
         padding: "16px 16px",
         background: backgroundStyle,
-        border: "1px solid rgba(255,255,255,0.1)",
+        border: "1px solid var(--hb-10)",
         borderRadius: 6,
         borderLeft: borderLeftStyle,
         transform: `translateX(${swipeDelta}px)`,
@@ -410,7 +410,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
           {platformIcon}
         </span>
         {item.accountName && (
-          <span style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.4)" }}>
+          <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-40)" }}>
             {item.accountName}
           </span>
         )}
@@ -426,7 +426,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
             ORBIT
           </span>
         )}
-        <span style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>
+        <span style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-25)", marginLeft: "auto" }}>
           {formatRelativeTime(item.createdAt)}
         </span>
         {item.source === "orbit" && onDismiss && (
@@ -440,9 +440,9 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
               lineHeight: 1,
               padding: "2px 6px",
               background: "transparent",
-              border: "1px solid rgba(255,255,255,0.12)",
+              border: "1px solid var(--hb-12)",
               borderRadius: 3,
-              color: "rgba(255,255,255,0.35)",
+              color: "var(--hb-35)",
               cursor: state === "loading" ? "wait" : "pointer",
             }}
           >
@@ -455,7 +455,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
       <div style={{
         fontFamily: "system-ui, -apple-system, sans-serif",
         fontSize: 14,
-        color: "rgba(255,255,255,0.8)",
+        color: "var(--hb-80)",
         lineHeight: 1.6,
         marginBottom: 14,
         wordBreak: "break-word",
@@ -466,7 +466,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
               {item.content.slice(0, 280)}...
               <button
                 onClick={() => setExpanded(true)}
-                style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.3)", cursor: "pointer", background: "none", border: "none", marginLeft: 4 }}
+                style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-30)", cursor: "pointer", background: "none", border: "none", marginLeft: 4 }}
               >
                 [expand]
               </button>
@@ -478,7 +478,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
               {item.content.length > 280 && (
                 <button
                   onClick={() => setExpanded(false)}
-                  style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(255,255,255,0.3)", cursor: "pointer", background: "none", border: "none", marginLeft: 4 }}
+                  style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-30)", cursor: "pointer", background: "none", border: "none", marginLeft: 4 }}
                 >
                   [collapse]
                 </button>
@@ -490,7 +490,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
 
       {/* Thread slides indicator */}
       {item.threadSlides && item.threadSlides.length > 0 && (
-        <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4, marginBottom: 10 }}>
+        <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", fontSize: 12, color: "var(--hb-35)", marginTop: 4, marginBottom: 10 }}>
           +{item.threadSlides.length} thread slides
         </div>
       )}
@@ -522,10 +522,10 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
                   fontFamily: PS2P,
                   fontSize: 6,
                   padding: "5px 8px",
-                  background: rejectReason === preset ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.05)",
-                  border: `1px solid ${rejectReason === preset ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.1)"}`,
+                  background: rejectReason === preset ? "rgba(239,68,68,0.2)" : "var(--hb-05)",
+                  border: `1px solid ${rejectReason === preset ? "rgba(239,68,68,0.4)" : "var(--hb-10)"}`,
                   borderRadius: 3,
-                  color: rejectReason === preset ? "#f87171" : "rgba(255,255,255,0.5)",
+                  color: rejectReason === preset ? "#f87171" : "var(--hb-50)",
                   cursor: "pointer",
                 }}
               >
@@ -544,7 +544,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
               fontSize: 7,
               padding: "8px 10px",
               background: "rgba(0,0,0,0.3)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              border: "1px solid var(--hb-10)",
               borderRadius: 4,
               color: "#fff",
               outline: "none",
@@ -582,10 +582,10 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
                 fontFamily: PS2P,
                 fontSize: 8,
                 padding: "12px 16px",
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "var(--hb-05)",
+                border: "1px solid var(--hb-10)",
                 borderRadius: 4,
-                color: "rgba(255,255,255,0.5)",
+                color: "var(--hb-50)",
                 cursor: "pointer",
                 minHeight: 44,
               }}
@@ -910,7 +910,7 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
         <div style={{
           fontFamily: "monospace",
           fontSize: 10,
-          color: "rgba(255,255,255,0.2)",
+          color: "var(--hb-20)",
           textAlign: "center",
           letterSpacing: "0.04em",
           padding: "4px 0 2px",
@@ -920,7 +920,7 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
       )}
 
       {loading && (
-        <div style={{ fontFamily: PS2P, fontSize: 9, color: "rgba(255,255,255,0.3)", textAlign: "center", padding: 20 }}>
+        <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-30)", textAlign: "center", padding: 20 }}>
           Loading queue...
         </div>
       )}
@@ -937,10 +937,10 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
 
       {!loading && !error && count === 0 && (
         <div style={{ textAlign: "center", padding: 24 }}>
-          <div style={{ fontFamily: PS2P, fontSize: 10, color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>
+          <div style={{ fontFamily: PS2P, fontSize: 10, color: "var(--hb-50)", marginBottom: 8 }}>
             Nothing to review
           </div>
-          <div style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.25)" }}>
+          <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-25)" }}>
             Your agents are working on it
           </div>
         </div>
@@ -1019,10 +1019,10 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
                   fontFamily: PS2P,
                   fontSize: 8,
                   padding: "14px 16px",
-                  background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "var(--hb-05)",
+                  border: "1px solid var(--hb-10)",
                   borderRadius: 4,
-                  color: "rgba(255,255,255,0.5)",
+                  color: "var(--hb-50)",
                   cursor: "pointer",
                   minHeight: 48,
                 }}

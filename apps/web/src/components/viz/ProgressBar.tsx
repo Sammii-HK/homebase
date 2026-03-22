@@ -23,18 +23,18 @@ export default function ProgressBar({
           justifyContent: "space-between",
           marginBottom: 4,
         }}>
-          <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: "rgba(255,255,255,0.45)" }}>
+          <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: "var(--hb-45)" }}>
             {label}
           </span>
-          <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: "rgba(255,255,255,0.6)" }}>
+          <span style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 8, color: "var(--hb-60)" }}>
             {value}/{max}
           </span>
         </div>
       )}
       <div style={{
         height: 8,
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.1)",
+        background: "var(--hb-06)",
+        border: "1px solid var(--hb-10)",
         borderRadius: 2,
         overflow: "hidden",
       }}>

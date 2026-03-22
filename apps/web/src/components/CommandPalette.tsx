@@ -248,7 +248,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
           top: "15%", left: "50%", transform: "translateX(-50%)",
           width: "min(420px, 90vw)",
           background: "rgba(12,12,18,0.98)",
-          border: "1px solid rgba(255,255,255,0.12)",
+          border: "1px solid var(--hb-12)",
           borderRadius: 8,
           zIndex: 101,
           overflow: "hidden",
@@ -256,7 +256,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
         }}
       >
         {/* Search input */}
-        <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--hb-08)" }}>
           <input
             ref={inputRef}
             value={query}
@@ -277,7 +277,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
             <div key={cat}>
               <div style={{
                 fontFamily: PS2P, fontSize: 7,
-                color: "rgba(255,255,255,0.25)",
+                color: "var(--hb-25)",
                 padding: "8px 14px 4px",
                 letterSpacing: 1,
               }}>
@@ -295,7 +295,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
                     style={{
                       display: "flex", alignItems: "center", gap: 10,
                       width: "100%", padding: "8px 14px",
-                      background: isSelected ? "rgba(255,255,255,0.06)" : "transparent",
+                      background: isSelected ? "var(--hb-06)" : "transparent",
                       border: "none", cursor: "pointer", textAlign: "left",
                     }}
                   >
@@ -303,14 +303,14 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
                     <div style={{ flex: 1 }}>
                       <span style={{
                         fontFamily: PS2P, fontSize: 9,
-                        color: isAlert ? "#f87171" : isSelected ? "#fff" : "rgba(255,255,255,0.6)",
+                        color: isAlert ? "#f87171" : isSelected ? "#fff" : "var(--hb-60)",
                       }}>
                         {cmd.label}
                       </span>
                       {cmd.description && (
                         <span style={{
                           fontFamily: PS2P, fontSize: 7,
-                          color: isAlert ? "#f87171" : "rgba(255,255,255,0.25)",
+                          color: isAlert ? "#f87171" : "var(--hb-25)",
                           marginLeft: 8,
                         }}>
                           {cmd.description}
@@ -320,10 +320,10 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
                     {cmd.shortcut && (
                       <span style={{
                         fontFamily: PS2P, fontSize: 7,
-                        color: "rgba(255,255,255,0.2)",
-                        background: "rgba(255,255,255,0.05)",
+                        color: "var(--hb-20)",
+                        background: "var(--hb-05)",
                         padding: "2px 6px", borderRadius: 3,
-                        border: "1px solid rgba(255,255,255,0.08)",
+                        border: "1px solid var(--hb-08)",
                       }}>
                         {cmd.shortcut}
                       </span>
@@ -337,7 +337,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
           {flatList.length === 0 && (
             <div style={{
               fontFamily: PS2P, fontSize: 9,
-              color: "rgba(255,255,255,0.25)",
+              color: "var(--hb-25)",
               textAlign: "center", padding: 20,
             }}>
               No matching commands
@@ -348,7 +348,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
         {/* Status bar */}
         <div style={{
           padding: "8px 14px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid var(--hb-06)",
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           {running ? (
@@ -360,11 +360,11 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
               {result.message}
             </span>
           ) : (
-            <span style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.2)" }}>
+            <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-20)" }}>
               ↑↓ navigate · ↵ select · esc close
             </span>
           )}
-          <span style={{ fontFamily: PS2P, fontSize: 7, color: "rgba(255,255,255,0.15)" }}>
+          <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-15)" }}>
             ⌘K
           </span>
         </div>

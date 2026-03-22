@@ -14,7 +14,7 @@ const STATUS_DOT: Record<LaunchStatus, string> = {
   live: "#4ade80",
   building: "#f59e0b",
   ready: "#3b82f6",
-  "not-started": "rgba(255,255,255,0.2)",
+  "not-started": "var(--hb-20)",
   paused: "#f87171",
 };
 

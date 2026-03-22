@@ -12,7 +12,7 @@ export default function RoomTabs({ tabs, active, accent, onChange }: Props) {
     <div style={{
       display: "flex",
       gap: 0,
-      borderBottom: "1px solid rgba(255,255,255,0.1)",
+      borderBottom: "1px solid var(--hb-10)",
       marginBottom: 12,
     }}>
       {tabs.map((tab) => (
@@ -22,7 +22,7 @@ export default function RoomTabs({ tabs, active, accent, onChange }: Props) {
           style={{
             fontFamily: "'Press Start 2P', monospace",
             fontSize: 8,
-            color: tab === active ? accent : "rgba(255,255,255,0.35)",
+            color: tab === active ? accent : "var(--hb-35)",
             background: "none",
             border: "none",
             borderBottom: tab === active ? `2px solid ${accent}` : "2px solid transparent",

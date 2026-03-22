@@ -44,7 +44,7 @@ function formatContent(text: string): React.ReactNode {
             style={{
               position: "absolute",
               left: 0,
-              color: "rgba(255,255,255,0.4)",
+              color: "var(--hb-40)",
             }}
           >
             {">"}
@@ -266,10 +266,10 @@ export default function ChatPanel({ token }: { token: string }) {
             fontFamily: PS2P,
             fontSize: 7,
             padding: "4px 8px",
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "var(--hb-04)",
+            border: "1px solid var(--hb-08)",
             borderRadius: 4,
-            color: "rgba(255,255,255,0.3)",
+            color: "var(--hb-30)",
             cursor: "pointer",
           }}
         >
@@ -284,10 +284,10 @@ export default function ChatPanel({ token }: { token: string }) {
             padding: "4px 8px",
             background: ttsEnabled
               ? "rgba(167,139,250,0.1)"
-              : "rgba(255,255,255,0.04)",
-            border: `1px solid ${ttsEnabled ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.08)"}`,
+              : "var(--hb-04)",
+            border: `1px solid ${ttsEnabled ? "rgba(167,139,250,0.2)" : "var(--hb-08)"}`,
             borderRadius: 4,
-            color: ttsEnabled ? "#a78bfa" : "rgba(255,255,255,0.3)",
+            color: ttsEnabled ? "#a78bfa" : "var(--hb-30)",
             cursor: "pointer",
           }}
         >
@@ -312,7 +312,7 @@ export default function ChatPanel({ token }: { token: string }) {
               style={{
                 fontFamily: PS2P,
                 fontSize: 9,
-                color: "rgba(255,255,255,0.25)",
+                color: "var(--hb-25)",
                 textAlign: "center",
                 marginBottom: 20,
               }}
@@ -331,7 +331,7 @@ export default function ChatPanel({ token }: { token: string }) {
                     background: "rgba(167,139,250,0.06)",
                     border: "1px solid rgba(167,139,250,0.15)",
                     borderRadius: 6,
-                    color: "rgba(255,255,255,0.5)",
+                    color: "var(--hb-50)",
                     cursor: "pointer",
                     textAlign: "left",
                     lineHeight: 1.6,
@@ -369,18 +369,18 @@ export default function ChatPanel({ token }: { token: string }) {
                   background:
                     m.role === "user"
                       ? "rgba(167,139,250,0.12)"
-                      : "rgba(255,255,255,0.04)",
+                      : "var(--hb-04)",
                   border:
                     m.role === "user"
                       ? "1px solid rgba(167,139,250,0.2)"
-                      : "1px solid rgba(255,255,255,0.08)",
+                      : "1px solid var(--hb-08)",
                   fontFamily: "system-ui, -apple-system, sans-serif",
                   fontSize: 15,
                   lineHeight: 1.6,
                   color:
                     m.role === "user"
-                      ? "rgba(255,255,255,0.85)"
-                      : "rgba(255,255,255,0.75)",
+                      ? "var(--hb-85)"
+                      : "var(--hb-75)",
                 }}
               >
                 {m.role === "assistant"
@@ -396,8 +396,8 @@ export default function ChatPanel({ token }: { token: string }) {
             <div
               style={{
                 padding: "10px 14px",
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "var(--hb-04)",
+                border: "1px solid var(--hb-08)",
                 borderRadius: "8px 8px 8px 2px",
                 display: "flex",
                 gap: 4,
@@ -443,7 +443,7 @@ export default function ChatPanel({ token }: { token: string }) {
       <div
         style={{
           padding: "10px 12px 12px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid var(--hb-06)",
           display: "flex",
           gap: 8,
           alignItems: "flex-end",
@@ -459,10 +459,10 @@ export default function ChatPanel({ token }: { token: string }) {
               padding: "8px 10px",
               background: isListening
                 ? "rgba(239,68,68,0.15)"
-                : "rgba(255,255,255,0.04)",
-              border: `1px solid ${isListening ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.1)"}`,
+                : "var(--hb-04)",
+              border: `1px solid ${isListening ? "rgba(239,68,68,0.4)" : "var(--hb-10)"}`,
               borderRadius: 6,
-              color: isListening ? "#f87171" : "rgba(255,255,255,0.4)",
+              color: isListening ? "#f87171" : "var(--hb-40)",
               cursor: "pointer",
               minHeight: 38,
               animation: isListening ? "micPulse 1s ease-in-out infinite" : "none",
@@ -485,7 +485,7 @@ export default function ChatPanel({ token }: { token: string }) {
             fontSize: 15,
             padding: "11px 13px",
             background: "rgba(0,0,0,0.4)",
-            border: `1px solid ${isListening ? "rgba(239,68,68,0.3)" : "rgba(255,255,255,0.1)"}`,
+            border: `1px solid ${isListening ? "rgba(239,68,68,0.3)" : "var(--hb-10)"}`,
             borderRadius: 6,
             color: "#fff",
             resize: "none",

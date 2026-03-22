@@ -44,8 +44,8 @@ export default function Opportunities({ opportunities, stats }: Props) {
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "var(--hb-03)",
+        border: "1px solid var(--hb-08)",
         borderRadius: 8,
         padding: 16,
         display: "flex",
@@ -71,7 +71,7 @@ export default function Opportunities({ opportunities, stats }: Props) {
           style={{
             fontFamily: PS2P,
             fontSize: 8,
-            color: "rgba(255,255,255,0.2)",
+            color: "var(--hb-20)",
             textAlign: "center",
             padding: "16px 0",
           }}
@@ -99,19 +99,19 @@ export default function Opportunities({ opportunities, stats }: Props) {
                 display: "block",
                 textDecoration: "none",
                 padding: "12px 14px",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "var(--hb-03)",
+                border: "1px solid var(--hb-08)",
                 borderLeft: `3px solid ${isThreads ? "#fff" : platformColor}`,
                 borderRadius: 6,
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLAnchorElement).style.background =
-                  "rgba(255,255,255,0.06)";
+                  "var(--hb-06)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLAnchorElement).style.background =
-                  "rgba(255,255,255,0.03)";
+                  "var(--hb-03)";
               }}
             >
               {/* Top row: platform badge + handle */}
@@ -129,12 +129,12 @@ export default function Opportunities({ opportunities, stats }: Props) {
                     fontSize: 7,
                     color: isThreads ? "#fff" : platformColor,
                     background: isThreads
-                      ? "rgba(255,255,255,0.1)"
+                      ? "var(--hb-10)"
                       : `${platformColor}20`,
                     padding: "2px 6px",
                     borderRadius: 3,
                     letterSpacing: 1,
-                    border: isThreads ? "1px solid rgba(255,255,255,0.2)" : "none",
+                    border: isThreads ? "1px solid var(--hb-20)" : "none",
                   }}
                 >
                   {platformIcon}
@@ -144,7 +144,7 @@ export default function Opportunities({ opportunities, stats }: Props) {
                     style={{
                       fontFamily: PS2P,
                       fontSize: 6,
-                      color: "rgba(255,255,255,0.45)",
+                      color: "var(--hb-45)",
                     }}
                   >
                     @{opp.authorHandle.replace(/^@/, "")}
@@ -157,7 +157,7 @@ export default function Opportunities({ opportunities, stats }: Props) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 7,
-                  color: "rgba(255,255,255,0.6)",
+                  color: "var(--hb-60)",
                   lineHeight: 1.6,
                   marginBottom: 10,
                   wordBreak: "break-word",
@@ -172,7 +172,7 @@ export default function Opportunities({ opportunities, stats }: Props) {
                   style={{
                     flex: 1,
                     height: 3,
-                    background: "rgba(255,255,255,0.08)",
+                    background: "var(--hb-08)",
                     borderRadius: 2,
                     overflow: "hidden",
                   }}
@@ -195,7 +195,7 @@ export default function Opportunities({ opportunities, stats }: Props) {
                   style={{
                     fontFamily: PS2P,
                     fontSize: 6,
-                    color: "rgba(255,255,255,0.3)",
+                    color: "var(--hb-30)",
                     minWidth: 28,
                     textAlign: "right",
                   }}

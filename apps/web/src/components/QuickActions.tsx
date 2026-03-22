@@ -106,9 +106,9 @@ export default function QuickActions({ token, onAction }: Props) {
           const isSuccess = state === "success";
           const isError = state === "error";
 
-          let bg = "rgba(255,255,255,0.04)";
-          let border = "rgba(255,255,255,0.1)";
-          let colour = "rgba(255,255,255,0.6)";
+          let bg = "var(--hb-04)";
+          let border = "var(--hb-10)";
+          let colour = "var(--hb-60)";
 
           if (isLoading) {
             bg = "rgba(167,139,250,0.12)";

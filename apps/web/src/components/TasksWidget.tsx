@@ -40,8 +40,8 @@ export default function TasksWidget({ tasks }: Props) {
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "var(--hb-03)",
+        border: "1px solid var(--hb-08)",
         borderRadius: 8,
         padding: "10px 12px",
       }}
@@ -58,7 +58,7 @@ export default function TasksWidget({ tasks }: Props) {
           style={{
             fontFamily: "'Press Start 2P', monospace",
             fontSize: 7,
-            color: "rgba(255,255,255,0.4)",
+            color: "var(--hb-40)",
             letterSpacing: 1,
             textTransform: "uppercase",
           }}
@@ -69,7 +69,7 @@ export default function TasksWidget({ tasks }: Props) {
           style={{
             fontFamily: "system-ui, sans-serif",
             fontSize: 10,
-            color: "rgba(255,255,255,0.25)",
+            color: "var(--hb-25)",
           }}
         >
           {tasks.length} open
@@ -112,7 +112,7 @@ export default function TasksWidget({ tasks }: Props) {
                 style={{
                   fontFamily: "system-ui, sans-serif",
                   fontSize: 11,
-                  color: "rgba(255,255,255,0.7)",
+                  color: "var(--hb-70)",
                   flex: 1,
                   lineHeight: 1.4,
                   wordBreak: "break-word",
@@ -150,7 +150,7 @@ export default function TasksWidget({ tasks }: Props) {
           style={{
             fontFamily: "system-ui, sans-serif",
             fontSize: 10,
-            color: "rgba(255,255,255,0.2)",
+            color: "var(--hb-20)",
             marginTop: 6,
             textAlign: "center",
           }}

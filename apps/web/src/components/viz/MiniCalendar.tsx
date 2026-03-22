@@ -36,15 +36,15 @@ export default function MiniCalendar({ days }: Props) {
               flex: 1,
               textAlign: "center",
               padding: "6px 2px",
-              background: isToday ? "rgba(255,255,255,0.06)" : "transparent",
-              border: isToday ? "1px solid rgba(255,255,255,0.15)" : "1px solid transparent",
+              background: isToday ? "var(--hb-06)" : "transparent",
+              border: isToday ? "1px solid var(--hb-15)" : "1px solid transparent",
               borderRadius: 3,
             }}
           >
             <div style={{
               fontFamily: "'Press Start 2P', monospace",
               fontSize: 7,
-              color: isToday ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.35)",
+              color: isToday ? "var(--hb-70)" : "var(--hb-35)",
               marginBottom: 4,
             }}>
               {abbr}
@@ -60,7 +60,7 @@ export default function MiniCalendar({ days }: Props) {
             <div style={{
               fontFamily: "'Press Start 2P', monospace",
               fontSize: 7,
-              color: "rgba(255,255,255,0.5)",
+              color: "var(--hb-50)",
             }}>
               {day.count}
             </div>

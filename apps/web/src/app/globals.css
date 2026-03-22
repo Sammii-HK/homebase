@@ -7,7 +7,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: #000;
+  background: var(--hb-bg);
   font-family: 'Press Start 2P', monospace;
   overflow-x: hidden;
   image-rendering: pixelated;
@@ -31,6 +31,90 @@ body {
 :root {
   --border: 2px solid rgba(255,255,255,0.12);
   --pixel-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+
+  /* ── Adaptive colour tokens (dark mode defaults) ── */
+  --hb-bg: #000;
+  --hb-02: rgba(255,255,255,0.02);
+  --hb-03: rgba(255,255,255,0.03);
+  --hb-04: rgba(255,255,255,0.04);
+  --hb-05: rgba(255,255,255,0.05);
+  --hb-06: rgba(255,255,255,0.06);
+  --hb-07: rgba(255,255,255,0.07);
+  --hb-08: rgba(255,255,255,0.08);
+  --hb-10: rgba(255,255,255,0.1);
+  --hb-12: rgba(255,255,255,0.12);
+  --hb-15: rgba(255,255,255,0.15);
+  --hb-18: rgba(255,255,255,0.18);
+  --hb-20: rgba(255,255,255,0.2);
+  --hb-25: rgba(255,255,255,0.25);
+  --hb-30: rgba(255,255,255,0.3);
+  --hb-35: rgba(255,255,255,0.35);
+  --hb-40: rgba(255,255,255,0.4);
+  --hb-45: rgba(255,255,255,0.45);
+  --hb-50: rgba(255,255,255,0.5);
+  --hb-55: rgba(255,255,255,0.55);
+  --hb-60: rgba(255,255,255,0.6);
+  --hb-65: rgba(255,255,255,0.65);
+  --hb-70: rgba(255,255,255,0.7);
+  --hb-75: rgba(255,255,255,0.75);
+  --hb-80: rgba(255,255,255,0.8);
+  --hb-85: rgba(255,255,255,0.85);
+  --hb-90: rgba(255,255,255,0.9);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --hb-bg: #f0ede8;
+    --hb-02: rgba(0,0,0,0.02);
+    --hb-03: rgba(0,0,0,0.03);
+    --hb-04: rgba(0,0,0,0.04);
+    --hb-05: rgba(0,0,0,0.05);
+    --hb-06: rgba(0,0,0,0.06);
+    --hb-07: rgba(0,0,0,0.07);
+    --hb-08: rgba(0,0,0,0.08);
+    --hb-10: rgba(0,0,0,0.1);
+    --hb-12: rgba(0,0,0,0.12);
+    --hb-15: rgba(0,0,0,0.15);
+    --hb-18: rgba(0,0,0,0.18);
+    --hb-20: rgba(0,0,0,0.2);
+    --hb-25: rgba(0,0,0,0.25);
+    --hb-30: rgba(0,0,0,0.3);
+    --hb-35: rgba(0,0,0,0.35);
+    --hb-40: rgba(0,0,0,0.4);
+    --hb-45: rgba(0,0,0,0.45);
+    --hb-50: rgba(0,0,0,0.5);
+    --hb-55: rgba(0,0,0,0.55);
+    --hb-60: rgba(0,0,0,0.6);
+    --hb-65: rgba(0,0,0,0.65);
+    --hb-70: rgba(0,0,0,0.7);
+    --hb-75: rgba(0,0,0,0.75);
+    --hb-80: rgba(0,0,0,0.8);
+    --hb-85: rgba(0,0,0,0.85);
+    --hb-90: rgba(0,0,0,0.9);
+  }
+
+  /* ── Tailwind white-opacity class overrides ── */
+  .bg-white\/\[0\.03\] { background-color: rgba(0,0,0,0.03) !important; }
+  .bg-white\/\[0\.04\] { background-color: rgba(0,0,0,0.04) !important; }
+  .bg-white\/\[0\.05\] { background-color: rgba(0,0,0,0.05) !important; }
+  .bg-white\/\[0\.06\] { background-color: rgba(0,0,0,0.06) !important; }
+  .bg-white\/5        { background-color: rgba(0,0,0,0.05) !important; }
+  .bg-white\/10       { background-color: rgba(0,0,0,0.1)  !important; }
+  .bg-white\/20       { background-color: rgba(0,0,0,0.2)  !important; }
+  .border-white\/\[0\.06\] { border-color: rgba(0,0,0,0.06) !important; }
+  .border-white\/10   { border-color: rgba(0,0,0,0.1)  !important; }
+  .border-white\/20   { border-color: rgba(0,0,0,0.2)  !important; }
+  .text-white\/15     { color: rgba(0,0,0,0.15) !important; }
+  .text-white\/20     { color: rgba(0,0,0,0.2)  !important; }
+  .text-white\/25     { color: rgba(0,0,0,0.25) !important; }
+  .text-white\/30     { color: rgba(0,0,0,0.3)  !important; }
+  .text-white\/35     { color: rgba(0,0,0,0.35) !important; }
+  .text-white\/40     { color: rgba(0,0,0,0.4)  !important; }
+  .text-white\/50     { color: rgba(0,0,0,0.5)  !important; }
+  .text-white\/60     { color: rgba(0,0,0,0.6)  !important; }
+  .text-white\/70     { color: rgba(0,0,0,0.7)  !important; }
+  .text-white\/80     { color: rgba(0,0,0,0.8)  !important; }
+  .text-white         { color: rgba(0,0,0,0.9)  !important; }
 }
 
 /* Pixel art border style */
