@@ -367,6 +367,71 @@ function JobRow({ job }: { job: CastJob }) {
   );
 }
 
+function NeedsAction({ jobs }: { jobs: CastJob[] }) {
+  const actionable = jobs.filter((j) => j.bookingLink);
+  if (actionable.length === 0) return null;
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <div style={{ width: 4, height: 12, borderRadius: 2, background: "#f87171", flexShrink: 0 }} />
+        <span style={{ fontFamily: PS2P, fontSize: 7, color: "#f87171", letterSpacing: 1 }}>
+          NEEDS ACTION
+        </span>
+        <span style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-60)", marginLeft: 2 }}>
+          ({actionable.length})
+        </span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {actionable.map((job) => (
+          <a
+            key={job.id}
+            href={job.bookingLink!}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              padding: "14px 16px",
+              background: "rgba(248,113,113,0.08)",
+              border: "2px solid rgba(248,113,113,0.4)",
+              borderRadius: 8,
+              textDecoration: "none",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "rgba(248,113,113,0.15)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "rgba(248,113,113,0.08)"; }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: PS2P, fontSize: 10, color: "#fff", marginBottom: 4, letterSpacing: 0.3 }}>
+                {job.company}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--hb-60)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {job.role}
+              </div>
+            </div>
+            <div style={{
+              fontFamily: PS2P,
+              fontSize: 8,
+              color: "#f87171",
+              background: "rgba(248,113,113,0.15)",
+              border: "1px solid rgba(248,113,113,0.5)",
+              borderRadius: 5,
+              padding: "8px 14px",
+              flexShrink: 0,
+              letterSpacing: 0.5,
+              animation: "pulse 2s ease-in-out infinite",
+            }}>
+              BOOK NOW →
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SectionBlock({
   label,
   color,
@@ -759,6 +824,8 @@ export default function CastQueue({ token }: Props) {
   return (
     <div>
       {renderNewApplicationForm()}
+
+      <NeedsAction jobs={data.interviews} />
 
       {/* Stats summary row */}
       <div
