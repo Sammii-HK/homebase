@@ -19,7 +19,11 @@ export interface MetricsSnapshot {
 export const SNAPSHOT_PATH = path.join("/app/data", "metrics-snapshot.json");
 
 export function writeMetricsSnapshot(
-  metrics: { dau?: number; mau?: number; wau?: number; mrr?: number; signups7d?: number },
+  metrics: {
+    dau?: number; mau?: number; wau?: number; mrr?: number; signups7d?: number;
+    seoImpressions7d?: number; seoClicks7d?: number; seoCtr7d?: number;
+    seoPosition7d?: number; seoDailyAvg?: number;
+  },
   ts: string
 ): void {
   try {
