@@ -34,6 +34,7 @@ body {
 
   /* ── Adaptive colour tokens (dark mode defaults) ── */
   --hb-bg: #000;
+  --hb-surface: #0a0a0a;
   --hb-02: rgba(255,255,255,0.02);
   --hb-03: rgba(255,255,255,0.03);
   --hb-04: rgba(255,255,255,0.04);
@@ -65,6 +66,7 @@ body {
 @media (prefers-color-scheme: light) {
   :root {
     --hb-bg: #f0ede8;
+    --hb-surface: #e8e5e0;
     --hb-02: rgba(0,0,0,0.02);
     --hb-03: rgba(0,0,0,0.03);
     --hb-04: rgba(0,0,0,0.04);
@@ -92,6 +94,12 @@ body {
     --hb-85: rgba(0,0,0,0.85);
     --hb-90: rgba(0,0,0,0.9);
   }
+
+  /* ── Base bg overrides ── */
+  body { background: var(--hb-bg); }
+  .bg-black   { background-color: var(--hb-bg) !important; }
+  .bg-black\/90 { background-color: rgba(240,237,232,0.95) !important; }
+  .bg-black\/80 { background-color: rgba(240,237,232,0.9) !important; }
 
   /* ── Tailwind white-opacity class overrides ── */
   .bg-white\/\[0\.03\] { background-color: rgba(0,0,0,0.03) !important; }

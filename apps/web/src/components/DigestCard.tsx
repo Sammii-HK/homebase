@@ -51,7 +51,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
     return (
       <div
         style={{
-          background: "#0a0a0f",
+          background: "var(--hb-surface)",
           border: "1px solid #1a1a2e",
           borderRadius: 8,
           padding: "10px 14px",
@@ -121,7 +121,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
     <div style={{ position: "relative" }}>
       <div
         style={{
-          background: "#0a0a0f",
+          background: "var(--hb-surface)",
           border: "1px solid #1a1a2e",
           borderRadius: showHealth ? "8px 8px 0 0" : 8,
           padding: "10px 14px",
@@ -205,7 +205,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
       {showHealth && (
         <div
           style={{
-            background: "#0a0a0f",
+            background: "var(--hb-surface)",
             border: "1px solid #1a1a2e",
             borderTop: "1px solid #1a1a2e",
             borderRadius: "0 0 8px 8px",

@@ -365,7 +365,7 @@ export default function Dashboard() {
                   border: "1px solid var(--hb-15)",
                   borderRadius: 6,
                   padding: "12px 14px",
-                  color: "#fff",
+                  color: "var(--hb-90)",
                   fontFamily: "system-ui, sans-serif",
                   fontSize: 14,
                   outline: "none",
@@ -503,7 +503,7 @@ export default function Dashboard() {
   const sidebarWidth = 200;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#000", color: "#fff" }}>
+    <div style={{ minHeight: "100vh", background: "var(--hb-bg)", color: "var(--hb-90)" }}>
       <style>{`
         @media (min-width: 768px) {
           .hb-status-grid {

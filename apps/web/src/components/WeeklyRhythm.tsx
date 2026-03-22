@@ -134,7 +134,7 @@ export default function WeeklyRhythm({ token }: Props) {
   return (
     <div
       style={{
-        background: "#0a0a0a",
+        background: "var(--hb-surface)",
         border: "1px solid var(--hb-08)",
         borderRadius: 6,
         padding: "12px 14px",
