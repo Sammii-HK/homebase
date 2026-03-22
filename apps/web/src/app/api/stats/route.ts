@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { execFileSync } from "child_process";
 import { checkAuth } from "@/lib/auth";
 import { readMetricsSnapshot } from "@/lib/metrics-snapshot";
 
@@ -451,6 +452,23 @@ function computeTrends(
   };
 }
 
+// ── Server disk (Hetzner) ────────────────────────────────────────────
+
+function getServerDisk(): { pct: number; used: string; avail: string } | null {
+  try {
+    const out = execFileSync("df", ["-h", "/"], { timeout: 3000 }).toString();
+    const line = out.split("\n")[1];
+    if (!line) return null;
+    const parts = line.trim().split(/\s+/);
+    const pct = parseInt(parts[4] ?? "0", 10);
+    const used = parts[2] ?? "?";
+    const avail = parts[3] ?? "?";
+    return { pct, used, avail };
+  } catch {
+    return null;
+  }
+}
+
 // ── Route handler ───────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
@@ -504,6 +522,7 @@ export async function GET(req: NextRequest) {
     seo,
     opportunities,
     trends,
+    server: { disk: getServerDisk() },
     updatedAt: new Date().toISOString(),
   });
 }

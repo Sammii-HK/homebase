@@ -43,8 +43,13 @@ export default function ServiceHealth({ stats, heartbeat }: Props) {
   }));
 
   const all = [...cloud, ...local];
-  const disk = heartbeat?.heartbeat?.disk;
+  const macDisk = heartbeat?.heartbeat?.disk;
+  const serverDisk = stats?.server?.disk;
   const macOnline = heartbeat?.status === "online";
+
+  function diskColor(pct: number) {
+    return pct >= 90 ? "text-red-400" : pct >= 80 ? "text-amber-400" : "text-white/30";
+  }
 
   return (
     <div className="bg-white/[0.04] border border-white/10 rounded-lg p-3">
@@ -52,16 +57,24 @@ export default function ServiceHealth({ stats, heartbeat }: Props) {
         <p className="text-[8px] md:text-xs uppercase tracking-wider text-white/40">
           Services
         </p>
-        {disk && (
-          <span
-            className={`text-[7px] md:text-[11px] tabular-nums ${
-              disk.pct >= 90 ? "text-red-400" : disk.pct >= 80 ? "text-amber-400" : "text-white/30"
-            }`}
-            title={`Disk: ${disk.used} used, ${disk.avail} free`}
-          >
-            💾 {disk.pct}%
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {serverDisk && (
+            <span
+              className={`text-[7px] md:text-[11px] tabular-nums ${diskColor(serverDisk.pct)}`}
+              title={`Server: ${serverDisk.used} used, ${serverDisk.avail} free`}
+            >
+              🖥 {serverDisk.pct}%
+            </span>
+          )}
+          {macDisk && (
+            <span
+              className={`text-[7px] md:text-[11px] tabular-nums ${diskColor(macDisk.pct)}`}
+              title={`Mac: ${macDisk.used} used, ${macDisk.avail} free`}
+            >
+              💾 {macDisk.pct}%
+            </span>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
         {all.map((svc) => (

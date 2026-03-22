@@ -63,6 +63,7 @@ export interface DashboardStats {
   };
   opportunities: Opportunity[];
   trends: Record<string, Trend> | null;
+  server: { disk: { pct: number; used: string; avail: string } | null };
   updatedAt: string;
 }
 
