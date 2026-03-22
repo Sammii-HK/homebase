@@ -1,0 +1,32 @@
+name: Deploy to Hetzner
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t homebase:linux apps/web/
+
+      - name: Ship image to server
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 95.217.179.111 >> ~/.ssh/known_hosts
+          docker save homebase:linux | ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no root@95.217.179.111 \
+            "docker load && \
+             docker stop homebase 2>/dev/null || true && \
+             docker rm homebase 2>/dev/null || true && \
+             docker run -d --name homebase --restart unless-stopped \
+               --network spellcast_default \
+               --env-file /opt/homebase/.env \
+               -v /opt/homebase/data:/app/data \
+               homebase:linux"
