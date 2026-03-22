@@ -186,7 +186,7 @@ async function queryApplications(): Promise<CastJob[]> {
           filter: {
             or: Array.from(SHOW_STATUSES).map((status) => ({
               property: "Status",
-              select: { equals: status },
+              status: { equals: status },
             })),
           },
           sorts: [{ property: "Status", direction: "ascending" }],
@@ -217,8 +217,10 @@ async function queryApplications(): Promise<CastJob[]> {
         extractText(props["Role"] ?? props["role"] ?? props["Job Title"] ?? props["Position"] ?? props["Title"]) ||
         "Unknown role";
 
-      const status =
-        extractText(props["Status"] ?? props["status"]) || "Unknown";
+      // Status is a Notion "status" property type, not "select"
+      const statusProp = props["Status"] ?? props["status"];
+      const status = (statusProp as { type: string; status?: { name: string } } | undefined)
+        ?.status?.name ?? extractText(statusProp) ?? "Unknown";
 
       const fitScore = extractNumber(props["Fit Score"] ?? props["fit_score"] ?? props["Score"]);
 
