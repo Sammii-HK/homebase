@@ -52,6 +52,7 @@ export default function Dashboard() {
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [passkeyRegistered, setPasskeyRegistered] = useState<boolean | null>(null);
+  const [setupSecret, setSetupSecret] = useState("");
   const [activeTab, setActiveTab] = useState<TabId>("status");
   const [isDesktop, setIsDesktop] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -159,6 +160,10 @@ export default function Dashboard() {
 
   // Passkey: register (first time setup)
   const handleRegister = async () => {
+    if (!setupSecret) {
+      setLoginError("Enter the dashboard secret first");
+      return;
+    }
     setLoginError("");
     setLoginLoading(true);
     try {
@@ -171,7 +176,10 @@ export default function Dashboard() {
 
       const verifyRes = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${setupSecret}`,
+        },
         body: JSON.stringify({ ...attResp, _clientId }),
       });
 
@@ -343,8 +351,27 @@ export default function Dashboard() {
                   lineHeight: 1.8,
                 }}
               >
-                No passkey found.{"\n"}Set up Touch ID to continue.
+                Enter secret to register.
               </p>
+              <input
+                type="password"
+                placeholder="Dashboard secret"
+                value={setupSecret}
+                onChange={(e) => setSetupSecret(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+                style={{
+                  width: "100%",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 6,
+                  padding: "12px 14px",
+                  color: "#fff",
+                  fontFamily: "system-ui, sans-serif",
+                  fontSize: 14,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
               <button
                 onClick={handleRegister}
                 disabled={loginLoading}

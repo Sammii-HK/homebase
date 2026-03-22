@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyRegistrationResponse } from "@simplewebauthn/server";
 import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { consumeChallenge } from "@/lib/challenge-store";
-import { saveCredential } from "@/lib/passkey-store";
+import { saveCredential, hasCredential } from "@/lib/passkey-store";
 
 export const dynamic = "force-dynamic";
 
 const rpID = process.env.HOMEBASE_RPID ?? "homebase.sammii.dev";
+const SECRET = process.env.HOMEBASE_SECRET ?? "";
 
 function getOrigin(): string[] {
   const origins = [`https://${rpID}`];
@@ -20,6 +21,19 @@ function getOrigin(): string[] {
 }
 
 export async function POST(req: NextRequest) {
+  // Require HOMEBASE_SECRET to register — prevents anyone from hijacking the dashboard
+  const auth = req.headers.get("authorization") ?? "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+  if (!SECRET || token !== SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Block re-registration if a credential already exists (must delete passkey.json to reset)
+  const alreadyRegistered = await hasCredential();
+  if (alreadyRegistered) {
+    return NextResponse.json({ error: "Already registered" }, { status: 409 });
+  }
+
   try {
     const body = (await req.json()) as RegistrationResponseJSON & { _clientId?: string };
     const clientId = body._clientId;
