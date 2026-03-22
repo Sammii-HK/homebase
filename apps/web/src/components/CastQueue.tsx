@@ -383,11 +383,8 @@ function NeedsAction({ jobs }: { jobs: CastJob[] }) {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {actionable.map((job) => (
-          <a
+          <div
             key={job.id}
-            href={job.bookingLink!}
-            target="_blank"
-            rel="noopener noreferrer"
             style={{
               display: "flex",
               alignItems: "center",
@@ -397,35 +394,42 @@ function NeedsAction({ jobs }: { jobs: CastJob[] }) {
               background: "rgba(248,113,113,0.08)",
               border: "2px solid rgba(248,113,113,0.4)",
               borderRadius: 8,
-              textDecoration: "none",
-              transition: "background 0.15s",
             }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "rgba(248,113,113,0.15)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = "rgba(248,113,113,0.08)"; }}
           >
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <a
+              href={job.notionUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ flex: 1, minWidth: 0, textDecoration: "none" }}
+            >
               <div style={{ fontFamily: PS2P, fontSize: 10, color: "#fff", marginBottom: 4, letterSpacing: 0.3 }}>
                 {job.company}
               </div>
               <div style={{ fontSize: 11, color: "var(--hb-60)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {job.role}
               </div>
-            </div>
-            <div style={{
-              fontFamily: PS2P,
-              fontSize: 8,
-              color: "#f87171",
-              background: "rgba(248,113,113,0.15)",
-              border: "1px solid rgba(248,113,113,0.5)",
-              borderRadius: 5,
-              padding: "8px 14px",
-              flexShrink: 0,
-              letterSpacing: 0.5,
-              animation: "pulse 2s ease-in-out infinite",
-            }}>
-              BOOK NOW →
-            </div>
-          </a>
+            </a>
+            <a
+              href={job.bookingLink!}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily: PS2P,
+                fontSize: 8,
+                color: "#f87171",
+                background: "rgba(248,113,113,0.15)",
+                border: "1px solid rgba(248,113,113,0.5)",
+                borderRadius: 5,
+                padding: "8px 14px",
+                flexShrink: 0,
+                letterSpacing: 0.5,
+                textDecoration: "none",
+                animation: "pulse 2s ease-in-out infinite",
+              }}
+            >
+              BOOK →
+            </a>
+          </div>
         ))}
       </div>
     </div>
