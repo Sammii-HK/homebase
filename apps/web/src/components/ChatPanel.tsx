@@ -2,7 +2,7 @@
 
 import { authHeaders } from "@/lib/client-auth";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 
 const PS2P = "'Press Start 2P', monospace";
@@ -83,7 +83,7 @@ export default function ChatPanel({ token }: { token: string }) {
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
-  const [initialMessages, setInitialMessages] = useState<unknown[] | undefined>(undefined);
+  const [initialMessages, setInitialMessages] = useState<UIMessage[] | undefined>(undefined);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
@@ -98,7 +98,7 @@ export default function ChatPanel({ token }: { token: string }) {
     fetch("/api/chat/history", { headers: authHeaders(token) })
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) setInitialMessages(data);
+        if (Array.isArray(data) && data.length > 0) setInitialMessages(data as UIMessage[]);
       })
       .catch(() => {})
       .finally(() => setHistoryLoaded(true));
@@ -115,8 +115,7 @@ export default function ChatPanel({ token }: { token: string }) {
 
   const { messages, sendMessage, status, error } = useChat({
     transport,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    initialMessages: initialMessages as any,
+    messages: initialMessages,
   });
 
   const isLoading = status === "streaming" || status === "submitted";
