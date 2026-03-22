@@ -9,15 +9,15 @@ interface Props {
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   in_progress: { color: "var(--hb-accent)", label: "active" },
   ready:       { color: "#60a5fa", label: "ready" },
-  blocked:     { color: "#f87171", label: "blocked" },
+  blocked:     { color: "var(--hb-error-soft)", label: "blocked" },
 };
 
 const PROJECT_COLOURS: Record<string, string> = {
   lunary:           "var(--hb-accent)",
   spellcast:        "#60a5fa",
   homebase:         "#34d399",
-  orbit:            "#f59e0b",
-  cast:             "#f87171",
+  orbit:            "var(--hb-warn)",
+  cast:             "var(--hb-error-soft)",
   content:          "#fb7185",
   "digital-products": "#c084fc",
   infra:            "#94a3b8",

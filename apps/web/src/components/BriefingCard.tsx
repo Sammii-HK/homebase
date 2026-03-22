@@ -33,8 +33,8 @@ interface Props {
 // ── Colours ───────────────────────────────────────────────────────────────────
 
 const PRIORITY_COLOUR: Record<BriefingItem["priority"], string> = {
-  urgent: "#f87171",
-  today: "#fbbf24",
+  urgent: "var(--hb-error-soft)",
+  today: "var(--hb-warn)",
   info: "var(--hb-accent)",
   done: "#34d399",
 };

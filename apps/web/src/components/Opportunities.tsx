@@ -183,9 +183,9 @@ export default function Opportunities({ opportunities, stats }: Props) {
                       height: "100%",
                       background:
                         scorePercent >= 75
-                          ? "#4ade80"
+                          ? "var(--hb-success)"
                           : scorePercent >= 50
-                          ? "#f59e0b"
+                          ? "var(--hb-warn)"
                           : "#60a5fa",
                       borderRadius: 2,
                     }}

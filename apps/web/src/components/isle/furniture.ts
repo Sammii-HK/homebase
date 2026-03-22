@@ -1991,11 +1991,11 @@ export function drawScoreboard(
   // DAU | MRR | Posts | Queue | Engagement | Orbit
   const metrics = [
     { value: stats.lunary.activeToday, max: 50, color: "#c090ff", alert: false },                           // DAU — purple
-    { value: stats.lunary.mrr * 10, max: 100, color: "#4ade80", alert: false },                             // MRR — green (scaled)
+    { value: stats.lunary.mrr * 10, max: 100, color: "var(--hb-success)", alert: false },                             // MRR — green (scaled)
     { value: stats.spellcast.postsToday, max: 8, color: "#38bdf8", alert: false },                          // Posts — cyan
     { value: stats.content.scheduledToday, max: 12, color: "#f0a040", alert: stats.content.scheduledTomorrow === 0 }, // Queue — amber
     { value: stats.engagement.unread, max: 20, color: "#10b981", alert: stats.engagement.unread > 5 },      // Engagement — emerald
-    { value: stats.orbit.runningAgents, max: 6, color: "#f59e0b", alert: stats.orbit.errorAgents > 0 },     // Orbit — yellow
+    { value: stats.orbit.runningAgents, max: 6, color: "var(--hb-warn)", alert: stats.orbit.errorAgents > 0 },     // Orbit — yellow
   ];
 
   const barMaxW = bw - 6;
@@ -2013,12 +2013,12 @@ export function drawScoreboard(
     wr(x + 3, by, barMaxW, barH, "rgba(0,0,0,0.25)");
 
     // Filled bar
-    const col = m.alert && animTick % 3 === 0 ? "#f87171" : m.color;
+    const col = m.alert && animTick % 3 === 0 ? "var(--hb-error-soft)" : m.color;
     wr(x + 3, by, barW, barH, col);
 
     // Bright leading edge
     if (barW > 1) {
-      wr(x + 3 + barW - 0.8, by, 0.8, barH, m.alert ? "#fca5a5" : "#ffffff");
+      wr(x + 3 + barW - 0.8, by, 0.8, barH, m.alert ? "var(--hb-error-soft)" : "#ffffff");
     }
 
     // Pip dot on the left (metric identifier)
@@ -2029,7 +2029,7 @@ export function drawScoreboard(
   const hasAlert = metrics.some(m => m.alert);
   if (hasAlert) {
     const pulse = 0.08 + 0.04 * Math.sin(animTick * 0.5);
-    we(x + bw / 2, y + bh / 2, bw / 2 + 4, bh / 2 + 4, "#f87171", pulse);
+    we(x + bw / 2, y + bh / 2, bw / 2 + 4, bh / 2 + 4, "var(--hb-error-soft)", pulse);
   }
 }
 

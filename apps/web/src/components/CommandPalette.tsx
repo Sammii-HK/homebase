@@ -303,14 +303,14 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
                     <div style={{ flex: 1 }}>
                       <span style={{
                         fontFamily: PS2P, fontSize: 9,
-                        color: isAlert ? "#f87171" : isSelected ? "#fff" : "var(--hb-60)",
+                        color: isAlert ? "var(--hb-error-soft)" : isSelected ? "#fff" : "var(--hb-60)",
                       }}>
                         {cmd.label}
                       </span>
                       {cmd.description && (
                         <span style={{
                           fontFamily: PS2P, fontSize: 7,
-                          color: isAlert ? "#f87171" : "var(--hb-60)",
+                          color: isAlert ? "var(--hb-error-soft)" : "var(--hb-60)",
                           marginLeft: 8,
                         }}>
                           {cmd.description}
@@ -352,11 +352,11 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           {running ? (
-            <span style={{ fontFamily: PS2P, fontSize: 7, color: "#facc15" }}>
+            <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-warn)" }}>
               RUNNING...
             </span>
           ) : result ? (
-            <span style={{ fontFamily: PS2P, fontSize: 7, color: result.ok ? "#4ade80" : "#f87171" }}>
+            <span style={{ fontFamily: PS2P, fontSize: 7, color: result.ok ? "var(--hb-success)" : "var(--hb-error-soft)" }}>
               {result.message}
             </span>
           ) : (

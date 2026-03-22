@@ -11,9 +11,9 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  good: "#4ade80",
-  gap: "#facc15",
-  overloaded: "#f87171",
+  good: "var(--hb-success)",
+  gap: "var(--hb-warn)",
+  overloaded: "var(--hb-error-soft)",
 };
 
 const DAY_ABBR = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];

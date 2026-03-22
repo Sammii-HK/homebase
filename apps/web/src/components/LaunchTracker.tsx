@@ -11,11 +11,11 @@ interface Props {
 const POLL_MS = 86_400_000; // daily
 
 const STATUS_DOT: Record<LaunchStatus, string> = {
-  live: "#4ade80",
-  building: "#f59e0b",
+  live: "var(--hb-success)",
+  building: "var(--hb-warn)",
   ready: "#3b82f6",
   "not-started": "var(--hb-20)",
-  paused: "#f87171",
+  paused: "var(--hb-error-soft)",
 };
 
 const STATUS_LABEL: Record<LaunchStatus, string> = {
@@ -75,7 +75,7 @@ export default function LaunchTracker({ token }: Props) {
       {/* Priority action */}
       <div
         className="rounded px-2 py-1.5 mb-2"
-        style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)" }}
+        style={{ background: "rgba(217,141,237,0.1)", border: "1px solid rgba(217,141,237,0.2)" }}
       >
         <p className="text-[7px] md:text-[11px] md:text-[11px] text-amber-400">
           <span className="text-white/40 mr-1">NEXT:</span>

@@ -37,7 +37,7 @@ const PS2P = "'Press Start 2P', monospace";
 
 function TrendArrow({ value, suffix = "" }: { value?: number; suffix?: string }) {
   if (value === undefined || value === 0) return null;
-  const color = value > 0 ? "#4ade80" : "#f87171";
+  const color = value > 0 ? "var(--hb-success)" : "var(--hb-error-soft)";
   const arrow = value > 0 ? "\u25B2" : "\u25BC";
   return (
     <span style={{ color, fontSize: 11, marginLeft: 6 }}>
@@ -49,13 +49,13 @@ function TrendArrow({ value, suffix = "" }: { value?: number; suffix?: string })
 function Stat({ label, value, trend, alert }: { label: string; value: string; trend?: number; alert?: boolean }) {
   return (
     <div style={{
-      background: alert ? "rgba(239,68,68,0.15)" : "var(--hb-04)",
-      border: `1px solid ${alert ? "rgba(239,68,68,0.3)" : "var(--hb-10)"}`,
+      background: alert ? "rgba(232,74,125,0.15)" : "var(--hb-04)",
+      border: `1px solid ${alert ? "rgba(232,74,125,0.3)" : "var(--hb-10)"}`,
       padding: "10px 12px",
       borderRadius: 4,
     }}>
       <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-45)", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontFamily: PS2P, fontSize: 16, color: alert ? "#f87171" : "#fff" }}>
+      <div style={{ fontFamily: PS2P, fontSize: 16, color: alert ? "var(--hb-error-soft)" : "#fff" }}>
         {value}
         {trend !== undefined && <TrendArrow value={trend} />}
       </div>
@@ -64,7 +64,7 @@ function Stat({ label, value, trend, alert }: { label: string; value: string; tr
 }
 
 function HealthDot({ status, label }: { status: string; label: string }) {
-  const color = status === "ok" ? "#4ade80" : status === "degraded" ? "#facc15" : "#f87171";
+  const color = status === "ok" ? "var(--hb-success)" : status === "degraded" ? "var(--hb-warn)" : "var(--hb-error-soft)";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div style={{ width: 10, height: 10, borderRadius: 2, background: color, border: "1px solid var(--hb-panel-50)", boxShadow: `0 0 8px ${color}` }} />
@@ -83,7 +83,7 @@ function SectionLabel({ children }: { children: string }) {
 }
 
 function SystemLink({ label, url, status }: { label: string; url: string; status?: "ok" | "degraded" | "down" | "unknown" }) {
-  const dotColor = status === "ok" ? "#4ade80" : status === "degraded" ? "#facc15" : status === "down" ? "#f87171" : "#71717a";
+  const dotColor = status === "ok" ? "var(--hb-success)" : status === "degraded" ? "var(--hb-warn)" : status === "down" ? "var(--hb-error-soft)" : "#71717a";
   return (
     <a
       href={url}
@@ -129,8 +129,8 @@ function FailedPostsList({ posts, spellcastUrl }: { posts: FailedPost[]; spellca
         <div
           key={post.id}
           style={{
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.2)",
+            background: "rgba(232,74,125,0.08)",
+            border: "1px solid rgba(232,74,125,0.2)",
             borderRadius: 4, padding: "8px 10px",
           }}
         >
@@ -147,7 +147,7 @@ function FailedPostsList({ posts, spellcastUrl }: { posts: FailedPost[]; spellca
           <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)", marginBottom: 4, lineHeight: 1.4 }}>
             {post.content || "No content preview"}
           </div>
-          <div style={{ fontFamily: PS2P, fontSize: 7, color: "#f87171" }}>
+          <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-error-soft)" }}>
             {post.error}
           </div>
           {spellcastUrl && (
@@ -299,11 +299,11 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
           {loading && <LoadingState />}
           {deepData?.abTests && deepData.abTests.length > 0 ? (
             deepData.abTests.map((t) => {
-              const sigColor = t.isSignificant ? "#4ade80" : "#facc15";
+              const sigColor = t.isSignificant ? "var(--hb-success)" : "var(--hb-warn)";
               return (
                 <div key={t.testName} style={{
                   padding: "10px 12px", background: "var(--hb-04)",
-                  border: `1px solid ${t.isSignificant ? "rgba(74,222,128,0.2)" : "var(--hb-10)"}`,
+                  border: `1px solid ${t.isSignificant ? "rgba(133,173,146,0.2)" : "var(--hb-10)"}`,
                   borderRadius: 4,
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -317,7 +317,7 @@ function LunaryDetail({ stats, deepData, loading }: { stats: DashboardStats; dee
                       Winner: {t.bestVariant || "—"}
                     </span>
                     {t.improvement > 0 && (
-                      <span style={{ fontFamily: PS2P, fontSize: 8, color: "#4ade80" }}>
+                      <span style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-success)" }}>
                         +{t.improvement.toFixed(1)}%
                       </span>
                     )}
@@ -424,8 +424,8 @@ function SpellcastDetail({ stats, deepData, loading }: { stats: DashboardStats; 
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{
                   width: 10, height: 10, borderRadius: 2,
-                  background: deepData.autopilot.enabled ? "#4ade80" : "#71717a",
-                  boxShadow: deepData.autopilot.enabled ? "0 0 6px #4ade80" : "none",
+                  background: deepData.autopilot.enabled ? "var(--hb-success)" : "#71717a",
+                  boxShadow: deepData.autopilot.enabled ? "0 0 6px var(--hb-success)" : "none",
                 }} />
                 <span style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-60)" }}>
                   {deepData.autopilot.enabled ? "ACTIVE" : "OFF"}
@@ -456,7 +456,7 @@ function DevDetail({ stats, heartbeat, deepData, loading }: {
 }) {
   const [tab, setTab] = useState("SERVICES");
   const macStatus = heartbeat?.status ?? "no-data";
-  const macColor = macStatus === "online" ? "#4ade80" : macStatus === "offline" ? "#f87171" : "#71717a";
+  const macColor = macStatus === "online" ? "var(--hb-success)" : macStatus === "offline" ? "var(--hb-error-soft)" : "#71717a";
   const systemsUp = [
     stats.health.lunary.status !== "down",
     stats.health.spellcast.status !== "down",
@@ -466,19 +466,19 @@ function DevDetail({ stats, heartbeat, deepData, loading }: {
 
   return (
     <div>
-      <RoomTabs tabs={DEV_TABS} active={tab} accent="#4ade80" onChange={setTab} />
+      <RoomTabs tabs={DEV_TABS} active={tab} accent="var(--hb-success)" onChange={setTab} />
 
       {tab === "SERVICES" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             <Stat label="SYSTEMS" value={`${systemsUp}/3 UP`} alert={systemsUp < 3} />
             <div style={{
-              background: allHealthy ? "rgba(74,222,128,0.08)" : "rgba(239,68,68,0.15)",
-              border: `1px solid ${allHealthy ? "rgba(74,222,128,0.2)" : "rgba(239,68,68,0.3)"}`,
+              background: allHealthy ? "rgba(133,173,146,0.08)" : "rgba(232,74,125,0.15)",
+              border: `1px solid ${allHealthy ? "rgba(133,173,146,0.2)" : "rgba(232,74,125,0.3)"}`,
               padding: "10px 12px", borderRadius: 4,
             }}>
               <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-45)", marginBottom: 6 }}>STATUS</div>
-              <div style={{ fontFamily: PS2P, fontSize: 16, color: allHealthy ? "#4ade80" : "#f87171" }}>
+              <div style={{ fontFamily: PS2P, fontSize: 16, color: allHealthy ? "var(--hb-success)" : "var(--hb-error-soft)" }}>
                 {allHealthy ? "ALL OK" : "ALERT"}
               </div>
             </div>
@@ -525,7 +525,7 @@ function DevDetail({ stats, heartbeat, deepData, loading }: {
           {loading && <LoadingState />}
           {deepData?.recentWorkflows && deepData.recentWorkflows.length > 0 ? (
             deepData.recentWorkflows.map((wf) => {
-              const statusColor = wf.status === "success" ? "#4ade80" : wf.status === "error" ? "#f87171" : wf.status === "running" ? "#facc15" : "#71717a";
+              const statusColor = wf.status === "success" ? "var(--hb-success)" : wf.status === "error" ? "var(--hb-error-soft)" : wf.status === "running" ? "var(--hb-warn)" : "#71717a";
               return (
                 <div key={wf.id} style={{
                   display: "flex", alignItems: "center", gap: 8,
@@ -600,16 +600,16 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
   const [tab, setTab] = useState("REVIEW");
 
   const AGENT_STATUS_COLORS: Record<string, string> = {
-    running: "#facc15", completed: "#4ade80", failed: "#f87171", idle: "#71717a",
+    running: "var(--hb-warn)", completed: "var(--hb-success)", failed: "var(--hb-error-soft)", idle: "#71717a",
   };
 
   return (
     <div>
-      <RoomTabs tabs={ORBIT_TABS} active={tab} accent="#f59e0b" onChange={setTab} />
+      <RoomTabs tabs={ORBIT_TABS} active={tab} accent="var(--hb-warn)" onChange={setTab} />
 
       {!deepData?.online && !loading && (
         <div style={{ textAlign: "center", padding: 20 }}>
-          <div style={{ fontFamily: PS2P, fontSize: 10, color: "#f87171", marginBottom: 8 }}>ORBIT OFFLINE</div>
+          <div style={{ fontFamily: PS2P, fontSize: 10, color: "var(--hb-error-soft)", marginBottom: 8 }}>ORBIT OFFLINE</div>
           <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)" }}>Start Orbit on port 3001</div>
         </div>
       )}
@@ -621,7 +621,7 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
       {tab === "AGENTS" && deepData?.online && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {deepData.pipelineRunning && (
-            <div style={{ fontFamily: PS2P, fontSize: 8, color: "#facc15", textAlign: "center", padding: 8, background: "rgba(250,204,21,0.08)", borderRadius: 4, marginBottom: 4 }}>
+            <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-warn)", textAlign: "center", padding: 8, background: "rgba(250,204,21,0.08)", borderRadius: 4, marginBottom: 4 }}>
               PIPELINE RUNNING
             </div>
           )}
@@ -651,12 +651,12 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
           {deepData.approvedContent.length > 0 ? (
             deepData.approvedContent.map((c, i) => (
               <div key={i} style={{
-                padding: "10px 12px", background: "rgba(74,222,128,0.06)",
-                border: "1px solid rgba(74,222,128,0.15)", borderRadius: 4,
+                padding: "10px 12px", background: "rgba(133,173,146,0.06)",
+                border: "1px solid rgba(133,173,146,0.15)", borderRadius: 4,
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "#f59e0b", textTransform: "uppercase" }}>{c.persona}</span>
-                  <span style={{ fontFamily: PS2P, fontSize: 7, color: c.score >= 80 ? "#4ade80" : c.score >= 70 ? "#facc15" : "#f87171" }}>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-warn)", textTransform: "uppercase" }}>{c.persona}</span>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: c.score >= 80 ? "var(--hb-success)" : c.score >= 70 ? "var(--hb-warn)" : "var(--hb-error-soft)" }}>
                     {c.score}/100
                   </span>
                 </div>
@@ -675,7 +675,7 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
           {loading && <LoadingState />}
           {deepData.trendingTopics.length > 0 ? (
             deepData.trendingTopics.map((t, i) => {
-              const heatColor = t.heat === "hot" ? "#ef4444" : t.heat === "warm" ? "#f59e0b" : "#60a5fa";
+              const heatColor = t.heat === "hot" ? "var(--hb-error)" : t.heat === "warm" ? "var(--hb-warn)" : "#60a5fa";
               return (
                 <div key={i} style={{
                   padding: "8px 10px", background: "var(--hb-03)",
@@ -707,14 +707,14 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
                 border: "1px solid var(--hb-08)", borderRadius: 4,
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "#f59e0b" }}>{t.platform} · @{t.author}</span>
-                  <span style={{ fontFamily: PS2P, fontSize: 7, color: t.score >= 0.8 ? "#4ade80" : "#facc15" }}>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-warn)" }}>{t.platform} · @{t.author}</span>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: t.score >= 0.8 ? "var(--hb-success)" : "var(--hb-warn)" }}>
                     {(t.score * 100).toFixed(0)}%
                   </span>
                 </div>
                 <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-60)", lineHeight: 1.3, marginBottom: 6 }}>{t.content}</div>
                 {t.draftReply && (
-                  <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)", lineHeight: 1.3, borderLeft: "2px solid rgba(245,158,11,0.3)", paddingLeft: 8 }}>
+                  <div style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)", lineHeight: 1.3, borderLeft: "2px solid rgba(217,141,237,0.3)", paddingLeft: 8 }}>
                     {t.draftReply}
                   </div>
                 )}
@@ -735,7 +735,7 @@ function OrbitDetail({ deepData, loading, token }: { deepData: OrbitDeepData | n
                 <span style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-20)", minWidth: 40 }}>
                   {a.timestamp ? new Date(a.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
                 </span>
-                <span style={{ fontFamily: PS2P, fontSize: 7, color: "#f59e0b", minWidth: 60 }}>{a.agent}</span>
+                <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-warn)", minWidth: 60 }}>{a.agent}</span>
                 <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-60)" }}>{a.detail || a.action}</span>
               </div>
             ))
@@ -835,7 +835,7 @@ function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDe
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                   <span style={{ fontFamily: PS2P, fontSize: 7, color: PLATFORM_COLORS[d.platform] ?? "#999" }}>{d.platform} · @{d.author}</span>
-                  <span style={{ fontFamily: PS2P, fontSize: 7, color: d.score >= 0.7 ? "#4ade80" : "#facc15" }}>
+                  <span style={{ fontFamily: PS2P, fontSize: 7, color: d.score >= 0.7 ? "var(--hb-success)" : "var(--hb-warn)" }}>
                     {(d.score * 100).toFixed(0)}%
                   </span>
                 </div>
@@ -853,7 +853,7 @@ function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDe
           {loading && <LoadingState />}
           {deepData?.abTests && deepData.abTests.length > 0 ? (
             deepData.abTests.map((t) => {
-              const statusColor = t.status === "completed" ? "#4ade80" : t.status === "active" ? "#facc15" : "#71717a";
+              const statusColor = t.status === "completed" ? "var(--hb-success)" : t.status === "active" ? "var(--hb-warn)" : "#71717a";
               return (
                 <div key={t.id} style={{
                   padding: "10px 12px", background: "var(--hb-04)",
@@ -918,9 +918,9 @@ function EngagementDetail({ deepData, loading, token }: { deepData: EngagementDe
 const ROOM_TITLES: Record<RoomId, { title: string; accent: string }> = {
   lunary: { title: "LUNARY OBSERVATORY", accent: "#c084fc" },
   spellcast: { title: "SPELLCAST COMMAND", accent: "#22d3ee" },
-  dev: { title: "DEV DEN", accent: "#4ade80" },
+  dev: { title: "DEV DEN", accent: "var(--hb-success)" },
   meta: { title: "META ANALYTICS", accent: "#f472b6" },
-  orbit: { title: "ORBIT HQ", accent: "#f59e0b" },
+  orbit: { title: "ORBIT HQ", accent: "var(--hb-warn)" },
   engagement: { title: "ENGAGEMENT", accent: "#10b981" },
 };
 

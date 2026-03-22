@@ -27,8 +27,8 @@ const TYPE_CONFIG: Record<
   { color: string; bg: string; icon: string; label: string }
 > = {
   content_generated: {
-    color: "#4ade80",
-    bg: "rgba(74,222,128,0.1)",
+    color: "var(--hb-success)",
+    bg: "rgba(133,173,146,0.1)",
     icon: "✦",
     label: "GENERATED",
   },
@@ -39,14 +39,14 @@ const TYPE_CONFIG: Record<
     label: "SCHEDULED",
   },
   engagement_replied: {
-    color: "#f59e0b",
-    bg: "rgba(245,158,11,0.1)",
+    color: "var(--hb-warn)",
+    bg: "rgba(217,141,237,0.1)",
     icon: "↩",
     label: "REPLIED",
   },
   error: {
-    color: "#ef4444",
-    bg: "rgba(239,68,68,0.1)",
+    color: "var(--hb-error)",
+    bg: "rgba(232,74,125,0.1)",
     icon: "✕",
     label: "ERROR",
   },
@@ -125,10 +125,10 @@ export default function OrbitLog({ token }: Props) {
                 height: 5,
                 borderRadius: "50%",
                 background:
-                  isOffline || isQuiet ? "var(--hb-15)" : "#4ade80",
+                  isOffline || isQuiet ? "var(--hb-15)" : "var(--hb-success)",
                 boxShadow:
                   !isOffline && !isQuiet
-                    ? "0 0 4px rgba(74,222,128,0.5)"
+                    ? "0 0 4px rgba(133,173,146,0.5)"
                     : "none",
               }}
             />
@@ -143,9 +143,9 @@ export default function OrbitLog({ token }: Props) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 6,
-                  color: "#4ade80",
-                  background: "rgba(74,222,128,0.08)",
-                  border: "1px solid rgba(74,222,128,0.2)",
+                  color: "var(--hb-success)",
+                  background: "rgba(133,173,146,0.08)",
+                  border: "1px solid rgba(133,173,146,0.2)",
                   borderRadius: 3,
                   padding: "2px 6px",
                 }}
@@ -158,9 +158,9 @@ export default function OrbitLog({ token }: Props) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 6,
-                  color: "#ef4444",
-                  background: "rgba(239,68,68,0.08)",
-                  border: "1px solid rgba(239,68,68,0.2)",
+                  color: "var(--hb-error)",
+                  background: "rgba(232,74,125,0.08)",
+                  border: "1px solid rgba(232,74,125,0.2)",
                   borderRadius: 3,
                   padding: "2px 6px",
                 }}

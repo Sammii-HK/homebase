@@ -450,7 +450,7 @@ export default function Dashboard() {
                   />
                   <path
                     d="M18 11l1.5 1.5L22 10"
-                    stroke="#4ade80"
+                    stroke="var(--hb-success)"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -475,7 +475,7 @@ export default function Dashboard() {
               style={{
                 fontFamily: PS2P,
                 fontSize: 7,
-                color: "#f87171",
+                color: "var(--hb-error-soft)",
                 textAlign: "center",
                 letterSpacing: 0.5,
               }}
@@ -601,7 +601,7 @@ export default function Dashboard() {
           {stats?.health && (() => {
             const downCount = Object.values(stats.health).filter(s => s.status === "down").length;
             const degradedCount = Object.values(stats.health).filter(s => s.status === "degraded").length;
-            const dotColor = downCount > 0 ? "#f87171" : degradedCount > 0 ? "#fbbf24" : "#4ade80";
+            const dotColor = downCount > 0 ? "var(--hb-error-soft)" : degradedCount > 0 ? "var(--hb-warn)" : "var(--hb-success)";
             const pulse = downCount > 0;
             return (
               <span
@@ -642,7 +642,7 @@ export default function Dashboard() {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                background: "#ef4444",
+                background: "var(--hb-error)",
                 flexShrink: 0,
               }}
             />
@@ -662,7 +662,7 @@ export default function Dashboard() {
               onMouseEnter={e => (e.currentTarget.style.background = "rgba(251,191,36,0.2)")}
               onMouseLeave={e => (e.currentTarget.style.background = "rgba(251,191,36,0.12)")}
             >
-              <span style={{ fontFamily: PS2P, fontSize: 7, color: "#fbbf24", fontWeight: 700 }}>
+              <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-warn)", fontWeight: 700 }}>
                 {stats!.content.pendingReview}
               </span>
               <span style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(251,191,36,0.65)" }}>REVIEW</span>
@@ -673,16 +673,16 @@ export default function Dashboard() {
               onClick={() => setActiveTab("queue")}
               style={{
                 display: "flex", alignItems: "center", gap: 4,
-                background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)",
+                background: "rgba(133,173,146,0.1)", border: "1px solid rgba(133,173,146,0.25)",
                 borderRadius: 4, padding: "3px 8px", cursor: "pointer", transition: "all 0.15s",
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(74,222,128,0.18)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "rgba(74,222,128,0.1)")}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(133,173,146,0.18)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(133,173,146,0.1)")}
             >
-              <span style={{ fontFamily: PS2P, fontSize: 7, color: "#4ade80", fontWeight: 700 }}>
+              <span style={{ fontFamily: PS2P, fontSize: 7, color: "var(--hb-success)", fontWeight: 700 }}>
                 {stats!.engagement.unread}
               </span>
-              <span style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(74,222,128,0.65)" }}>ENGAGE</span>
+              <span style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(133,173,146,0.65)" }}>ENGAGE</span>
             </button>
           )}
         </div>
@@ -803,7 +803,7 @@ export default function Dashboard() {
                 <span
                   style={{
                     marginLeft: "auto",
-                    background: "#facc15",
+                    background: "var(--hb-warn)",
                     color: "#000",
                     fontFamily: PS2P,
                     fontSize: 5,
@@ -1082,7 +1082,7 @@ export default function Dashboard() {
                     position: "absolute",
                     top: 6,
                     right: "calc(50% - 18px)",
-                    background: "#facc15",
+                    background: "var(--hb-warn)",
                     color: "#000",
                     fontFamily: PS2P,
                     fontSize: 5,

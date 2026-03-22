@@ -162,13 +162,13 @@ function EngagementCard({
       <div
         style={{
           padding: 16,
-          background: "rgba(74,222,128,0.08)",
-          border: "1px solid rgba(74,222,128,0.2)",
+          background: "rgba(133,173,146,0.08)",
+          border: "1px solid rgba(133,173,146,0.2)",
           borderRadius: 6,
           textAlign: "center",
         }}
       >
-        <div style={{ fontFamily: PS2P, fontSize: 9, color: "#4ade80" }}>
+        <div style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-success)" }}>
           REPLY SENT
         </div>
       </div>
@@ -418,8 +418,8 @@ function EngagementCard({
           style={{
             fontFamily: PS2P,
             fontSize: 7,
-            color: "#f87171",
-            background: "rgba(239,68,68,0.1)",
+            color: "var(--hb-error-soft)",
+            background: "rgba(232,74,125,0.1)",
             padding: "6px 8px",
             borderRadius: 4,
             marginBottom: 10,
@@ -441,14 +441,14 @@ function EngagementCard({
             padding: "12px",
             background:
               state === "sending"
-                ? "rgba(74,222,128,0.05)"
-                : "rgba(74,222,128,0.12)",
-            border: "1px solid rgba(74,222,128,0.3)",
+                ? "rgba(133,173,146,0.05)"
+                : "rgba(133,173,146,0.12)",
+            border: "1px solid rgba(133,173,146,0.3)",
             borderRadius: 4,
             color:
               state === "sending" || !reply.trim()
-                ? "rgba(74,222,128,0.4)"
-                : "#4ade80",
+                ? "rgba(133,173,146,0.4)"
+                : "var(--hb-success)",
             cursor:
               state === "sending" || !reply.trim() ? "not-allowed" : "pointer",
             minHeight: 44,
@@ -581,7 +581,7 @@ export default function EngagementQueue({ token, compact }: Props) {
             Loading...
           </div>
         ) : error ? (
-          <div style={{ fontFamily: PS2P, fontSize: 8, color: "#f87171" }}>
+          <div style={{ fontFamily: PS2P, fontSize: 8, color: "var(--hb-error-soft)" }}>
             Error: {error}
           </div>
         ) : count === 0 ? (
@@ -644,10 +644,10 @@ export default function EngagementQueue({ token, compact }: Props) {
           style={{
             fontFamily: PS2P,
             fontSize: 8,
-            color: "#f87171",
+            color: "var(--hb-error-soft)",
             textAlign: "center",
             padding: 16,
-            background: "rgba(239,68,68,0.08)",
+            background: "rgba(232,74,125,0.08)",
             borderRadius: 4,
           }}
         >

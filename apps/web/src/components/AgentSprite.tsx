@@ -153,7 +153,7 @@ export default function AgentSprite({
             top: -20,
             left: "50%",
             transform: "translateX(-50%)",
-            background: "#ef4444",
+            background: "var(--hb-error)",
             border: "2px solid #000",
             padding: "1px 4px",
             zIndex: 25,
@@ -175,7 +175,7 @@ export default function AgentSprite({
             height: 0,
             borderLeft: "3px solid transparent",
             borderRight: "3px solid transparent",
-            borderTop: "4px solid #ef4444",
+            borderTop: "4px solid var(--hb-error)",
           }} />
         </div>
       )}

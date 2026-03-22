@@ -37,7 +37,7 @@ export default function StatusTimeline({ segments, service }: Props) {
               key={i}
               style={{
                 flex: 1,
-                background: status === "ok" ? "#4ade80" : "#f87171",
+                background: status === "ok" ? "var(--hb-success)" : "var(--hb-error-soft)",
               }}
               title={`${new Date(seg.ts).toLocaleTimeString()} — ${status}`}
             />

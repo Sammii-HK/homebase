@@ -100,7 +100,7 @@ export const SPRITES = {
       G: "#15803d", // green hoodie
       g: "#166534", // hoodie shadow
       F: "#dcfce7", // face
-      S: "#4ade80", // glasses (lime)
+      S: "var(--hb-success)", // glasses (lime)
       s: "#86efac", // glasses lens
       E: "#052e16", // eyes
       P: "#14532d", // pocket detail

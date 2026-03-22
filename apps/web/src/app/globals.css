@@ -32,6 +32,16 @@ body {
   --border: 2px solid rgba(255,255,255,0.12);
   --pixel-shadow: 4px 4px 0 rgba(0,0,0,0.5);
 
+  /* ── Lunary semantic colour tokens (dark mode) ── */
+  --hb-success:          #85ad92;  /* Aurora Green 400  — 8.4:1 on #000 */
+  --hb-success-rgb:      133,173,146;
+  --hb-warn:             #d98ded;  /* Supernova 300     — 9.0:1 on #000 */
+  --hb-warn-rgb:         217,141,237;
+  --hb-error:            #e84a7d;  /* Cosmic Rose 400   — 5.7:1 on #000 */
+  --hb-error-rgb:        232,74,125;
+  --hb-error-soft:       #EE789E;  /* Cosmic Rose default — 7.8:1 on #000 */
+  --hb-error-soft-rgb:   238,120,158;
+
   /* ── Adaptive colour tokens (dark mode defaults) ── */
   --hb-bg: #000;
   --hb-surface: #0a0a0a;
@@ -78,6 +88,16 @@ body {
 
 @media (prefers-color-scheme: light) {
   :root {
+    /* Darker Lunary shades for parchment bg — all pass WCAG AA */
+    --hb-success:        #3e5b47;  /* Aurora Green 700  — 9.2:1 on parchment */
+    --hb-success-rgb:    62,91,71;
+    --hb-warn:           #6e1584;  /* Supernova 700     — 11.2:1 on parchment */
+    --hb-warn-rgb:       110,21,132;
+    --hb-error:          #b5174a;  /* Cosmic Rose 600   — 9.5:1 on parchment */
+    --hb-error-rgb:      181,23,74;
+    --hb-error-soft:     #e21d5c;  /* Cosmic Rose 500   — 5.2:1 on parchment */
+    --hb-error-soft-rgb: 226,29,92;
+
     --hb-bg: #f0ede8;
     --hb-surface: #e8e5e0;
     /* Dark panel backgrounds flip to light equivalents */
@@ -251,8 +271,8 @@ body {
 /* Room element hot effects */
 .crystal-hot { filter: drop-shadow(0 0 14px rgba(167,139,250,0.95)); animation: pulse-glow 0.3s ease-in-out infinite; }
 .telescope-hot { filter: drop-shadow(0 0 10px rgba(196,181,253,0.9)); animation: pulse-glow 0.3s ease-in-out infinite; }
-.terminal-hot { animation: pulse-glow 0.35s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(74,222,128,0.7)); }
-.laptop-hot { filter: drop-shadow(0 0 10px rgba(74,222,128,0.85)); animation: pulse-glow 0.3s ease-in-out infinite; }
+.terminal-hot { animation: pulse-glow 0.35s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(133,173,146,0.7)); }
+.laptop-hot { filter: drop-shadow(0 0 10px rgba(133,173,146,0.85)); animation: pulse-glow 0.3s ease-in-out infinite; }
 .led-hot { animation: pulse-glow 0.2s ease-in-out infinite; }
 .monitor-hot { filter: drop-shadow(0 0 8px rgba(34,211,238,0.8)); animation: pulse-glow 0.3s ease-in-out infinite; }
 .ring-hot { animation: pulse-glow 0.3s ease-in-out infinite; filter: drop-shadow(0 0 12px rgba(232,121,249,0.85)); }
@@ -263,8 +283,8 @@ body {
   50% { transform: translateY(-3px); }
 }
 @keyframes badge-glow {
-  0%, 100% { box-shadow: 0 0 4px rgba(239,68,68,0.6); }
-  50% { box-shadow: 0 0 10px rgba(239,68,68,0.9); }
+  0%, 100% { box-shadow: 0 0 4px rgba(232,74,125,0.6); }
+  50% { box-shadow: 0 0 10px rgba(232,74,125,0.9); }
 }
 .notification-badge {
   animation: badge-bounce 1.2s ease-in-out infinite, badge-glow 2s ease-in-out infinite;

@@ -425,9 +425,9 @@ export default function ChatPanel({ token }: { token: string }) {
             style={{
               fontFamily: PS2P,
               fontSize: 7,
-              color: "#f87171",
-              background: "rgba(239,68,68,0.08)",
-              border: "1px solid rgba(239,68,68,0.2)",
+              color: "var(--hb-error-soft)",
+              background: "rgba(232,74,125,0.08)",
+              border: "1px solid rgba(232,74,125,0.2)",
               borderRadius: 4,
               padding: "8px 10px",
             }}
@@ -458,11 +458,11 @@ export default function ChatPanel({ token }: { token: string }) {
               fontSize: 16,
               padding: "8px 10px",
               background: isListening
-                ? "rgba(239,68,68,0.15)"
+                ? "rgba(232,74,125,0.15)"
                 : "var(--hb-04)",
-              border: `1px solid ${isListening ? "rgba(239,68,68,0.4)" : "var(--hb-10)"}`,
+              border: `1px solid ${isListening ? "rgba(232,74,125,0.4)" : "var(--hb-10)"}`,
               borderRadius: 6,
-              color: isListening ? "#f87171" : "var(--hb-60)",
+              color: isListening ? "var(--hb-error-soft)" : "var(--hb-60)",
               cursor: "pointer",
               minHeight: 38,
               animation: isListening ? "micPulse 1s ease-in-out infinite" : "none",
@@ -485,7 +485,7 @@ export default function ChatPanel({ token }: { token: string }) {
             fontSize: 15,
             padding: "11px 13px",
             background: "var(--hb-panel-40)",
-            border: `1px solid ${isListening ? "rgba(239,68,68,0.3)" : "var(--hb-10)"}`,
+            border: `1px solid ${isListening ? "rgba(232,74,125,0.3)" : "var(--hb-10)"}`,
             borderRadius: 6,
             color: "#fff",
             resize: "none",
@@ -527,8 +527,8 @@ export default function ChatPanel({ token }: { token: string }) {
           50% { opacity: 1; transform: scale(1); }
         }
         @keyframes micPulse {
-          0%, 100% { border-color: rgba(239,68,68,0.4); }
-          50% { border-color: rgba(239,68,68,0.8); }
+          0%, 100% { border-color: rgba(232,74,125,0.4); }
+          50% { border-color: rgba(232,74,125,0.8); }
         }
       `}</style>
     </div>

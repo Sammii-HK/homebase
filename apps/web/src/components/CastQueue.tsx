@@ -30,22 +30,22 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  "Interview 💬": "#4ade80",
-  "Assignment given 📑": "#f59e0b",
+  "Interview 💬": "var(--hb-success)",
+  "Assignment given 📑": "var(--hb-warn)",
   "Pending ⏳": "#60a5fa",
   "To apply": "var(--hb-60)",
 };
 
 const STATUS_BG: Record<string, string> = {
-  "Interview 💬": "rgba(74,222,128,0.1)",
-  "Assignment given 📑": "rgba(245,158,11,0.1)",
+  "Interview 💬": "rgba(133,173,146,0.1)",
+  "Assignment given 📑": "rgba(217,141,237,0.1)",
   "Pending ⏳": "rgba(96,165,250,0.1)",
   "To apply": "var(--hb-04)",
 };
 
 const STATUS_BORDER: Record<string, string> = {
-  "Interview 💬": "rgba(74,222,128,0.25)",
-  "Assignment given 📑": "rgba(245,158,11,0.25)",
+  "Interview 💬": "rgba(133,173,146,0.25)",
+  "Assignment given 📑": "rgba(217,141,237,0.25)",
   "Pending ⏳": "rgba(96,165,250,0.2)",
   "To apply": "var(--hb-08)",
 };
@@ -62,7 +62,7 @@ function formatDate(isoDate: string): string {
 function FitScore({ score }: { score: number | null }) {
   if (score === null) return null;
   const color =
-    score >= 80 ? "#4ade80" : score >= 60 ? "#f59e0b" : "var(--hb-60)";
+    score >= 80 ? "var(--hb-success)" : score >= 60 ? "var(--hb-warn)" : "var(--hb-60)";
   return (
     <span
       style={{
@@ -184,7 +184,7 @@ function JobRow({ job }: { job: CastJob }) {
                   style={{
                     fontFamily: PS2P,
                     fontSize: 7,
-                    color: "#4ade80",
+                    color: "var(--hb-success)",
                     flexShrink: 0,
                   }}
                 >
@@ -591,7 +591,7 @@ export default function CastQueue({ token }: Props) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 6,
-                  color: "#4ade80",
+                  color: "var(--hb-success)",
                   letterSpacing: 0.5,
                 }}
               >
@@ -604,7 +604,7 @@ export default function CastQueue({ token }: Props) {
                 style={{
                   fontFamily: PS2P,
                   fontSize: 6,
-                  color: "#f87171",
+                  color: "var(--hb-error-soft)",
                   letterSpacing: 0.3,
                 }}
               >
@@ -618,7 +618,7 @@ export default function CastQueue({ token }: Props) {
               style={{
                 fontFamily: PS2P,
                 fontSize: 6,
-                color: "rgba(74,222,128,0.6)",
+                color: "rgba(133,173,146,0.6)",
                 letterSpacing: 0.3,
               }}
             >
@@ -662,8 +662,8 @@ export default function CastQueue({ token }: Props) {
         {renderNewApplicationForm()}
         <div
           style={{
-            background: "rgba(248,113,113,0.06)",
-            border: "1px solid rgba(248,113,113,0.2)",
+            background: "rgba(238,120,158,0.06)",
+            border: "1px solid rgba(238,120,158,0.2)",
             borderRadius: 8,
             padding: 16,
           }}
@@ -672,7 +672,7 @@ export default function CastQueue({ token }: Props) {
             style={{
               fontFamily: PS2P,
               fontSize: 8,
-              color: "#f87171",
+              color: "var(--hb-error-soft)",
             }}
           >
             Could not load jobs — check NOTION_TOKEN
@@ -722,8 +722,8 @@ export default function CastQueue({ token }: Props) {
         }}
       >
         {[
-          { label: "INTERVIEWS", value: data.interviews.length, color: "#4ade80" },
-          { label: "ASSIGNMENTS", value: data.assignments.length, color: "#f59e0b" },
+          { label: "INTERVIEWS", value: data.interviews.length, color: "var(--hb-success)" },
+          { label: "ASSIGNMENTS", value: data.assignments.length, color: "var(--hb-warn)" },
           { label: "PENDING", value: data.pending.filter(j => j.status === "Pending ⏳").length, color: "#60a5fa" },
           { label: "TO APPLY", value: data.pending.filter(j => j.status === "To apply").length, color: "var(--hb-60)" },
         ].map(({ label, value, color }) => (
@@ -765,12 +765,12 @@ export default function CastQueue({ token }: Props) {
       {/* Grouped sections — most urgent first */}
       <SectionBlock
         label="INTERVIEWS"
-        color="#4ade80"
+        color="var(--hb-success)"
         jobs={data.interviews}
       />
       <SectionBlock
         label="ASSIGNMENTS"
-        color="#f59e0b"
+        color="var(--hb-warn)"
         jobs={data.assignments}
       />
       <SectionBlock

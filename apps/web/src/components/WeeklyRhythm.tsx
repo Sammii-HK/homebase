@@ -165,9 +165,9 @@ export default function WeeklyRhythm({ token }: Props) {
               style={{
                 fontFamily: PS2P,
                 fontSize: 6,
-                color: "#ef4444",
-                background: "rgba(239,68,68,0.1)",
-                border: "1px solid rgba(239,68,68,0.25)",
+                color: "var(--hb-error)",
+                background: "rgba(232,74,125,0.1)",
+                border: "1px solid rgba(232,74,125,0.25)",
                 borderRadius: 3,
                 padding: "2px 6px",
               }}
@@ -180,9 +180,9 @@ export default function WeeklyRhythm({ token }: Props) {
               style={{
                 fontFamily: PS2P,
                 fontSize: 6,
-                color: "#f59e0b",
-                background: "rgba(245,158,11,0.1)",
-                border: "1px solid rgba(245,158,11,0.25)",
+                color: "var(--hb-warn)",
+                background: "rgba(217,141,237,0.1)",
+                border: "1px solid rgba(217,141,237,0.25)",
                 borderRadius: 3,
                 padding: "2px 6px",
               }}
@@ -276,9 +276,9 @@ export default function WeeklyRhythm({ token }: Props) {
         }}
       >
         {[
-          { color: "#4ade80", label: "published" },
-          { color: "#f59e0b", label: "scheduled" },
-          { color: "#ef4444", label: "review" },
+          { color: "var(--hb-success)", label: "published" },
+          { color: "var(--hb-warn)", label: "scheduled" },
+          { color: "var(--hb-error)", label: "review" },
           { color: "var(--hb-12)", label: "gap" },
         ].map(({ color, label }) => (
           <div
@@ -530,21 +530,21 @@ function DayCell({
               height: 6,
               borderRadius: 1,
               background: day.hasGap
-                ? "rgba(239,68,68,0.3)"
+                ? "rgba(232,74,125,0.3)"
                 : "var(--hb-08)",
-              border: day.hasGap ? "1px solid rgba(239,68,68,0.4)" : "none",
+              border: day.hasGap ? "1px solid rgba(232,74,125,0.4)" : "none",
             }}
           />
         )}
 
         {day.published > 0 && (
-          <DotBar count={day.published} color="#4ade80" />
+          <DotBar count={day.published} color="var(--hb-success)" />
         )}
         {day.scheduled > 0 && (
-          <DotBar count={day.scheduled} color="#f59e0b" />
+          <DotBar count={day.scheduled} color="var(--hb-warn)" />
         )}
         {day.review > 0 && (
-          <DotBar count={day.review} color="#ef4444" />
+          <DotBar count={day.review} color="var(--hb-error)" />
         )}
       </div>
 
@@ -644,15 +644,15 @@ function DayTooltip({ tooltip }: { tooltip: { day: WeekDay; x: number } }) {
           <span style={{ color: "var(--hb-accent)", marginLeft: 6 }}>TODAY</span>
         )}
       </div>
-      <TooltipRow label="published" value={day.published} color="#4ade80" />
-      <TooltipRow label="scheduled" value={day.scheduled} color="#f59e0b" />
-      <TooltipRow label="review" value={day.review} color="#ef4444" />
+      <TooltipRow label="published" value={day.published} color="var(--hb-success)" />
+      <TooltipRow label="scheduled" value={day.scheduled} color="var(--hb-warn)" />
+      <TooltipRow label="review" value={day.review} color="var(--hb-error)" />
       {day.hasGap && (
         <div
           style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "#ef4444",
+            color: "var(--hb-error)",
             marginTop: 4,
             opacity: 0.8,
           }}

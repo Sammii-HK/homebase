@@ -119,9 +119,9 @@ export default function QuickActions({ token, onAction }: Props) {
             border = "rgba(52,211,153,0.3)";
             colour = "#34d399";
           } else if (isError) {
-            bg = "rgba(248,113,113,0.12)";
-            border = "rgba(248,113,113,0.3)";
-            colour = "#f87171";
+            bg = "rgba(238,120,158,0.12)";
+            border = "rgba(238,120,158,0.3)";
+            colour = "var(--hb-error-soft)";
           }
 
           return (

@@ -19,9 +19,9 @@ interface Props {
 }
 
 const STATE_COLOURS: Record<string, string> = {
-  READY: "#4ade80",
-  BUILDING: "#facc15",
-  ERROR: "#f87171",
+  READY: "var(--hb-success)",
+  BUILDING: "var(--hb-warn)",
+  ERROR: "var(--hb-error-soft)",
   QUEUED: "#60a5fa",
   CANCELED: "#71717a",
 };

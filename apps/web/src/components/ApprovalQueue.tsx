@@ -298,12 +298,12 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
     return (
       <div style={{
         padding: "16px",
-        background: scheduledDate ? "rgba(74,222,128,0.08)" : "rgba(239,68,68,0.08)",
-        border: `1px solid ${scheduledDate ? "rgba(74,222,128,0.2)" : "rgba(239,68,68,0.2)"}`,
+        background: scheduledDate ? "rgba(133,173,146,0.08)" : "rgba(232,74,125,0.08)",
+        border: `1px solid ${scheduledDate ? "rgba(133,173,146,0.2)" : "rgba(232,74,125,0.2)"}`,
         borderRadius: 6,
         textAlign: "center",
       }}>
-        <div style={{ fontFamily: PS2P, fontSize: 9, color: scheduledDate ? "#4ade80" : "#f87171" }}>
+        <div style={{ fontFamily: PS2P, fontSize: 9, color: scheduledDate ? "var(--hb-success)" : "var(--hb-error-soft)" }}>
           {scheduledDate ? "APPROVED" : "REJECTED"}
         </div>
         {scheduledDate && (
@@ -354,7 +354,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
           right: 0,
           bottom: 0,
           width: `${Math.min(swipeDelta * 1.5, 80)}px`,
-          background: `rgba(74,222,128,${Math.min((swipeDelta - 30) / 90, 0.35)})`,
+          background: `rgba(133,173,146,${Math.min((swipeDelta - 30) / 90, 0.35)})`,
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
@@ -366,7 +366,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
           <span style={{
             fontFamily: PS2P,
             fontSize: 14,
-            color: "#4ade80",
+            color: "var(--hb-success)",
             opacity: Math.min((swipeDelta - 30) / 60, 1),
           }}>✓</span>
         </div>
@@ -379,7 +379,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
           left: 0,
           bottom: 0,
           width: `${Math.min(-swipeDelta * 1.5, 80)}px`,
-          background: `rgba(239,68,68,${Math.min((-swipeDelta - 30) / 90, 0.35)})`,
+          background: `rgba(232,74,125,${Math.min((-swipeDelta - 30) / 90, 0.35)})`,
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-start",
@@ -391,7 +391,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
           <span style={{
             fontFamily: PS2P,
             fontSize: 14,
-            color: "#f87171",
+            color: "var(--hb-error-soft)",
             opacity: Math.min((-swipeDelta - 30) / 60, 1),
           }}>✗</span>
         </div>
@@ -418,8 +418,8 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
           <span style={{
             fontFamily: PS2P,
             fontSize: 6,
-            color: "#f59e0b",
-            background: "rgba(245,158,11,0.1)",
+            color: "var(--hb-warn)",
+            background: "rgba(217,141,237,0.1)",
             padding: "2px 5px",
             borderRadius: 3,
           }}>
@@ -500,8 +500,8 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
         <div style={{
           fontFamily: PS2P,
           fontSize: 7,
-          color: "#f87171",
-          background: "rgba(239,68,68,0.1)",
+          color: "var(--hb-error-soft)",
+          background: "rgba(232,74,125,0.1)",
           padding: "6px 8px",
           borderRadius: 4,
           marginBottom: 10,
@@ -522,10 +522,10 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
                   fontFamily: PS2P,
                   fontSize: 6,
                   padding: "5px 8px",
-                  background: rejectReason === preset ? "rgba(239,68,68,0.2)" : "var(--hb-05)",
-                  border: `1px solid ${rejectReason === preset ? "rgba(239,68,68,0.4)" : "var(--hb-10)"}`,
+                  background: rejectReason === preset ? "rgba(232,74,125,0.2)" : "var(--hb-05)",
+                  border: `1px solid ${rejectReason === preset ? "rgba(232,74,125,0.4)" : "var(--hb-10)"}`,
                   borderRadius: 3,
-                  color: rejectReason === preset ? "#f87171" : "var(--hb-60)",
+                  color: rejectReason === preset ? "var(--hb-error-soft)" : "var(--hb-60)",
                   cursor: "pointer",
                 }}
               >
@@ -566,10 +566,10 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
                 fontFamily: PS2P,
                 fontSize: 8,
                 padding: "12px",
-                background: "rgba(239,68,68,0.15)",
-                border: "1px solid rgba(239,68,68,0.4)",
+                background: "rgba(232,74,125,0.15)",
+                border: "1px solid rgba(232,74,125,0.4)",
                 borderRadius: 4,
-                color: "#f87171",
+                color: "var(--hb-error-soft)",
                 cursor: "pointer",
                 minHeight: 44,
               }}
@@ -603,10 +603,10 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
                 fontFamily: PS2P,
                 fontSize: 8,
                 padding: "12px",
-                background: state === "loading" ? "rgba(74,222,128,0.05)" : "rgba(74,222,128,0.12)",
-                border: "1px solid rgba(74,222,128,0.3)",
+                background: state === "loading" ? "rgba(133,173,146,0.05)" : "rgba(133,173,146,0.12)",
+                border: "1px solid rgba(133,173,146,0.3)",
                 borderRadius: 4,
-                color: state === "loading" ? "rgba(74,222,128,0.5)" : "#4ade80",
+                color: state === "loading" ? "rgba(133,173,146,0.5)" : "var(--hb-success)",
                 cursor: state === "loading" ? "wait" : "pointer",
                 minHeight: 44,
               }}
@@ -621,10 +621,10 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
                 fontFamily: PS2P,
                 fontSize: 8,
                 padding: "12px",
-                background: "rgba(239,68,68,0.08)",
-                border: "1px solid rgba(239,68,68,0.2)",
+                background: "rgba(232,74,125,0.08)",
+                border: "1px solid rgba(232,74,125,0.2)",
                 borderRadius: 4,
-                color: "#f87171",
+                color: "var(--hb-error-soft)",
                 cursor: state === "loading" ? "wait" : "pointer",
                 minHeight: 44,
               }}
@@ -927,9 +927,9 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
 
       {error && (
         <div style={{
-          fontFamily: PS2P, fontSize: 8, color: "#f87171",
+          fontFamily: PS2P, fontSize: 8, color: "var(--hb-error-soft)",
           textAlign: "center", padding: 16,
-          background: "rgba(239,68,68,0.08)", borderRadius: 4,
+          background: "rgba(232,74,125,0.08)", borderRadius: 4,
         }}>
           Failed to load: {error}
         </div>
@@ -951,10 +951,10 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
         <div style={{
           fontFamily: PS2P,
           fontSize: 7,
-          color: "#4ade80",
+          color: "var(--hb-success)",
           padding: "6px 10px",
-          background: "rgba(74,222,128,0.06)",
-          border: "1px solid rgba(74,222,128,0.15)",
+          background: "rgba(133,173,146,0.06)",
+          border: "1px solid rgba(133,173,146,0.15)",
           borderRadius: 4,
         }}>
           ✓ {autoApprovedCount} post{autoApprovedCount === 1 ? "" : "s"} auto-approved
@@ -969,9 +969,9 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
               flex: 1,
               fontFamily: PS2P,
               fontSize: 9,
-              color: "#4ade80",
-              background: "rgba(74,222,128,0.08)",
-              border: "1px solid rgba(74,222,128,0.2)",
+              color: "var(--hb-success)",
+              background: "rgba(133,173,146,0.08)",
+              border: "1px solid rgba(133,173,146,0.2)",
               borderRadius: 4,
               padding: "14px",
               textAlign: "center",
@@ -983,9 +983,9 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
               flex: 1,
               fontFamily: PS2P,
               fontSize: 9,
-              color: "rgba(74,222,128,0.5)",
-              background: "rgba(74,222,128,0.05)",
-              border: "1px solid rgba(74,222,128,0.3)",
+              color: "rgba(133,173,146,0.5)",
+              background: "rgba(133,173,146,0.05)",
+              border: "1px solid rgba(133,173,146,0.3)",
               borderRadius: 4,
               padding: "14px",
               textAlign: "center",
@@ -1003,10 +1003,10 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
                   fontFamily: PS2P,
                   fontSize: 9,
                   padding: "14px",
-                  background: "rgba(74,222,128,0.18)",
-                  border: "1px solid rgba(74,222,128,0.45)",
+                  background: "rgba(133,173,146,0.18)",
+                  border: "1px solid rgba(133,173,146,0.45)",
                   borderRadius: 4,
-                  color: "#4ade80",
+                  color: "var(--hb-success)",
                   cursor: "pointer",
                   minHeight: 48,
                 }}
@@ -1039,10 +1039,10 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
                   fontFamily: PS2P,
                   fontSize: 9,
                   padding: "14px",
-                  background: "rgba(74,222,128,0.12)",
-                  border: "1px solid rgba(74,222,128,0.3)",
+                  background: "rgba(133,173,146,0.12)",
+                  border: "1px solid rgba(133,173,146,0.3)",
                   borderRadius: 4,
-                  color: "#4ade80",
+                  color: "var(--hb-success)",
                   cursor: "pointer",
                   minHeight: 48,
                 }}
@@ -1053,9 +1053,9 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
                 <div style={{
                   fontFamily: PS2P,
                   fontSize: 7,
-                  color: "#4ade80",
-                  background: "rgba(74,222,128,0.08)",
-                  border: "1px solid rgba(74,222,128,0.2)",
+                  color: "var(--hb-success)",
+                  background: "rgba(133,173,146,0.08)",
+                  border: "1px solid rgba(133,173,146,0.2)",
                   borderRadius: 4,
                   padding: "14px 12px",
                   textAlign: "center",
@@ -1102,17 +1102,17 @@ export default function ApprovalQueue({ token: tokenProp, compact }: Props) {
             fontSize: 8,
             padding: "10px 14px",
             background: clearOrbitState === "done"
-              ? "rgba(245,158,11,0.08)"
+              ? "rgba(217,141,237,0.08)"
               : clearOrbitState === "running"
-              ? "rgba(245,158,11,0.04)"
-              : "rgba(245,158,11,0.1)",
-            border: "1px solid rgba(245,158,11,0.3)",
+              ? "rgba(217,141,237,0.04)"
+              : "rgba(217,141,237,0.1)",
+            border: "1px solid rgba(217,141,237,0.3)",
             borderRadius: 4,
             color: clearOrbitState === "running"
-              ? "rgba(245,158,11,0.4)"
+              ? "rgba(217,141,237,0.4)"
               : clearOrbitState === "done"
-              ? "#4ade80"
-              : "#f59e0b",
+              ? "var(--hb-success)"
+              : "var(--hb-warn)",
             cursor: clearOrbitState === "running" ? "wait" : "pointer",
             alignSelf: "flex-start",
           }}

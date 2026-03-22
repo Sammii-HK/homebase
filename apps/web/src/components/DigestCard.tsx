@@ -32,9 +32,9 @@ const SERVICE_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLOUR: Record<string, string> = {
-  ok: "#4ade80",
-  degraded: "#fbbf24",
-  down: "#f87171",
+  ok: "var(--hb-success)",
+  degraded: "var(--hb-warn)",
+  down: "var(--hb-error-soft)",
 };
 
 const STATUS_DOT: Record<string, string> = {
@@ -91,22 +91,22 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
       ? [{ icon: "📅", count: stats.content.scheduledToday, label: "posts today", colour: "#888", onClick: onOpenApprovalQueue }]
       : []),
     ...(stats.content.pendingReview > 0
-      ? [{ icon: "⏳", count: stats.content.pendingReview, label: "review", colour: "#fbbf24", onClick: onOpenApprovalQueue }]
+      ? [{ icon: "⏳", count: stats.content.pendingReview, label: "review", colour: "var(--hb-warn)", onClick: onOpenApprovalQueue }]
       : []),
     ...(stats.content.failedPosts > 0
-      ? [{ icon: "✗", count: stats.content.failedPosts, label: "failed", colour: "#f87171", onClick: onOpenApprovalQueue }]
+      ? [{ icon: "✗", count: stats.content.failedPosts, label: "failed", colour: "var(--hb-error-soft)", onClick: onOpenApprovalQueue }]
       : []),
     ...(stats.opportunities.length > 0
-      ? [{ icon: "💡", count: stats.opportunities.length, label: "opps", colour: "#4ade80", onClick: onOpenEngagementQueue }]
+      ? [{ icon: "💡", count: stats.opportunities.length, label: "opps", colour: "var(--hb-success)", onClick: onOpenEngagementQueue }]
       : []),
     ...(stats.orbit.runningAgents > 0
-      ? [{ icon: "🤖", count: stats.orbit.runningAgents, label: "agents", colour: "#4ade80" }]
+      ? [{ icon: "🤖", count: stats.orbit.runningAgents, label: "agents", colour: "var(--hb-success)" }]
       : []),
     ...(systemsDown > 0
-      ? [{ icon: "⚠", count: systemsDown, label: "down", colour: "#f87171", onClick: () => setShowHealth((v) => !v) }]
+      ? [{ icon: "⚠", count: systemsDown, label: "down", colour: "var(--hb-error-soft)", onClick: () => setShowHealth((v) => !v) }]
       : []),
     ...(stats.github.commitsToday > 0
-      ? [{ icon: "⎇", count: stats.github.commitsToday, label: "commits", colour: "#4ade80", href: "https://github.com/sammii-hk" }]
+      ? [{ icon: "⎇", count: stats.github.commitsToday, label: "commits", colour: "var(--hb-success)", href: "https://github.com/sammii-hk" }]
       : []),
   ];
 
@@ -183,7 +183,7 @@ export default function DigestCard({ stats, onOpenApprovalQueue, onOpenEngagemen
             return <span key={i} style={chipStyle}>{content}</span>;
           })}
           {chips.length === 0 && (
-            <span style={{ fontSize: 11, color: "#4ade80", fontFamily: "system-ui, sans-serif" }}>
+            <span style={{ fontSize: 11, color: "var(--hb-success)", fontFamily: "system-ui, sans-serif" }}>
               All clear today
             </span>
           )}

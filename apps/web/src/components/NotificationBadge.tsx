@@ -10,7 +10,7 @@ export default function NotificationBadge() {
         right: 6,
         width: 16,
         height: 16,
-        background: "#ef4444",
+        background: "var(--hb-error)",
         border: "2px solid #000",
         display: "flex",
         alignItems: "center",
@@ -25,7 +25,7 @@ export default function NotificationBadge() {
           fontSize: 7,
           color: "#fff",
           lineHeight: 1,
-          textShadow: "0 0 4px rgba(239,68,68,0.8)",
+          textShadow: "0 0 4px rgba(232,74,125,0.8)",
         }}
       >
         !

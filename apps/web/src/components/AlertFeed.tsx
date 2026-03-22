@@ -325,17 +325,17 @@ function deriveAlerts(stats: DashboardStats | null, heartbeat: HeartbeatResponse
 // ── Colours ──────────────────────────────────────────────────────────
 
 const SEVERITY_COLORS = {
-  critical: { bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.3)", dot: "#ef4444", text: "#fca5a5" },
-  warning: { bg: "rgba(250,204,21,0.08)", border: "rgba(250,204,21,0.2)", dot: "#facc15", text: "#fde68a" },
+  critical: { bg: "rgba(232,74,125,0.12)", border: "rgba(232,74,125,0.3)", dot: "var(--hb-error)", text: "var(--hb-error-soft)" },
+  warning: { bg: "rgba(250,204,21,0.08)", border: "rgba(250,204,21,0.2)", dot: "var(--hb-warn)", text: "#fde68a" },
   info: { bg: "rgba(96,165,250,0.06)", border: "rgba(96,165,250,0.15)", dot: "#60a5fa", text: "#93c5fd" },
 };
 
 const ROOM_ACCENTS: Record<string, string> = {
   lunary: "#c084fc",
   spellcast: "#22d3ee",
-  dev: "#4ade80",
+  dev: "var(--hb-success)",
   meta: "#f472b6",
-  orbit: "#f59e0b",
+  orbit: "var(--hb-warn)",
   engagement: "#10b981",
 };
 
@@ -437,12 +437,12 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenA
           {sorted.length} ALERT{sorted.length !== 1 ? "S" : ""}
         </span>
         {warnings.length > 0 && criticals.length === 0 && (
-          <span style={{ fontFamily: PS2P, fontSize: 6, color: "#facc15", marginLeft: "auto" }}>
+          <span style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-warn)", marginLeft: "auto" }}>
             {warnings.length} WARN
           </span>
         )}
         {criticals.length > 0 && (
-          <span style={{ fontFamily: PS2P, fontSize: 6, color: "#ef4444", marginLeft: "auto" }}>
+          <span style={{ fontFamily: PS2P, fontSize: 6, color: "var(--hb-error)", marginLeft: "auto" }}>
             {criticals.length} CRIT
           </span>
         )}
@@ -495,9 +495,9 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenA
                         disabled={runningAction === alert.quickAction.actionId}
                         style={{
                           fontFamily: PS2P, fontSize: 6,
-                          color: runningAction === alert.quickAction.actionId ? "var(--hb-60)" : "#4ade80",
-                          background: "rgba(74,222,128,0.08)",
-                          border: "1px solid rgba(74,222,128,0.3)",
+                          color: runningAction === alert.quickAction.actionId ? "var(--hb-60)" : "var(--hb-success)",
+                          background: "rgba(133,173,146,0.08)",
+                          border: "1px solid rgba(133,173,146,0.3)",
                           borderRadius: 3, padding: "2px 5px",
                           cursor: runningAction ? "wait" : "pointer", flexShrink: 0,
                         }}

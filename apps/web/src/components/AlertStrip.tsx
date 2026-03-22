@@ -12,25 +12,25 @@ const LEVEL_STYLES: Record<
   { bg: string; border: string; dot: string; text: string; actionColor: string }
 > = {
   critical: {
-    bg: "rgba(239,68,68,0.15)",
-    border: "#ef4444",
-    dot: "#ef4444",
+    bg: "rgba(232,74,125,0.15)",
+    border: "var(--hb-error)",
+    dot: "var(--hb-error)",
     text: "var(--hb-90)",
-    actionColor: "#ef4444",
+    actionColor: "var(--hb-error)",
   },
   error: {
-    bg: "rgba(239,68,68,0.15)",
-    border: "#ef4444",
-    dot: "#ef4444",
+    bg: "rgba(232,74,125,0.15)",
+    border: "var(--hb-error)",
+    dot: "var(--hb-error)",
     text: "var(--hb-90)",
-    actionColor: "#ef4444",
+    actionColor: "var(--hb-error)",
   },
   warning: {
     bg: "rgba(251,191,36,0.1)",
-    border: "#fbbf24",
-    dot: "#fbbf24",
+    border: "var(--hb-warn)",
+    dot: "var(--hb-warn)",
     text: "var(--hb-60)",
-    actionColor: "#fbbf24",
+    actionColor: "var(--hb-warn)",
   },
   info: {
     bg: "rgba(59,130,246,0.1)",

@@ -219,13 +219,13 @@ export default function QuickComposer({ token }: QuickComposerProps) {
 
       {/* Footer */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <div style={{ fontFamily: "monospace", fontSize: 11, color: state === "error" ? "#f87171" : state === "success" ? "#4ade80" : "transparent", transition: "color 0.2s", minHeight: 16, flex: 1 }}>
+        <div style={{ fontFamily: "monospace", fontSize: 11, color: state === "error" ? "var(--hb-error-soft)" : state === "success" ? "var(--hb-success)" : "transparent", transition: "color 0.2s", minHeight: 16, flex: 1 }}>
           {state === "success" && "Saved to Spellcast \u2713"}
           {state === "error" && (errorMsg || "Something went wrong")}
           {state === "generating" && <span style={{ color: "var(--hb-accent)" }}>Polishing...</span>}
         </div>
 
-        <div style={{ fontFamily: "monospace", fontSize: 10, color: isOverMax ? "#f87171" : charCount > 280 ? "#fbbf24" : "var(--hb-20)", flexShrink: 0 }}>
+        <div style={{ fontFamily: "monospace", fontSize: 10, color: isOverMax ? "var(--hb-error-soft)" : charCount > 280 ? "var(--hb-warn)" : "var(--hb-20)", flexShrink: 0 }}>
           {charCount}/{MAX_CHARS}
         </div>
 
