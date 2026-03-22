@@ -35,6 +35,7 @@ body {
   /* ── Adaptive colour tokens (dark mode defaults) ── */
   --hb-bg: #000;
   --hb-surface: #0a0a0a;
+  --hb-accent: #a78bfa;
   /* Dark panel backgrounds (rgba black) */
   --hb-panel-20: rgba(0,0,0,0.2);
   --hb-panel-25: rgba(0,0,0,0.25);
@@ -118,6 +119,10 @@ body {
     --hb-85: rgba(0,0,0,0.85);
     --hb-90: rgba(0,0,0,0.9);
   }
+
+  /* ── Accent colour — darken purple for contrast on light bg ── */
+  /* #a78bfa (dark mode) → #6d28d9 gives 5.2:1 on #f0ede8 */
+  --hb-accent: #6d28d9;
 
   /* ── Base bg overrides ── */
   body { background: var(--hb-bg); }

@@ -150,7 +150,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
                   transition: "all 0.15s",
                   background: isSelected ? "rgba(167,139,250,0.2)" : "var(--hb-04)",
                   border: isSelected ? "1px solid rgba(167,139,250,0.5)" : "1px solid var(--hb-10)",
-                  color: isSelected ? "#a78bfa" : "var(--hb-35)",
+                  color: isSelected ? "var(--hb-accent)" : "var(--hb-35)",
                 }}
               >
                 {set.name}
@@ -209,7 +209,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
             </button>
             <button
               onClick={() => save(generated)}
-              style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, letterSpacing: 0.5, padding: "5px 10px", borderRadius: 4, border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.12)", color: "#a78bfa", cursor: "pointer" }}
+              style={{ fontFamily: "'Press Start 2P', monospace", fontSize: 6, letterSpacing: 0.5, padding: "5px 10px", borderRadius: 4, border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.12)", color: "var(--hb-accent)", cursor: "pointer" }}
             >
               SAVE TO SPELLCAST
             </button>
@@ -222,7 +222,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
         <div style={{ fontFamily: "monospace", fontSize: 11, color: state === "error" ? "#f87171" : state === "success" ? "#4ade80" : "transparent", transition: "color 0.2s", minHeight: 16, flex: 1 }}>
           {state === "success" && "Saved to Spellcast \u2713"}
           {state === "error" && (errorMsg || "Something went wrong")}
-          {state === "generating" && <span style={{ color: "#a78bfa" }}>Polishing...</span>}
+          {state === "generating" && <span style={{ color: "var(--hb-accent)" }}>Polishing...</span>}
         </div>
 
         <div style={{ fontFamily: "monospace", fontSize: 10, color: isOverMax ? "#f87171" : charCount > 280 ? "#fbbf24" : "var(--hb-20)", flexShrink: 0 }}>
@@ -239,7 +239,7 @@ export default function QuickComposer({ token }: QuickComposerProps) {
               padding: "6px 10px", borderRadius: 5, flexShrink: 0, transition: "all 0.15s",
               border: "1px solid rgba(167,139,250,0.35)",
               background: busy || !hasContent || isOverMax ? "rgba(167,139,250,0.04)" : "rgba(167,139,250,0.12)",
-              color: busy || !hasContent || isOverMax ? "rgba(167,139,250,0.3)" : "#a78bfa",
+              color: busy || !hasContent || isOverMax ? "rgba(167,139,250,0.3)" : "var(--hb-accent)",
               cursor: busy || !hasContent || isOverMax ? "not-allowed" : "pointer",
             }}
           >

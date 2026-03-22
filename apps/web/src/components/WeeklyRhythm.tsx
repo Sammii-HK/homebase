@@ -502,7 +502,7 @@ function DayCell({
           fontFamily: PS2P,
           fontSize: 6,
           color: day.isToday
-            ? "#a78bfa"
+            ? "var(--hb-accent)"
             : isPast
             ? "var(--hb-20)"
             : "var(--hb-45)",
@@ -641,7 +641,7 @@ function DayTooltip({ tooltip }: { tooltip: { day: WeekDay; x: number } }) {
       >
         {day.dayLabel} {day.date.slice(5).replace("-", "/")}
         {day.isToday && (
-          <span style={{ color: "#a78bfa", marginLeft: 6 }}>TODAY</span>
+          <span style={{ color: "var(--hb-accent)", marginLeft: 6 }}>TODAY</span>
         )}
       </div>
       <TooltipRow label="published" value={day.published} color="#4ade80" />

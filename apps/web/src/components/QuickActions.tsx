@@ -113,7 +113,7 @@ export default function QuickActions({ token, onAction }: Props) {
           if (isLoading) {
             bg = "rgba(167,139,250,0.12)";
             border = "rgba(167,139,250,0.3)";
-            colour = "#a78bfa";
+            colour = "var(--hb-accent)";
           } else if (isSuccess) {
             bg = "rgba(52,211,153,0.12)";
             border = "rgba(52,211,153,0.3)";

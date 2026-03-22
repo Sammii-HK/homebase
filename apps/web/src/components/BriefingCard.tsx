@@ -35,7 +35,7 @@ interface Props {
 const PRIORITY_COLOUR: Record<BriefingItem["priority"], string> = {
   urgent: "#f87171",
   today: "#fbbf24",
-  info: "#a78bfa",
+  info: "var(--hb-accent)",
   done: "#34d399",
 };
 
@@ -403,7 +403,7 @@ export default function BriefingCard({
             style={{
               fontFamily: PS2P,
               fontSize: 9,
-              color: "#a78bfa",
+              color: "var(--hb-accent)",
               letterSpacing: 1,
             }}
           >

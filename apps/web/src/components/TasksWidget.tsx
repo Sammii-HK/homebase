@@ -7,13 +7,13 @@ interface Props {
 }
 
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  in_progress: { color: "#a78bfa", label: "active" },
+  in_progress: { color: "var(--hb-accent)", label: "active" },
   ready:       { color: "#60a5fa", label: "ready" },
   blocked:     { color: "#f87171", label: "blocked" },
 };
 
 const PROJECT_COLOURS: Record<string, string> = {
-  lunary:           "#a78bfa",
+  lunary:           "var(--hb-accent)",
   spellcast:        "#60a5fa",
   homebase:         "#34d399",
   orbit:            "#f59e0b",

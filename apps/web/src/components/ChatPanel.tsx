@@ -287,7 +287,7 @@ export default function ChatPanel({ token }: { token: string }) {
               : "var(--hb-04)",
             border: `1px solid ${ttsEnabled ? "rgba(167,139,250,0.2)" : "var(--hb-08)"}`,
             borderRadius: 4,
-            color: ttsEnabled ? "#a78bfa" : "var(--hb-30)",
+            color: ttsEnabled ? "var(--hb-accent)" : "var(--hb-30)",
             cursor: "pointer",
           }}
         >
@@ -511,7 +511,7 @@ export default function ChatPanel({ token }: { token: string }) {
             color:
               !input.trim() || isLoading
                 ? "rgba(167,139,250,0.3)"
-                : "#a78bfa",
+                : "var(--hb-accent)",
             cursor: !input.trim() || isLoading ? "default" : "pointer",
             minHeight: 38,
             whiteSpace: "nowrap",

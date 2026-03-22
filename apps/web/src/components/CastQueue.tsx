@@ -486,7 +486,7 @@ export default function CastQueue({ token }: Props) {
               : "rgba(167,139,250,0.12)",
             border: `1px solid ${showForm ? "var(--hb-12)" : "rgba(167,139,250,0.3)"}`,
             borderRadius: 5,
-            color: showForm ? "var(--hb-40)" : "#a78bfa",
+            color: showForm ? "var(--hb-40)" : "var(--hb-accent)",
             cursor: "pointer",
             letterSpacing: 0.5,
           }}
@@ -578,7 +578,7 @@ export default function CastQueue({ token }: Props) {
                 color:
                   !formUrl.trim() || submitting
                     ? "rgba(167,139,250,0.3)"
-                    : "#a78bfa",
+                    : "var(--hb-accent)",
                 cursor: !formUrl.trim() || submitting ? "default" : "pointer",
                 letterSpacing: 0.5,
               }}

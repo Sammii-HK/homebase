@@ -394,7 +394,7 @@ export default function Dashboard() {
                   style={{
                     fontFamily: PS2P,
                     fontSize: 8,
-                    color: loginLoading ? "rgba(167,139,250,0.5)" : "#a78bfa",
+                    color: loginLoading ? "rgba(167,139,250,0.5)" : "var(--hb-accent)",
                     letterSpacing: 1,
                   }}
                 >
@@ -441,10 +441,10 @@ export default function Dashboard() {
                   xmlns="http://www.w3.org/2000/svg"
                   style={{ opacity: loginLoading ? 0.4 : 1 }}
                 >
-                  <circle cx="12" cy="8" r="3.5" stroke="#a78bfa" strokeWidth="1.5" />
+                  <circle cx="12" cy="8" r="3.5" stroke="var(--hb-accent)" strokeWidth="1.5" />
                   <path
                     d="M5 20c0-3.866 3.134-7 7-7s7 3.134 7 7"
-                    stroke="#a78bfa"
+                    stroke="var(--hb-accent)"
                     strokeWidth="1.5"
                     strokeLinecap="round"
                   />
@@ -460,7 +460,7 @@ export default function Dashboard() {
                   style={{
                     fontFamily: PS2P,
                     fontSize: 8,
-                    color: loginLoading ? "rgba(167,139,250,0.5)" : "#a78bfa",
+                    color: loginLoading ? "rgba(167,139,250,0.5)" : "var(--hb-accent)",
                     letterSpacing: 1,
                   }}
                 >
@@ -695,7 +695,7 @@ export default function Dashboard() {
             style={{
               fontFamily: PS2P,
               fontSize: 6,
-              color: viewMode === "pixel" ? "#a78bfa" : "var(--hb-35)",
+              color: viewMode === "pixel" ? "var(--hb-accent)" : "var(--hb-35)",
               background: viewMode === "pixel" ? "rgba(167,139,250,0.1)" : "none",
               border: `1px solid ${viewMode === "pixel" ? "rgba(167,139,250,0.4)" : "var(--hb-10)"}`,
               borderRadius: 3,
@@ -777,7 +777,7 @@ export default function Dashboard() {
                 height: 52,
                 background: isActive ? "rgba(167,139,250,0.08)" : "none",
                 border: "none",
-                borderLeft: `3px solid ${isActive ? "#a78bfa" : "transparent"}`,
+                borderLeft: `3px solid ${isActive ? "var(--hb-accent)" : "transparent"}`,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
@@ -793,7 +793,7 @@ export default function Dashboard() {
                   fontFamily: PS2P,
                   fontSize: 8,
                   letterSpacing: 0.5,
-                  color: isActive ? "#a78bfa" : "var(--hb-40)",
+                  color: isActive ? "var(--hb-accent)" : "var(--hb-40)",
                   transition: "color 0.15s",
                 }}
               >
@@ -940,7 +940,7 @@ export default function Dashboard() {
                       style={{
                         fontFamily: PS2P,
                         fontSize: 10,
-                        color: "#a78bfa",
+                        color: "var(--hb-accent)",
                         letterSpacing: 1,
                         marginBottom: 12,
                       }}
@@ -968,7 +968,7 @@ export default function Dashboard() {
                       style={{
                         fontFamily: PS2P,
                         fontSize: 10,
-                        color: "#a78bfa",
+                        color: "var(--hb-accent)",
                         letterSpacing: 1,
                         marginBottom: 12,
                       }}
@@ -1070,7 +1070,7 @@ export default function Dashboard() {
                   fontFamily: PS2P,
                   fontSize: 6,
                   letterSpacing: 0.5,
-                  color: isActive ? "#a78bfa" : "var(--hb-30)",
+                  color: isActive ? "var(--hb-accent)" : "var(--hb-30)",
                   transition: "color 0.15s",
                 }}
               >

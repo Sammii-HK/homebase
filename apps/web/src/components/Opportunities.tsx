@@ -58,7 +58,7 @@ export default function Opportunities({ opportunities, stats }: Props) {
         style={{
           fontFamily: PS2P,
           fontSize: 8,
-          color: "#a78bfa",
+          color: "var(--hb-accent)",
           letterSpacing: 1,
           marginBottom: 2,
         }}
