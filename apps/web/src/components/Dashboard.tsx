@@ -556,6 +556,7 @@ export default function Dashboard() {
           zIndex: 40,
         }}
       >
+        {/* Left: brand + health dot */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 14 }}>🏠</span>
           <span
@@ -568,6 +569,45 @@ export default function Dashboard() {
           >
             HOMEBASE
           </span>
+          {/* System health dot — always visible */}
+          {stats?.health && (() => {
+            const downCount = Object.values(stats.health).filter(s => s.status === "down").length;
+            const degradedCount = Object.values(stats.health).filter(s => s.status === "degraded").length;
+            const dotColor = downCount > 0 ? "#f87171" : degradedCount > 0 ? "#fbbf24" : "#4ade80";
+            const pulse = downCount > 0;
+            return (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  background: `${dotColor}15`,
+                  border: `1px solid ${dotColor}35`,
+                  borderRadius: 10,
+                  padding: "2px 6px",
+                  cursor: "pointer",
+                }}
+                onClick={() => setActiveTab("status")}
+                title="View system health"
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: dotColor,
+                    flexShrink: 0,
+                    animation: pulse ? "pulse 1.5s ease-in-out infinite" : undefined,
+                  }}
+                />
+                {downCount > 0 && (
+                  <span style={{ fontFamily: PS2P, fontSize: 6, color: dotColor, letterSpacing: 0.5 }}>
+                    {downCount}↓
+                  </span>
+                )}
+              </span>
+            );
+          })()}
           {alerts.length > 0 && (
             <span
               style={{
@@ -580,6 +620,45 @@ export default function Dashboard() {
             />
           )}
         </div>
+
+        {/* Centre: action badges (always visible) */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4, flex: 1, justifyContent: "center" }}>
+          {(stats?.content.pendingReview ?? 0) > 0 && (
+            <button
+              onClick={() => setActiveTab("queue")}
+              style={{
+                display: "flex", alignItems: "center", gap: 4,
+                background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)",
+                borderRadius: 4, padding: "3px 8px", cursor: "pointer", transition: "all 0.15s",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(251,191,36,0.2)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(251,191,36,0.12)")}
+            >
+              <span style={{ fontFamily: PS2P, fontSize: 7, color: "#fbbf24", fontWeight: 700 }}>
+                {stats!.content.pendingReview}
+              </span>
+              <span style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(251,191,36,0.65)" }}>REVIEW</span>
+            </button>
+          )}
+          {(stats?.engagement.unread ?? 0) > 0 && (
+            <button
+              onClick={() => setActiveTab("queue")}
+              style={{
+                display: "flex", alignItems: "center", gap: 4,
+                background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)",
+                borderRadius: 4, padding: "3px 8px", cursor: "pointer", transition: "all 0.15s",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(74,222,128,0.18)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(74,222,128,0.1)")}
+            >
+              <span style={{ fontFamily: PS2P, fontSize: 7, color: "#4ade80", fontWeight: 700 }}>
+                {stats!.engagement.unread}
+              </span>
+              <span style={{ fontFamily: PS2P, fontSize: 6, color: "rgba(74,222,128,0.65)" }}>ENGAGE</span>
+            </button>
+          )}
+        </div>
+
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {/* Pixel art view toggle */}
           <button
@@ -758,7 +837,12 @@ export default function Dashboard() {
                   margin: "0 auto",
                 }}
               >
-                <DigestCard stats={stats} heartbeat={heartbeat} />
+                <DigestCard
+                  stats={stats}
+                  heartbeat={heartbeat}
+                  onOpenApprovalQueue={() => setActiveTab("queue")}
+                  onOpenEngagementQueue={() => setActiveTab("queue")}
+                />
                 <AlertStrip
                   alerts={alerts}
                   onTabChange={setActiveTab}
