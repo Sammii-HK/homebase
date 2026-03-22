@@ -236,7 +236,7 @@ function JobRow({ job }: { job: CastJob }) {
           style={{
             borderTop: `1px solid ${border}`,
             padding: "12px 14px",
-            background: "rgba(0,0,0,0.25)",
+            background: "var(--hb-panel-25)",
           }}
         >
           {job.cvHeadline && (
@@ -532,7 +532,7 @@ export default function CastQueue({ token }: Props) {
               fontFamily: "system-ui, -apple-system, sans-serif",
               fontSize: 13,
               padding: "9px 11px",
-              background: "rgba(0,0,0,0.4)",
+              background: "var(--hb-panel-40)",
               border: "1px solid var(--hb-12)",
               borderRadius: 5,
               color: "#fff",
@@ -551,7 +551,7 @@ export default function CastQueue({ token }: Props) {
               fontFamily: "system-ui, -apple-system, sans-serif",
               fontSize: 13,
               padding: "9px 11px",
-              background: "rgba(0,0,0,0.4)",
+              background: "var(--hb-panel-40)",
               border: "1px solid var(--hb-12)",
               borderRadius: 5,
               color: "#fff",

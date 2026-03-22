@@ -627,7 +627,7 @@ function DayTooltip({ tooltip }: { tooltip: { day: WeekDay; x: number } }) {
         zIndex: 20,
         pointerEvents: "none",
         minWidth: 120,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.6)",
+        boxShadow: "0 4px 12px var(--hb-panel-60)",
       }}
     >
       <div

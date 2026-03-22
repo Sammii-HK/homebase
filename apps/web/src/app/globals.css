@@ -35,6 +35,18 @@ body {
   /* ── Adaptive colour tokens (dark mode defaults) ── */
   --hb-bg: #000;
   --hb-surface: #0a0a0a;
+  /* Dark panel backgrounds (rgba black) */
+  --hb-panel-20: rgba(0,0,0,0.2);
+  --hb-panel-25: rgba(0,0,0,0.25);
+  --hb-panel-30: rgba(0,0,0,0.3);
+  --hb-panel-40: rgba(0,0,0,0.4);
+  --hb-panel-50: rgba(0,0,0,0.5);
+  --hb-panel-60: rgba(0,0,0,0.6);
+  --hb-panel-70: rgba(0,0,0,0.7);
+  --hb-panel-80: rgba(0,0,0,0.8);
+  --hb-panel-82: rgba(0,0,0,0.82);
+  --hb-panel-85: rgba(0,0,0,0.85);
+  --hb-panel-95: rgba(0,0,0,0.95);
   --hb-02: rgba(255,255,255,0.02);
   --hb-03: rgba(255,255,255,0.03);
   --hb-04: rgba(255,255,255,0.04);
@@ -67,6 +79,18 @@ body {
   :root {
     --hb-bg: #f0ede8;
     --hb-surface: #e8e5e0;
+    /* Dark panel backgrounds flip to light equivalents */
+    --hb-panel-20: rgba(255,255,255,0.4);
+    --hb-panel-25: rgba(255,255,255,0.45);
+    --hb-panel-30: rgba(255,255,255,0.5);
+    --hb-panel-40: rgba(255,255,255,0.6);
+    --hb-panel-50: rgba(255,255,255,0.7);
+    --hb-panel-60: rgba(255,255,255,0.75);
+    --hb-panel-70: rgba(255,255,255,0.8);
+    --hb-panel-80: rgba(255,255,255,0.88);
+    --hb-panel-82: rgba(255,255,255,0.9);
+    --hb-panel-85: rgba(255,255,255,0.92);
+    --hb-panel-95: rgba(255,255,255,0.97);
     --hb-02: rgba(0,0,0,0.02);
     --hb-03: rgba(0,0,0,0.03);
     --hb-04: rgba(0,0,0,0.04);

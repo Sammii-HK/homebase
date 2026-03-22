@@ -357,7 +357,7 @@ function EngagementCard({
             lineHeight: 1.6,
             padding: "10px 12px",
             paddingRight: 40,
-            background: "rgba(0,0,0,0.3)",
+            background: "var(--hb-panel-30)",
             border: "1px solid var(--hb-12)",
             borderRadius: 4,
             color: "#fff",

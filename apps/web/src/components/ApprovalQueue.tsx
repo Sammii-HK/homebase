@@ -543,7 +543,7 @@ const ApprovalCard = forwardRef<ApprovalCardHandle, ApprovalCardProps>(function 
               fontFamily: PS2P,
               fontSize: 7,
               padding: "8px 10px",
-              background: "rgba(0,0,0,0.3)",
+              background: "var(--hb-panel-30)",
               border: "1px solid var(--hb-10)",
               borderRadius: 4,
               color: "#fff",

@@ -387,7 +387,7 @@ export default function BriefingCard({
           borderRadius: 8,
           padding: 16,
           backdropFilter: "blur(12px)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+          boxShadow: "0 8px 32px var(--hb-panel-60)",
         }}
       >
         {/* Header */}

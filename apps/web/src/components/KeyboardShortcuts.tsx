@@ -84,7 +84,7 @@ export default function KeyboardShortcuts() {
               borderRadius: 8,
               padding: "12px 16px",
               minWidth: 220,
-              boxShadow: "0 12px 40px rgba(0,0,0,0.7)",
+              boxShadow: "0 12px 40px var(--hb-panel-70)",
             }}
           >
             <div

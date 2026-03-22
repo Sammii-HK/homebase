@@ -129,8 +129,8 @@ export default function AgentSprite({
     Math.abs(pos.x - typingWp.x) < 8 && Math.abs(pos.y - typingWp.y) < 8;
 
   const glowIntensity = activityState === "hot" || activityState === "typing" || activityState === "running"
-    ? `drop-shadow(0 0 10px ${glowColor}) drop-shadow(0 2px 0 rgba(0,0,0,0.8))`
-    : `drop-shadow(0 0 6px ${glowColor}) drop-shadow(0 2px 0 rgba(0,0,0,0.8))`;
+    ? `drop-shadow(0 0 10px ${glowColor}) drop-shadow(0 2px 0 var(--hb-panel-80))`
+    : `drop-shadow(0 0 6px ${glowColor}) drop-shadow(0 2px 0 var(--hb-panel-80))`;
 
   const label = ACTION_LABEL[activityState];
   const labelColor = accentColor ?? "#fff";
@@ -185,7 +185,7 @@ export default function AgentSprite({
             fontFamily: "'Press Start 2P', monospace",
             fontSize: 5,
             color: labelColor,
-            background: "rgba(0,0,0,0.82)",
+            background: "var(--hb-panel-82)",
             border: `1px solid ${labelColor}`,
             padding: "2px 5px",
             whiteSpace: "nowrap",

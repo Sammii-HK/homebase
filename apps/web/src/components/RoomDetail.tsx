@@ -67,7 +67,7 @@ function HealthDot({ status, label }: { status: string; label: string }) {
   const color = status === "ok" ? "#4ade80" : status === "degraded" ? "#facc15" : "#f87171";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{ width: 10, height: 10, borderRadius: 2, background: color, border: "1px solid rgba(0,0,0,0.5)", boxShadow: `0 0 8px ${color}` }} />
+      <div style={{ width: 10, height: 10, borderRadius: 2, background: color, border: "1px solid var(--hb-panel-50)", boxShadow: `0 0 8px ${color}` }} />
       <span style={{ fontFamily: PS2P, fontSize: 11, color: "var(--hb-70)" }}>{label}</span>
       <span style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-35)" }}>{status}</span>
     </div>
@@ -503,7 +503,7 @@ function DevDetail({ stats, heartbeat, deepData, loading }: {
           <div>
             <SectionLabel>WORKSTATION</SectionLabel>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 2, background: macColor, border: "1px solid rgba(0,0,0,0.5)", boxShadow: `0 0 8px ${macColor}` }} />
+              <div style={{ width: 10, height: 10, borderRadius: 2, background: macColor, border: "1px solid var(--hb-panel-50)", boxShadow: `0 0 8px ${macColor}` }} />
               <span style={{ fontFamily: PS2P, fontSize: 11, color: "var(--hb-70)" }}>MAC</span>
               <span style={{ fontFamily: PS2P, fontSize: 9, color: "var(--hb-35)" }}>{macStatus}</span>
             </div>
@@ -937,7 +937,7 @@ export default function RoomDetail({ roomId, stats, heartbeat, token, onClose }:
         onClick={onClose}
         style={{
           position: "fixed", inset: 0,
-          background: "rgba(0,0,0,0.6)",
+          background: "var(--hb-panel-60)",
           backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
           zIndex: 45,
         }}

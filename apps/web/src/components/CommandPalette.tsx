@@ -236,7 +236,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
         onClick={() => setOpen(false)}
         style={{
           position: "fixed", inset: 0,
-          background: "rgba(0,0,0,0.7)",
+          background: "var(--hb-panel-70)",
           backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
           zIndex: 100,
         }}
@@ -252,7 +252,7 @@ export default function CommandPalette({ stats, token, onOpenRoom, onOpenApprova
           borderRadius: 8,
           zIndex: 101,
           overflow: "hidden",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
+          boxShadow: "0 20px 60px var(--hb-panel-80)",
         }}
       >
         {/* Search input */}

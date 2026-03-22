@@ -241,7 +241,7 @@ export default function ChatPanel({ token }: { token: string }) {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "rgba(0,0,0,0.2)",
+        background: "var(--hb-panel-20)",
       }}
     >
       {/* TTS toggle */}
@@ -484,7 +484,7 @@ export default function ChatPanel({ token }: { token: string }) {
             fontFamily: "system-ui, -apple-system, sans-serif",
             fontSize: 15,
             padding: "11px 13px",
-            background: "rgba(0,0,0,0.4)",
+            background: "var(--hb-panel-40)",
             border: `1px solid ${isListening ? "rgba(239,68,68,0.3)" : "var(--hb-10)"}`,
             borderRadius: 6,
             color: "#fff",

@@ -419,7 +419,7 @@ export default function AlertFeed({ stats, heartbeat, token, onOpenRoom, onOpenA
         onClick={() => setExpanded(!expanded)}
         style={{
           display: "flex", alignItems: "center", gap: 6,
-          background: "rgba(0,0,0,0.85)",
+          background: "var(--hb-panel-85)",
           border: `1px solid ${topColor.border}`,
           borderRadius: expanded ? "6px 6px 0 0" : 6,
           padding: "5px 10px",
