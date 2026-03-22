@@ -51,7 +51,7 @@ if [ -f "$LIVE_METRICS" ]; then
     seo_impressions=$(grep -o 'Total impressions: \*\*[0-9,]*\*\*' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9,]*' | tr -d ',')
     seo_clicks=$(grep -o 'Total clicks: \*\*[0-9,]*\*\*' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9,]*' | tr -d ',')
     seo_position=$(grep -o 'Average position: \*\*[0-9.]*\*\*' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9.]*')
-    seo_daily_avg=$(grep -o '[0-9,]* impressions/day' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9,]*' | tr -d ',')
+    seo_daily_avg=$(grep -o '\*\*[0-9,]*\*\* impressions/day' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9,]*' | tr -d ',')
     seo_ctr_raw=$(grep -o 'Average CTR: \*\*[0-9.]*%\*\*' "$LIVE_METRICS" 2>/dev/null | head -1 | grep -o '[0-9.]*')
     seo_ctr=$(echo "${seo_ctr_raw:-0} / 100" | bc -l 2>/dev/null || echo "0")
     seo_impressions="${seo_impressions:-0}"
